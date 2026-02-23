@@ -27,11 +27,18 @@ const BUDDY_DURATION    = 3000;   // Buddy: helper fish collects treats
 const BOMB_DURATION     = 2000;   // Bomb: shark scared to corner
 const CRAZY_DURATION    = 5000;   // Crazy: mass treat spawn, then game over
 
-// ─── ITEM APPEARANCE DURATIONS (milliseconds) ───
-// How long a power-up item stays on the field before vanishing
-const DEFAULT_ITEM_LIFETIME = 5000;  // Most power-ups
-const SHORT_ITEM_LIFETIME   = 2000;  // Magnet, Hourglass
-const CRAZY_ITEM_LIFETIME   = 900;   // Crazy mushroom (very brief)
+// ─── POWER-UP RARITY SYSTEM ───
+// Each rarity tier defines spawn chance multiplier and field lifetime.
+// 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Epic, 5 = Mythical
+const RARITY = {
+  1: { name: 'Common',   spawnMul: 1.0,  life: 5000 },
+  2: { name: 'Uncommon', spawnMul: 0.6,  life: 4500 },
+  3: { name: 'Rare',     spawnMul: 0.3,  life: 3500 },
+  4: { name: 'Epic',     spawnMul: 0.12, life: 2500 },
+  5: { name: 'Mythical', spawnMul: 0.05, life: 2000 },
+};
+const CRAZY_ITEM_LIFETIME   = 900;   // Crazy mushroom — its own thing
+const MAX_FIELD_ITEMS       = 3;     // Max power-up items on screen at once
 
 // ─── GAMEPLAY CONSTANTS ───
 const FRENZY_SPEED_BOOST = 1.2;  // Extra speed during frenzy
@@ -99,7 +106,8 @@ const scoreboardContent = document.getElementById('scoreboard-content');
 
 // Status bar indicators (power-up icons in the HUD)
 const st = {};
-['frenzy','ice','shield','magnet','ghost','time','buddy','bomb','crazy','combo'].forEach(
+['frenzy','ice','shield','magnet','ghost','time','buddy','bomb','crazy','combo',
+ 'decoy','star','hook'].forEach(
   k => st[k] = document.getElementById('st-' + k)
 );
 
@@ -125,7 +133,9 @@ let nameEntryActive = false;
 // Power-up items on the field (null = not spawned)
 let pwItems = {
   frenzy: null, ice: null, shield: null, magnet: null,
-  ghost: null, hourglass: null, buddy: null, bomb: null, crazy: null
+  ghost: null, hourglass: null, buddy: null, bomb: null, crazy: null,
+  decoy: null, swap: null, star: null, double: null,
+  wave: null, poison: null, hook: null
 };
 
 // Active power-up states
@@ -138,6 +148,9 @@ let hourglassActive = false, hourglassTO = null, timerFrozen = false;
 let buddyActive = false, buddyTO = null;
 let bombActive = false, bombTO = null;
 let crazyActive = false, crazyTO = null;
+let decoyActive = false, decoyTO = null, decoyFish = null;
+let starActive = false, starTO = null;
+let hookActive = false;
 
 // Combo system
 let comboCount = 0, comboTimer = 0;
@@ -596,6 +609,137 @@ function activateCrazy() {
   }, CRAZY_DURATION);
 }
 
+// ─── DECOY: Spawn a fake fish that distracts the shark ───
+function activateDecoy() {
+  decoyActive = true;
+  // Place decoy on opposite side of fish from shark
+  const ax = Math.atan2(shark.y - fish.y, shark.x - fish.x);
+  decoyFish = {
+    x: fish.x - Math.cos(ax) * 100,
+    y: fish.y - Math.sin(ax) * 100,
+    dir: fish.dir, tailPhase: rand(0, Math.PI * 2)
+  };
+  decoyFish.x = Math.max(30, Math.min(W - 30, decoyFish.x));
+  decoyFish.y = Math.max(30, Math.min(H - 30, decoyFish.y));
+  stOn('decoy', 's-decoy');
+  scorePopups.push({ x: fish.x, y: fish.y - 20, pts: 'DECOY!', life: 1, decay: 0.03 });
+  spawnParticles(decoyFish.x, decoyFish.y, '#ffaa44', 12);
+  decoyTO = clearTO(decoyTO);
+  decoyTO = setTimeout(deactivateDecoy, 4000);
+}
+
+function deactivateDecoy() {
+  decoyActive = false;
+  if (decoyFish) spawnParticles(decoyFish.x, decoyFish.y, '#ffaa44', 8);
+  decoyFish = null;
+  stOff('decoy', 's-decoy');
+  decoyTO = null;
+}
+
+// ─── SWAP: Swap positions with the shark ───
+function activateSwap() {
+  const oldFishX = fish.x, oldFishY = fish.y;
+  const oldSharkX = shark.x, oldSharkY = shark.y;
+  // Swap
+  fish.x = oldSharkX; fish.y = oldSharkY;
+  shark.x = oldFishX; shark.y = oldFishY;
+  // Visual feedback at both positions
+  spawnParticles(fish.x, fish.y, '#aa44ff', 16);
+  spawnParticles(shark.x, shark.y, '#aa44ff', 16);
+  scorePopups.push({ x: fish.x, y: fish.y - 20, pts: 'SWAP!', life: 1.2, decay: 0.025 });
+}
+
+// ─── STAR: Brief invincibility, shark bounces off ───
+function activateStar() {
+  starActive = true;
+  stOn('star', 's-star');
+  scorePopups.push({ x: fish.x, y: fish.y - 20, pts: 'STAR!', life: 1, decay: 0.03 });
+  spawnParticles(fish.x, fish.y, '#ffee44', 20);
+  starTO = clearTO(starTO);
+  starTO = setTimeout(deactivateStar, 3000);
+}
+
+function deactivateStar() {
+  starActive = false;
+  stOff('star', 's-star');
+  starTO = null;
+}
+
+// ─── DOUBLE: Duplicate all current treats on the field ───
+function activateDouble() {
+  const currentTreats = [...treats];
+  for (const t of currentTreats) {
+    if (t.collected) continue;
+    treats.push({
+      x: t.x + rand(-20, 20),
+      y: t.y + rand(-20, 20),
+      r: 14,
+      type: t.type,
+      bobPhase: rand(0, Math.PI * 2),
+      collected: false
+    });
+  }
+  treatsLeftEl.textContent = treats.length;
+  spawnParticles(fish.x, fish.y, '#44ddff', 16);
+  scorePopups.push({ x: fish.x, y: fish.y - 20, pts: 'DOUBLE!', life: 1.2, decay: 0.025 });
+}
+
+// ─── WAVE: Push all treats to nearest wall ───
+function activateWave() {
+  for (const t of treats) {
+    if (t.collected) continue;
+    // Find nearest wall axis
+    const dLeft = t.x, dRight = W - t.x;
+    const dTop = t.y, dBottom = H - t.y;
+    const minDist = Math.min(dLeft, dRight, dTop, dBottom);
+    if (minDist === dLeft) t.x = 20;
+    else if (minDist === dRight) t.x = W - 20;
+    else if (minDist === dTop) t.y = 20;
+    else t.y = H - 20;
+    spawnParticles(t.x, t.y, '#4488ff', 3);
+  }
+  scorePopups.push({ x: W / 2, y: H / 2, pts: 'WAVE!', life: 1, decay: 0.03 });
+  spawnParticles(fish.x, fish.y, '#4488ff', 16);
+}
+
+// ─── POISON: Bad item — lose 3 seconds ───
+function activatePoison() {
+  timeLeft = Math.max(0, timeLeft - 3);
+  timerEl.textContent = Math.max(0, timeLeft);
+  timerBar.style.width = (timeLeft / maxTime * 100) + '%';
+  spawnParticles(fish.x, fish.y, '#44ff00', 16);
+  scorePopups.push({ x: fish.x, y: fish.y - 20, pts: '-3 SEC!', life: 1.5, decay: 0.02 });
+  // Flash the timer bar red briefly
+  timerBar.classList.add('danger');
+  setTimeout(() => {
+    if (timeLeft > 10) timerBar.classList.remove('danger');
+  }, 500);
+  if (timeLeft <= 0) endGame(false, "Poisoned!");
+}
+
+// ─── HOOK: Grapple to nearest treat instantly ───
+function activateHook() {
+  if (treats.length === 0) return;
+  hookActive = true;
+  // Find nearest uncollected treat
+  let nearest = null, nearestD = Infinity;
+  for (const t of treats) {
+    if (t.collected) continue;
+    const d = dist(t, fish);
+    if (d < nearestD) { nearestD = d; nearest = t; }
+  }
+  if (nearest) {
+    // Teleport fish to the treat
+    spawnParticles(fish.x, fish.y, '#ccaa44', 8);
+    fish.x = nearest.x;
+    fish.y = nearest.y;
+    fish.vx = 0; fish.vy = 0;
+    spawnParticles(fish.x, fish.y, '#ccaa44', 8);
+    scorePopups.push({ x: fish.x, y: fish.y - 20, pts: 'HOOK!', life: 1, decay: 0.03 });
+  }
+  hookActive = false;
+}
+
 
 // ═══════════════════════════════════════════════════════════════
 // SECTION 9: POWER-UP SPAWNING & FIELD MANAGEMENT
@@ -609,20 +753,29 @@ function activateCrazy() {
  * relative spawn chance, eligibility check, and field lifetime.
  */
 const pwConfig = {
-  frenzy:    { emoji: '🔥', glow: '#ff8800', fn: activateFrenzy,    ch: 1,    ok: () => !frenzyActive },
-  ice:       { emoji: '❄️',  glow: '#88ddff', fn: activateIce,       ch: 0.8,  ok: () => !iceActive },
-  shield:    { emoji: '🛡️', glow: '#44ee88', fn: activateShield,    ch: 0.5,  ok: () => !shieldActive },
-  magnet:    { emoji: '🧲', glow: '#dd44ff', fn: activateMagnet,    ch: 0.3,  ok: () => !magnetActive, life: SHORT_ITEM_LIFETIME },
-  ghost:     { emoji: '👻', glow: '#ff8844', fn: activateGhost,     ch: 0.2,  ok: () => !ghostActive },
-  hourglass: { emoji: '⏳', glow: '#ffdd44', fn: activateHourglass, ch: 0.12, ok: () => !hourglassActive, life: SHORT_ITEM_LIFETIME },
-  buddy:     { emoji: '🐠', glow: '#44ddaa', fn: activateBuddy,     ch: 0.2,  ok: () => !buddyActive },
-  bomb:      { emoji: '💣', glow: '#ff4444', fn: activateBomb,      ch: 0.25, ok: () => !bombActive },
-  crazy:     { emoji: '🍄', glow: '#ff00aa', fn: activateCrazy,     ch: 0.3,  ok: () => level > 9 && !crazyActive, life: CRAZY_ITEM_LIFETIME }
+  frenzy:    { emoji: '🔥', glow: '#ff8800', fn: activateFrenzy,    rarity: 1, ok: () => !frenzyActive },
+  ice:       { emoji: '❄️',  glow: '#88ddff', fn: activateIce,       rarity: 2, ok: () => !iceActive },
+  shield:    { emoji: '🛡️', glow: '#44ee88', fn: activateShield,    rarity: 2, ok: () => !shieldActive },
+  poison:    { emoji: '☠️',  glow: '#44ff00', fn: activatePoison,    rarity: 2, ok: () => true },
+  hourglass: { emoji: '⏳', glow: '#ffdd44', fn: activateHourglass, rarity: 3, ok: () => !hourglassActive },
+  buddy:     { emoji: '🐠', glow: '#44ddaa', fn: activateBuddy,     rarity: 3, ok: () => !buddyActive },
+  hook:      { emoji: '🪝', glow: '#ccaa44', fn: activateHook,      rarity: 3, ok: () => treats.length > 0 },
+  ghost:     { emoji: '👻', glow: '#ff8844', fn: activateGhost,     rarity: 4, ok: () => !ghostActive },
+  bomb:      { emoji: '💣', glow: '#ff4444', fn: activateBomb,      rarity: 4, ok: () => !bombActive },
+  decoy:     { emoji: '👁️', glow: '#ffaa44', fn: activateDecoy,     rarity: 4, ok: () => !decoyActive },
+  swap:      { emoji: '🔄', glow: '#aa44ff', fn: activateSwap,      rarity: 4, ok: () => true },
+  star:      { emoji: '🌟', glow: '#ffee44', fn: activateStar,      rarity: 5, ok: () => !starActive },
+  double:    { emoji: '💎', glow: '#44ddff', fn: activateDouble,    rarity: 5, ok: () => treats.length > 0 },
+  magnet:    { emoji: '🧲', glow: '#dd44ff', fn: activateMagnet,    rarity: 5, ok: () => !magnetActive },
+  wave:      { emoji: '🌊', glow: '#4488ff', fn: activateWave,      rarity: 5, ok: () => treats.length > 0 },
+  crazy:     { emoji: '🍄', glow: '#ff00aa', fn: activateCrazy,     rarity: 0, ok: () => level > 9 && !crazyActive, life: CRAZY_ITEM_LIFETIME }
 };
 
 /** Spawn a power-up item at a random position away from the fish. */
 function spawnPW(type) {
-  const lt = pwConfig[type].life || DEFAULT_ITEM_LIFETIME;
+  const cfg = pwConfig[type];
+  // Use explicit life override (crazy), else derive from rarity tier
+  const lt = cfg.life || (RARITY[cfg.rarity] ? RARITY[cfg.rarity].life : 5000);
   const item = {
     x: rand(50, W - 50),
     y: rand(50, H - 50),
@@ -642,9 +795,23 @@ function spawnPW(type) {
 
 /** Each frame, randomly try to spawn power-ups that aren't already on field. */
 function trySpawnPowerups() {
+  // Count how many items are currently on the field
+  let fieldCount = 0;
+  for (const k in pwItems) { if (pwItems[k]) fieldCount++; }
+
+  // Don't spawn if already at the cap
+  if (fieldCount >= MAX_FIELD_ITEMS) return;
+
   for (const [k, c] of Object.entries(pwConfig)) {
-    if (!pwItems[k] && c.ok() && Math.random() < PW_SPAWN_CHANCE * c.ch) {
+    if (fieldCount >= MAX_FIELD_ITEMS) break;
+    if (pwItems[k] || !c.ok()) continue;
+
+    // Spawn chance = base chance × rarity multiplier
+    // Crazy (rarity 0) uses a fixed low chance
+    const rarityMul = c.rarity === 0 ? 0.15 : RARITY[c.rarity].spawnMul;
+    if (Math.random() < PW_SPAWN_CHANCE * rarityMul) {
       pwItems[k] = spawnPW(k);
+      fieldCount++;
     }
   }
 }
@@ -748,12 +915,14 @@ function startLevel() {
   bubbles = [];
   scorePopups = [];
   buddy = null;
+  decoyFish = null;
 
   // Reset all power-up items and states
   for (const k in pwItems) pwItems[k] = null;
   frenzyActive = iceActive = shieldActive = magnetActive = false;
   ghostActive = hourglassActive = buddyActive = bombActive = false;
   crazyActive = timerFrozen = false;
+  decoyActive = starActive = hookActive = false;
   comboCount = 0;
   comboTimer = 0;
 
@@ -765,13 +934,15 @@ function startLevel() {
   buddyTO = clearTO(buddyTO);
   bombTO = clearTO(bombTO);
   crazyTO = clearTO(crazyTO);
+  decoyTO = clearTO(decoyTO);
+  starTO = clearTO(starTO);
 
   // Reset HUD indicators
   frenzyHud.classList.remove('active');
   frenzyBarEl.style.width = '0%';
   for (const s of Object.values(st)) {
     s.classList.remove('s-on', 's-frenzy', 's-ice', 's-shield', 's-magnet',
-      's-ghost', 's-time', 's-buddy', 's-bomb', 's-combo', 's-crazy');
+      's-ghost', 's-time', 's-buddy', 's-bomb', 's-combo', 's-crazy', 's-decoy', 's-star', 's-poison', 's-hook', 's-swap', 's-double', 's-wave');
     s.style.color = '';
   }
   st.combo.textContent = '⚡x1';
@@ -863,15 +1034,17 @@ function endGame(won, msg) {
   cancelAnimationFrame(gameLoop);
 
   // Clear all power-up timeouts
-  [frenzyTO, iceTO, ghostTO, hourglassTO, buddyTO, bombTO, crazyTO].forEach(clearTO);
+  [frenzyTO, iceTO, ghostTO, hourglassTO, buddyTO, bombTO, crazyTO, decoyTO, starTO].forEach(clearTO);
   frenzyActive = iceActive = ghostActive = hourglassActive = false;
   buddyActive = bombActive = crazyActive = timerFrozen = false;
+  decoyActive = starActive = hookActive = false;
+  decoyFish = null;
   frenzyHud.classList.remove('active');
 
   // Reset all status indicators
   for (const s of Object.values(st)) {
     s.classList.remove('s-on', 's-frenzy', 's-ice', 's-shield', 's-magnet',
-      's-ghost', 's-time', 's-buddy', 's-bomb', 's-combo', 's-crazy');
+      's-ghost', 's-time', 's-buddy', 's-bomb', 's-combo', 's-crazy', 's-decoy', 's-star', 's-poison', 's-hook', 's-swap', 's-double', 's-wave');
     s.style.color = '';
   }
 
@@ -961,22 +1134,23 @@ function updateFish() {
 function updateShark() {
   if (shark.hidden || hourglassActive) return;
 
-  // Chase the fish with slight sinusoidal wobble
+  // Chase the decoy if active, otherwise chase the fish
+  const target = (decoyActive && decoyFish) ? decoyFish : fish;
+
   shark.chaseTimer += 0.02;
-  const a = Math.atan2(fish.y - shark.y, fish.x - shark.x);
+  const a = Math.atan2(target.y - shark.y, target.x - shark.x);
   const wobble = Math.sin(shark.chaseTimer * 3) * 0.4;
   const dx = Math.cos(a + wobble) * shark.speed;
   const dy = Math.sin(a + wobble) * shark.speed;
   shark.x += dx;
   shark.y += dy;
 
-  // Smoothly rotate towards the fish (lerp to avoid snapping)
+  // Smoothly rotate towards the target (lerp to avoid snapping)
   let targetAngle = a;
   let diff = targetAngle - shark.angle;
-  // Normalise angle difference to [-PI, PI]
   while (diff > Math.PI) diff -= Math.PI * 2;
   while (diff < -Math.PI) diff += Math.PI * 2;
-  shark.angle += diff * 0.15; // Smooth turning speed
+  shark.angle += diff * 0.15;
 
   // Animate tail
   shark.tailPhase += 0.12;
@@ -987,8 +1161,20 @@ function updateShark() {
 
   // Collision with fish (body only, not tail)
   if (dist(shark, fish) < 30) {
-    if (shieldActive) useShield();
-    else endGame(false, 'The shark got you!');
+    if (starActive) {
+      // Star: bounce shark away
+      const ba = Math.atan2(shark.y - fish.y, shark.x - fish.x);
+      shark.x += Math.cos(ba) * 80;
+      shark.y += Math.sin(ba) * 80;
+      shark.x = Math.max(20, Math.min(W - 20, shark.x));
+      shark.y = Math.max(20, Math.min(H - 20, shark.y));
+      spawnParticles(fish.x, fish.y, '#ffee44', 12);
+      scorePopups.push({ x: fish.x, y: fish.y - 20, pts: 'BOUNCE!', life: 0.8, decay: 0.03 });
+    } else if (shieldActive) {
+      useShield();
+    } else {
+      endGame(false, 'The shark got you!');
+    }
   }
 }
 
@@ -1172,6 +1358,19 @@ function drawFish() {
     ctx.lineWidth = 2;
     ctx.strokeRect(fish.x - 22, fish.y - 18, 44, 36);
   }
+
+  // Star invincibility aura
+  if (starActive) {
+    const p = 0.25 + Math.sin(Date.now() * 0.008) * 0.15;
+    ctx.fillStyle = `rgba(255,238,68,${p})`;
+    ctx.fillRect(fish.x - 24, fish.y - 20, 48, 40);
+    // Orbiting sparkles
+    ctx.fillStyle = '#ffee44';
+    for (let i = 0; i < 6; i++) {
+      const a = Date.now() * 0.004 + (i / 6) * Math.PI * 2;
+      ctx.fillRect(fish.x + Math.cos(a) * 26 - 1, fish.y + Math.sin(a) * 26 - 1, 3, 3);
+    }
+  }
 }
 
 function drawBuddy() {
@@ -1188,15 +1387,25 @@ function drawBuddy() {
   }
 }
 
-// ─── SHARK (replaces the cat) ───
+function drawDecoy() {
+  if (!decoyActive || !decoyFish) return;
+  // Animate tail
+  decoyFish.tailPhase += 0.06;
+  // Draw as translucent orange fish (flickering to look holographic)
+  const flicker = 0.4 + Math.sin(Date.now() * 0.012) * 0.2;
+  ctx.globalAlpha = flicker;
+  drawPixelFish(decoyFish.x, decoyFish.y, decoyFish.dir, decoyFish.tailPhase, '#ffaa44', '#ffcc66', '#dd8822');
+  ctx.globalAlpha = 1;
+  // Hologram sparkles
+  ctx.fillStyle = '#ffcc44';
+  for (let i = 0; i < 3; i++) {
+    ctx.fillRect(decoyFish.x + rand(-18, 18), decoyFish.y + rand(-12, 12), 2, 2);
+  }
+}
+
 // ─── SHARK ───
-// Drawn the same way as the player fish: faces left/right
-// using ctx.scale(dir, 1), with the tail trailing behind.
-// The tail is purely cosmetic — hitbox is on the body only.
-// ─── SHARK ───
-// Rotates to face the fish using ctx.rotate(shark.angle).
-// The angle is smoothly interpolated in updateShark so
-// it turns gradually rather than snapping.
+// Rotates to face the target using ctx.rotate(shark.angle).
+// The angle is smoothly interpolated in updateShark.
 function drawShark() {
   if (shark.hidden) return;
 
@@ -1324,6 +1533,13 @@ function drawPWItems() {
 
     ctx.save();
     ctx.translate(item.x, item.y + bob);
+
+    // Poison gets a pulsing red-green warning glow
+    if (k === 'poison') {
+      const pulse = 0.3 + Math.sin(Date.now() * 0.01) * 0.2;
+      ctx.fillStyle = `rgba(255,0,0,${pulse})`;
+      ctx.fillRect(-16, -16, 32, 32);
+    }
 
     // Inner glow (distinguishes power-ups from treats)
     ctx.fillStyle = c.glow + '26';
@@ -1495,6 +1711,7 @@ function loop() {
   drawPWItems();
   drawParticles();
   drawBuddy();
+  drawDecoy();
   drawFish();
   drawFishGlow();
   drawShark();

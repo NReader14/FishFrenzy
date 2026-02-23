@@ -202,6 +202,18 @@ body::after {
 .s-bomb   { color: #ff4444 !important; }
 .s-combo  { color: #ffdd44 !important; }
 .s-crazy  { color: #ff00aa !important; animation: crazy-shake .2s infinite; }
+.s-decoy  { color: #ffaa44 !important; }
+.s-star   { color: #ffee44 !important; animation: star-pulse .4s ease-in-out infinite; }
+.s-poison { color: #44ff00 !important; }
+.s-hook   { color: #ccaa44 !important; }
+.s-swap   { color: #aa44ff !important; }
+.s-double { color: #44ddff !important; }
+.s-wave   { color: #4488ff !important; }
+
+@keyframes star-pulse {
+  0%, 100% { text-shadow: 0 0 8px rgba(255,238,68,.5); }
+  50% { text-shadow: 0 0 16px rgba(255,238,68,.8); }
+}
 
 @keyframes crazy-shake {
   0%, 100% { transform: translateX(0) scale(1); }
