@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fish Frenzy!</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐟</text></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- GAME WRAPPER — Contains all game UI and overlays   -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div id="game-wrapper">
+
+  <!-- AI DISCLAIMER BANNER -->
+  <div id="ai-banner">THIS GAME IS MADE BY AI, NOT A REFLECTION OF THE MAKER'S SKILL</div>
+
+  <!-- HUD — Score, timer, level, treats remaining -->
+  <div id="hud">
+    <div class="hud-item">SCORE <span id="score">0</span></div>
+    <div class="hud-item timer-group">
+      <div id="timer-bar-bg"><div id="timer-bar"></div></div>
+      <span id="timer">30</span>
+    </div>
+    <div class="hud-item">LVL <span id="level">1</span></div>
+    <div class="hud-item">LEFT <span id="treats-left">0</span></div>
+  </div>
+
+  <!-- STATUS BAR — Active power-up indicators -->
+  <div id="status-bar">
+    <div class="status-item" id="st-frenzy">🔥FRZ</div>
+    <div class="status-item" id="st-ice">❄ICE</div>
+    <div class="status-item" id="st-shield">🛡SHD</div>
+    <div class="status-item" id="st-magnet">🧲MAG</div>
+    <div class="status-item" id="st-ghost">👻GHO</div>
+    <div class="status-item" id="st-time">⏳TIM</div>
+    <div class="status-item" id="st-buddy">🐠BUD</div>
+    <div class="status-item" id="st-bomb">💣BOM</div>
+    <div class="status-item" id="st-crazy">🍄CRZ</div>
+    <div class="status-item" id="st-combo">⚡x1</div>
+  </div>
+
+  <!-- GAME CANVAS -->
+  <canvas id="game" width="720" height="480"></canvas>
+
+  <!-- FRENZY MODE HUD — Shows when frenzy power-up is active -->
+  <div id="frenzy-hud">
+    FRENZY x2
+    <div id="frenzy-bar-bg-hud"><div id="frenzy-bar"></div></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- OVERLAYS — Menu screens layered over the canvas -->
+  <!-- ═══════════════════════════════════════════════ -->
+
+  <!-- MAIN MENU OVERLAY -->
+  <div id="overlay" class="game-overlay">
+    <h1>FISH<br>FRENZY</h1>
+    <p class="subtitle">EAT ALL TREATS &middot; ESCAPE THE SHARK</p>
+    <div class="menu-buttons">
+      <button id="start-btn" class="btn-primary">START</button>
+      <button id="rules-btn" class="btn-secondary">RULES</button>
+      <button id="scoreboard-btn" class="btn-secondary">HI-SCORES</button>
+    </div>
+    <p class="controls-hint">ARROW KEYS / WASD TO SWIM</p>
+    <p class="insert-coin">PRESS START</p>
+  </div>
+
+  <!-- RULES OVERLAY -->
+  <div id="rules-overlay" class="game-overlay hidden">
+    <div class="rules-container">
+      <div class="rules-title">HOW TO PLAY</div>
+
+      <div class="rules-section">
+        <div class="rules-heading">OBJECTIVE</div>
+        <p class="rules-text">Collect all the treats before time runs out. Avoid the shark — it will chase you!</p>
+      </div>
+
+      <div class="rules-section">
+        <div class="rules-heading">CONTROLS</div>
+        <p class="rules-text">Arrow Keys or WASD to swim in any direction.</p>
+      </div>
+
+      <div class="rules-section">
+        <div class="rules-heading">TREATS</div>
+        <p class="rules-text">
+          🍤 🪱 🦐 🫧 ⭐ 🐟 🦈 🍔 — Collect them all to complete the level. Each treat is worth 10 points (20 during Frenzy). Combo multiplier increases when you collect treats quickly in succession (max x5).
+        </p>
+      </div>
+
+      <div class="rules-section">
+        <div class="rules-heading">POWER-UPS</div>
+        <div class="rules-powerup-grid">
+          <div class="rules-pw"><span class="pw-icon">🔥</span><strong>FRENZY</strong> — 2x points, speed boost for 3s</div>
+          <div class="rules-pw"><span class="pw-icon">❄️</span><strong>ICE</strong> — Slows the shark for 4s</div>
+          <div class="rules-pw"><span class="pw-icon">🛡️</span><strong>SHIELD</strong> — Blocks one shark hit</div>
+          <div class="rules-pw"><span class="pw-icon">🧲</span><strong>MAGNET</strong> — Pulls all treats to you</div>
+          <div class="rules-pw"><span class="pw-icon">👻</span><strong>GHOST</strong> — Shark vanishes for 3s</div>
+          <div class="rules-pw"><span class="pw-icon">⏳</span><strong>TIME STOP</strong> — Freezes timer &amp; shark for 5s</div>
+          <div class="rules-pw"><span class="pw-icon">🐠</span><strong>BUDDY</strong> — Helper fish collects treats for 3s</div>
+          <div class="rules-pw"><span class="pw-icon">💣</span><strong>BOMB</strong> — Blasts shark to farthest corner</div>
+          <div class="rules-pw"><span class="pw-icon">🍄</span><strong>CRAZY</strong> — Spawns masses of treats for 5s, but the level ends when time's up! (Level 10+)</div>
+        </div>
+      </div>
+
+      <div class="rules-section">
+        <div class="rules-heading">TIPS</div>
+        <p class="rules-text">
+          Power-ups appear randomly and fade after a few seconds — grab them fast. The shark gets faster each level. The timer gets shorter each level. Build combos for massive scores!
+        </p>
+      </div>
+    </div>
+    <button id="rules-back-btn" class="btn-secondary">BACK</button>
+  </div>
+
+  <!-- NAME ENTRY OVERLAY -->
+  <div id="name-entry-overlay" class="game-overlay hidden"></div>
+
+  <!-- END SCREEN OVERLAY (game over + scoreboard) -->
+  <div id="end-screen-overlay" class="game-overlay hidden"></div>
+
+  <!-- WIN OVERLAY (level complete) -->
+  <div id="win-overlay" class="game-overlay hidden"></div>
+
+  <!-- SCOREBOARD OVERLAY -->
+  <div id="scoreboard-overlay" class="game-overlay hidden">
+    <div class="scoreboard-title">HIGH SCORES</div>
+    <div id="scoreboard-content"><p class="loading-text">LOADING...</p></div>
+    <div class="scoreboard-actions">
+      <button id="close-scoreboard-btn" class="btn-secondary">BACK</button>
+      <button id="wipe-scoreboard-btn" class="btn-danger">WIPE</button>
+    </div>
+  </div>
+
+  <!-- ADMIN LOGIN OVERLAY -->
+  <div id="admin-overlay" class="game-overlay hidden">
+    <div class="admin-container">
+      <div class="admin-title">ADMIN LOGIN</div>
+      <p class="admin-text">Enter admin credentials to wipe the scoreboard.</p>
+      <div class="admin-form">
+        <label class="admin-label">EMAIL</label>
+        <input type="email" id="admin-email" class="admin-input" placeholder="admin@email.com" autocomplete="email">
+        <label class="admin-label">PASSWORD</label>
+        <input type="password" id="admin-password" class="admin-input" placeholder="••••••••" autocomplete="current-password">
+        <div id="admin-error" class="admin-error hidden"></div>
+        <div class="admin-btn-row">
+          <button id="admin-login-btn" class="btn-primary" style="padding:10px 20px;font-size:9px;">LOGIN &amp; WIPE</button>
+          <button id="admin-cancel-btn" class="btn-secondary">CANCEL</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING OVERLAY — Shown during Firebase operations -->
+  <div id="loading-overlay" class="game-overlay hidden">
+    <p class="loading-text" id="loading-message">SAVING SCORE...</p>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SCRIPTS — Firebase first, then game logic          -->
+<!-- ═══════════════════════════════════════════════════ -->
+<script type="module" src="firebase-config.js"></script>
+<script type="module" src="game.js"></script>
+
+</body>
+</html>
