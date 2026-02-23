@@ -169,14 +169,17 @@ function buildScoreboardHtml(scores, highlightIdx = -1) {
     return '<p class="no-scores">NO SCORES YET</p>';
   }
 
+  const medals = ['🥇', '🥈', '🥉'];
+
   let html = '<table class="scoreboard-table"><thead><tr>';
   html += '<th></th><th>NAME</th><th>SCORE</th><th>LVL</th>';
   html += '</tr></thead><tbody>';
 
   scores.forEach((s, i) => {
     const cls = i === highlightIdx ? 'new-score' : '';
+    const rankLabel = i < 3 ? medals[i] : `${i + 1}.`;
     html += `<tr class="${cls}">`;
-    html += `<td class="rank">${i + 1}.</td>`;
+    html += `<td class="rank">${rankLabel}</td>`;
     html += `<td class="name-col">${s.name || '???'}</td>`;
     html += `<td>${s.score}</td>`;
     html += `<td>${s.level}</td>`;
@@ -234,7 +237,7 @@ function showNameEntry(finalScore, finalLevel, msg) {
     }
 
     html += `</div>
-      <div class="name-entry-hint">TYPE INITIALS OR USE ARROWS &middot; ENTER TO CONFIRM</div>
+      <div class="name-entry-hint">TYPE A-Z ON YOUR KEYBOARD &middot; ARROWS TO SCROLL &middot; ENTER TO CONFIRM</div>
       <button id="confirm-name-btn" class="btn-primary" style="padding:10px 28px;font-size:10px;">OK</button>`;
 
     nameEntryOverlay.innerHTML = html;
@@ -720,13 +723,11 @@ function startLevel() {
   };
 
   // Shark (enemy) — gets faster each level (slowed to compensate for slim hitbox)
-  const sharkSpeed = 0.9 + level * 0.2;
+  const sharkSpeed = 0.75 + level * 0.2;
   shark = {
     x: rand(60, W - 60), y: rand(60, H - 60),
-    w: 50, h: 18,
     speed: sharkSpeed, savedSpeed: sharkSpeed, savedSpeed2: sharkSpeed,
-    angle: rand(0, Math.PI * 2),
-    dir: 1, tailPhase: 0,
+    angle: 0, tailPhase: 0,
     chaseTimer: 0,
     hidden: false
   };
@@ -967,11 +968,14 @@ function updateShark() {
   const dy = Math.sin(a + wobble) * shark.speed;
   shark.x += dx;
   shark.y += dy;
-  shark.angle = a;
 
-  // Face the direction of travel (like the fish)
-  if (dx > 0.05) shark.dir = 1;
-  else if (dx < -0.05) shark.dir = -1;
+  // Smoothly rotate towards the fish (lerp to avoid snapping)
+  let targetAngle = a;
+  let diff = targetAngle - shark.angle;
+  // Normalise angle difference to [-PI, PI]
+  while (diff > Math.PI) diff -= Math.PI * 2;
+  while (diff < -Math.PI) diff += Math.PI * 2;
+  shark.angle += diff * 0.15; // Smooth turning speed
 
   // Animate tail
   shark.tailPhase += 0.12;
@@ -1188,12 +1192,16 @@ function drawBuddy() {
 // Drawn the same way as the player fish: faces left/right
 // using ctx.scale(dir, 1), with the tail trailing behind.
 // The tail is purely cosmetic — hitbox is on the body only.
+// ─── SHARK ───
+// Rotates to face the fish using ctx.rotate(shark.angle).
+// The angle is smoothly interpolated in updateShark so
+// it turns gradually rather than snapping.
 function drawShark() {
   if (shark.hidden) return;
 
   ctx.save();
   ctx.translate(shark.x, shark.y);
-  ctx.scale(shark.dir, 1); // Flip to face direction of travel
+  ctx.rotate(shark.angle); // Rotate to face the fish
 
   const frozen = iceActive || hourglassActive;
   if (frozen) ctx.globalAlpha = 0.6;
@@ -1203,8 +1211,7 @@ function drawShark() {
   const finCol   = frozen ? '#4a5a6a' : '#556677';
   const bellyCol = frozen ? '#8899aa' : '#99aabb';
 
-  // ── Tail fin (behind body — NO hitbox) ──
-  // Animated wag using tailPhase (same approach as fish tail)
+  // ── Tail fin (trails behind — NO hitbox) ──
   const tw = Math.round(Math.sin(shark.tailPhase) * 4);
   ctx.fillStyle = finCol;
   // Upper fork
@@ -1213,13 +1220,13 @@ function drawShark() {
   // Lower fork
   ctx.fillRect(-30, 3 + tw, 8, 3);
   ctx.fillRect(-34, 5 + tw, 5, 3);
-  // Stem connecting to body
+  // Stem
   ctx.fillStyle = darkCol;
   ctx.fillRect(-24, -3 + tw, 6, 6);
 
   // ── Main body (slim torpedo) ──
   ctx.fillStyle = bodyCol;
-  ctx.fillRect(-18, -5, 36, 10);   // Core
+  ctx.fillRect(-18, -5, 36, 10);
   ctx.fillRect(-14, -6, 28, 2);    // Top edge
   ctx.fillRect(-14, 5, 28, 2);     // Bottom edge
 
@@ -1227,20 +1234,20 @@ function drawShark() {
   ctx.fillStyle = bellyCol;
   ctx.fillRect(-14, 2, 28, 4);
 
-  // ── Snout (pointed, extends right) ──
+  // ── Snout (pointed, extends towards fish) ──
   ctx.fillStyle = bodyCol;
   ctx.fillRect(16, -4, 6, 8);
   ctx.fillRect(20, -3, 5, 6);
   ctx.fillRect(24, -2, 4, 4);
   ctx.fillRect(27, -1, 3, 2);
 
-  // ── Dorsal fin (on top, tall & narrow) ──
+  // ── Dorsal fin (on top) ──
   ctx.fillStyle = finCol;
   ctx.fillRect(-2, -12, 3, 7);
   ctx.fillRect(-1, -16, 3, 5);
   ctx.fillRect(0, -19, 2, 4);
 
-  // ── Pectoral fin (swept back, underneath) ──
+  // ── Pectoral fin (underneath) ──
   ctx.fillStyle = finCol;
   ctx.fillRect(2, 6, 8, 3);
   ctx.fillRect(4, 9, 5, 2);
@@ -1248,20 +1255,18 @@ function drawShark() {
   // ── Eye ──
   ctx.fillStyle = frozen ? '#aabbcc' : '#ffee44';
   ctx.fillRect(12, -4, 5, 5);
-  // Vertical slit pupil
   ctx.fillStyle = '#111';
-  ctx.fillRect(14, -4, 2, 5);
-  // Glint
+  ctx.fillRect(14, -4, 2, 5);    // Slit pupil
   ctx.fillStyle = '#fff';
-  ctx.fillRect(13, -3, 1, 1);
+  ctx.fillRect(13, -3, 1, 1);    // Glint
 
-  // ── Gill slits (3 lines behind eye) ──
+  // ── Gill slits ──
   ctx.fillStyle = darkCol;
   ctx.fillRect(5, -3, 1, 6);
   ctx.fillRect(7, -3, 1, 6);
   ctx.fillRect(9, -3, 1, 6);
 
-  // ── Teeth (jagged row along the mouth line) ──
+  // ── Teeth ──
   ctx.fillStyle = '#ddeeff';
   ctx.fillRect(18, 3, 2, 2);
   ctx.fillRect(21, 3, 2, 2);
@@ -1272,7 +1277,6 @@ function drawShark() {
 
   // ── Effects ──
   if (frozen) {
-    // Orbiting ice particles
     ctx.fillStyle = '#88ddff';
     for (let i = 0; i < 4; i++) {
       const a = Date.now() * 0.002 + (i / 4) * Math.PI * 2;
@@ -1280,7 +1284,6 @@ function drawShark() {
     }
     ctx.globalAlpha = 1;
   } else {
-    // Danger aura (red glow around body only, not tail)
     ctx.fillStyle = `rgba(255,40,40,${0.06 + Math.sin(Date.now() * 0.005) * 0.03})`;
     ctx.fillRect(-20, -22, 52, 36);
   }
