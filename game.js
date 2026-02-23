@@ -393,22 +393,22 @@ function playCRTWipe(callback) {
   wipe.className = 'crt-wipe';
   document.getElementById('game-wrapper').appendChild(wipe);
 
-  // Phase 1: white line appears in centre
+  // Phase 1: soft line appears in centre (400ms)
   requestAnimationFrame(() => {
     wipe.classList.add('crt-line');
-    // Phase 2: line expands to fill screen
+    // Phase 2: line expands to fill screen (300ms)
     setTimeout(() => {
       wipe.classList.remove('crt-line');
       wipe.classList.add('crt-expand');
-      // Phase 3: screen revealed, wipe fades out
+      // Phase 3: screen fades to reveal game (400ms)
       setTimeout(() => {
         wipe.classList.add('crt-fade');
         setTimeout(() => {
           wipe.remove();
           if (callback) callback();
-        }, 300);
-      }, 250);
-    }, 350);
+        }, 400);
+      }, 300);
+    }, 400);
   });
 }
 
