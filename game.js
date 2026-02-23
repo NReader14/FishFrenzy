@@ -720,7 +720,7 @@ function startLevel() {
   };
 
   // Shark (enemy) — gets faster each level (slowed to compensate for slim hitbox)
-  const sharkSpeed = 0.75 + level * 0.2;
+  const sharkSpeed = 0.9 + level * 0.2;
   shark = {
     x: rand(60, W - 60), y: rand(60, H - 60),
     w: 50, h: 18,
