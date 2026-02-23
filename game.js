@@ -902,7 +902,7 @@ function endGame(won, msg) {
 // ═══════════════════════════════════════════════════════════════
 
 document.addEventListener('keydown', e => {
-  if (nameEntryActive) return; // Name entry has its own handler
+  if (nameEntryActive || !e.key) return;
 
   // Don't intercept keypresses when typing in input fields (e.g. admin login)
   const tag = document.activeElement?.tagName;
@@ -913,6 +913,7 @@ document.addEventListener('keydown', e => {
 });
 
 document.addEventListener('keyup', e => {
+  if (!e.key) return;
   keys[e.key.toLowerCase()] = false;
 });
 
