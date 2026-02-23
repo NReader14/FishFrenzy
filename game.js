@@ -407,7 +407,7 @@ function activateIce() {
 
 function deactivateIce() {
   iceActive = false;
-  shark.speed = shark.savedSpeed || (1 + level * 0.25);
+  shark.speed = shark.savedSpeed || (0.75 + level * 0.2);
   stOff('ice', 's-ice');
   iceTO = null;
 }
@@ -475,7 +475,7 @@ function activateHourglass() {
 function deactivateHourglass() {
   hourglassActive = false;
   timerFrozen = false;
-  shark.speed = shark.savedSpeed2 || (1 + level * 0.25);
+  shark.speed = shark.savedSpeed2 || (0.75 + level * 0.2);
   if (iceActive) shark.speed *= 0.25;
   timerBar.classList.remove('frozen');
   stOff('time', 's-time');
@@ -673,13 +673,14 @@ function startLevel() {
     speed: 2.5, friction: 0.88
   };
 
-  // Shark (enemy) — gets faster each level
-  const sharkSpeed = 1 + level * 0.25;
+  // Shark (enemy) — gets faster each level (slowed to compensate for slim hitbox)
+  const sharkSpeed = 0.75 + level * 0.2;
   shark = {
     x: rand(60, W - 60), y: rand(60, H - 60),
-    w: 42, h: 36,
+    w: 50, h: 18,
     speed: sharkSpeed, savedSpeed: sharkSpeed, savedSpeed2: sharkSpeed,
     angle: rand(0, Math.PI * 2),
+    dir: 1, tailPhase: 0,
     chaseTimer: 0,
     hidden: false
   };
@@ -855,6 +856,11 @@ function endGame(won, msg) {
 
 document.addEventListener('keydown', e => {
   if (nameEntryActive) return; // Name entry has its own handler
+
+  // Don't intercept keypresses when typing in input fields (e.g. admin login)
+  const tag = document.activeElement?.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
   keys[e.key.toLowerCase()] = true;
   e.preventDefault();
 });
@@ -911,15 +917,24 @@ function updateShark() {
   shark.chaseTimer += 0.02;
   const a = Math.atan2(fish.y - shark.y, fish.x - shark.x);
   const wobble = Math.sin(shark.chaseTimer * 3) * 0.4;
-  shark.x += Math.cos(a + wobble) * shark.speed;
-  shark.y += Math.sin(a + wobble) * shark.speed;
+  const dx = Math.cos(a + wobble) * shark.speed;
+  const dy = Math.sin(a + wobble) * shark.speed;
+  shark.x += dx;
+  shark.y += dy;
   shark.angle = a;
+
+  // Face the direction of travel (like the fish)
+  if (dx > 0.05) shark.dir = 1;
+  else if (dx < -0.05) shark.dir = -1;
+
+  // Animate tail
+  shark.tailPhase += 0.12;
 
   // Clamp to canvas
   shark.x = Math.max(20, Math.min(W - 20, shark.x));
   shark.y = Math.max(20, Math.min(H - 20, shark.y));
 
-  // Collision with fish
+  // Collision with fish (body only, not tail)
   if (dist(shark, fish) < 30) {
     if (shieldActive) useShield();
     else endGame(false, 'The shark got you!');
@@ -1123,101 +1138,105 @@ function drawBuddy() {
 }
 
 // ─── SHARK (replaces the cat) ───
-// ─── SHARK (reworked from the original cat) ───
-// Same structure as the old cat: uses shark.angle to point a
-// trailing element (tail) in the chase direction, head faces
-// the fish, same approximate bounding size (~42x36). The cat's
-// body/head/ears/eyes/nose/whisker-aura are replaced with
-// shark body/snout/dorsal-fin/tail/teeth/gill-slits/eye.
+// ─── SHARK ───
+// Drawn the same way as the player fish: faces left/right
+// using ctx.scale(dir, 1), with the tail trailing behind.
+// The tail is purely cosmetic — hitbox is on the body only.
 function drawShark() {
   if (shark.hidden) return;
 
   ctx.save();
   ctx.translate(shark.x, shark.y);
+  ctx.scale(shark.dir, 1); // Flip to face direction of travel
 
   const frozen = iceActive || hourglassActive;
   if (frozen) ctx.globalAlpha = 0.6;
 
-  const pa = shark.angle; // Angle towards fish (same as old cat)
+  const bodyCol  = frozen ? '#556688' : '#667788';
+  const darkCol  = frozen ? '#445566' : '#555566';
+  const finCol   = frozen ? '#4a5a6a' : '#556677';
+  const bellyCol = frozen ? '#8899aa' : '#99aabb';
 
-  // ── Tail fin (trailing behind, same role as cat's tail) ──
-  // Drawn first so body overlaps it. Points away from fish.
-  const tailWag = Math.round(Math.sin(Date.now() * 0.008) * 3);
-  ctx.fillStyle = frozen ? '#556677' : '#5a6a7a';
-  ctx.fillRect(Math.cos(pa + Math.PI) * 24 - 4, Math.sin(pa + Math.PI) * 24 - 4 + tailWag, 8, 4);
-  ctx.fillRect(Math.cos(pa + Math.PI) * 24 - 4, Math.sin(pa + Math.PI) * 24 + 2 + tailWag, 8, 4);
-  ctx.fillRect(Math.cos(pa + Math.PI) * 28 - 3, Math.sin(pa + Math.PI) * 28 - 6 + tailWag, 6, 4);
-  ctx.fillRect(Math.cos(pa + Math.PI) * 28 - 3, Math.sin(pa + Math.PI) * 28 + 4 + tailWag, 6, 4);
+  // ── Tail fin (behind body — NO hitbox) ──
+  // Animated wag using tailPhase (same approach as fish tail)
+  const tw = Math.round(Math.sin(shark.tailPhase) * 4);
+  ctx.fillStyle = finCol;
+  // Upper fork
+  ctx.fillRect(-30, -6 + tw, 8, 3);
+  ctx.fillRect(-34, -8 + tw, 5, 3);
+  // Lower fork
+  ctx.fillRect(-30, 3 + tw, 8, 3);
+  ctx.fillRect(-34, 5 + tw, 5, 3);
+  // Stem connecting to body
+  ctx.fillStyle = darkCol;
+  ctx.fillRect(-24, -3 + tw, 6, 6);
 
-  // Tail connector
-  ctx.fillStyle = frozen ? '#4a5a6a' : '#556677';
-  ctx.fillRect(Math.cos(pa + Math.PI) * 16 - 3, Math.sin(pa + Math.PI) * 16 - 3, 6, 6);
+  // ── Main body (slim torpedo) ──
+  ctx.fillStyle = bodyCol;
+  ctx.fillRect(-18, -5, 36, 10);   // Core
+  ctx.fillRect(-14, -6, 28, 2);    // Top edge
+  ctx.fillRect(-14, 5, 28, 2);     // Bottom edge
 
-  // ── Main body (replaces cat body — torpedo oval via rects) ──
-  ctx.fillStyle = frozen ? '#556688' : '#667788';
-  ctx.fillRect(-16, -10, 32, 22);   // Core body
-  ctx.fillRect(-12, -12, 24, 2);    // Top edge
-  ctx.fillRect(-12, 12, 24, 2);     // Bottom edge
+  // Belly (lighter underside)
+  ctx.fillStyle = bellyCol;
+  ctx.fillRect(-14, 2, 28, 4);
 
-  // Belly (lighter underside — sharks have countershading)
-  ctx.fillStyle = frozen ? '#8899aa' : '#99aabb';
-  ctx.fillRect(-12, 4, 24, 8);
+  // ── Snout (pointed, extends right) ──
+  ctx.fillStyle = bodyCol;
+  ctx.fillRect(16, -4, 6, 8);
+  ctx.fillRect(20, -3, 5, 6);
+  ctx.fillRect(24, -2, 4, 4);
+  ctx.fillRect(27, -1, 3, 2);
 
-  // ── Dorsal fin (replaces cat ears — iconic shark silhouette) ──
-  ctx.fillStyle = frozen ? '#4a5a6a' : '#556677';
-  ctx.fillRect(-4, -20, 4, 10);     // Fin base
-  ctx.fillRect(-2, -24, 4, 6);      // Fin mid
-  ctx.fillRect(0, -26, 3, 4);       // Fin tip
+  // ── Dorsal fin (on top, tall & narrow) ──
+  ctx.fillStyle = finCol;
+  ctx.fillRect(-2, -12, 3, 7);
+  ctx.fillRect(-1, -16, 3, 5);
+  ctx.fillRect(0, -19, 2, 4);
 
-  // ── Pectoral fins (small side fins) ──
-  ctx.fillStyle = frozen ? '#4a5a6a' : '#556677';
-  ctx.fillRect(-10, 12, 8, 4);
-  ctx.fillRect(2, 12, 8, 4);
+  // ── Pectoral fin (swept back, underneath) ──
+  ctx.fillStyle = finCol;
+  ctx.fillRect(2, 6, 8, 3);
+  ctx.fillRect(4, 9, 5, 2);
 
-  // ── Head / snout (replaces cat head — extends towards fish) ──
-  ctx.fillStyle = frozen ? '#556688' : '#667788';
-  ctx.fillRect(-12, -14, 24, 8);     // Forehead
-  ctx.fillRect(-10, -16, 20, 2);     // Snout top
-
-  // ── Eyes (same spot as cat eyes, but with vertical slit pupils) ──
+  // ── Eye ──
   ctx.fillStyle = frozen ? '#aabbcc' : '#ffee44';
-  ctx.fillRect(-8, -12, 6, 6);      // Left eye
-  ctx.fillRect(2, -12, 6, 6);       // Right eye
-  // Slit pupils (vertical — distinctly shark-like)
+  ctx.fillRect(12, -4, 5, 5);
+  // Vertical slit pupil
   ctx.fillStyle = '#111';
-  ctx.fillRect(-6, -12, 2, 6);      // Left pupil
-  ctx.fillRect(4, -12, 2, 6);       // Right pupil
+  ctx.fillRect(14, -4, 2, 5);
+  // Glint
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(13, -3, 1, 1);
 
-  // ── Nose / snout tip (replaces cat nose) ──
-  ctx.fillStyle = frozen ? '#667788' : '#778899';
-  ctx.fillRect(-3, -18, 6, 3);
+  // ── Gill slits (3 lines behind eye) ──
+  ctx.fillStyle = darkCol;
+  ctx.fillRect(5, -3, 1, 6);
+  ctx.fillRect(7, -3, 1, 6);
+  ctx.fillRect(9, -3, 1, 6);
 
-  // ── Gill slits (unique to sharks — replaces cat whisker area) ──
-  ctx.fillStyle = frozen ? '#445566' : '#555566';
-  ctx.fillRect(-14, -4, 1, 8);
-  ctx.fillRect(-16, -3, 1, 6);
-  ctx.fillRect(13, -4, 1, 8);
-  ctx.fillRect(15, -3, 1, 6);
-
-  // ── Teeth (jagged row under the snout — menacing) ──
+  // ── Teeth (jagged row along the mouth line) ──
   ctx.fillStyle = '#ddeeff';
-  ctx.fillRect(-6, -6, 2, 3);
-  ctx.fillRect(-2, -6, 2, 3);
-  ctx.fillRect(2, -6, 2, 3);
-  ctx.fillRect(6, -6, 2, 3);
+  ctx.fillRect(18, 3, 2, 2);
+  ctx.fillRect(21, 3, 2, 2);
+  ctx.fillRect(24, 2, 2, 2);
+  ctx.fillRect(18, -5, 2, 2);
+  ctx.fillRect(21, -5, 2, 2);
+  ctx.fillRect(24, -4, 2, 2);
 
-  // ── Frozen effect (orbiting ice particles — same as old cat) ──
+  // ── Effects ──
   if (frozen) {
+    // Orbiting ice particles
     ctx.fillStyle = '#88ddff';
     for (let i = 0; i < 4; i++) {
       const a = Date.now() * 0.002 + (i / 4) * Math.PI * 2;
-      ctx.fillRect(Math.cos(a) * 26 - 1, Math.sin(a) * 26 - 1, 3, 3);
+      ctx.fillRect(Math.cos(a) * 22 - 1, Math.sin(a) * 22 - 1, 3, 3);
     }
     ctx.globalAlpha = 1;
   } else {
-    // Danger aura (same as old cat — red glow around shark)
+    // Danger aura (red glow around body only, not tail)
     ctx.fillStyle = `rgba(255,40,40,${0.06 + Math.sin(Date.now() * 0.005) * 0.03})`;
-    ctx.fillRect(-28, -30, 56, 50);
+    ctx.fillRect(-20, -22, 52, 36);
   }
 
   ctx.restore();
