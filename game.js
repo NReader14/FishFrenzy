@@ -304,7 +304,7 @@ function showNameEntry(finalScore, finalLevel, msg) {
 
     document.getElementById('play-again-btn').addEventListener('click', () => {
       endScreenOverlay.classList.add('hidden');
-      initGame();
+      playCRTWipe(() => initGame());
     });
     document.getElementById('main-menu-btn').addEventListener('click', () => {
       endScreenOverlay.classList.add('hidden');
@@ -361,6 +361,52 @@ function showAdminError(msg) {
 
 function hideAdminError() {
   adminError.classList.add('hidden');
+}
+
+/**
+ * Show a brief "SCOREBOARD WIPED" notification that fades out.
+ */
+function showWipeNotification() {
+  const notif = document.createElement('div');
+  notif.textContent = 'SCOREBOARD WIPED';
+  notif.className = 'wipe-notification';
+  document.getElementById('game-wrapper').appendChild(notif);
+  // Trigger fade-in
+  requestAnimationFrame(() => notif.classList.add('visible'));
+  // Remove after 2 seconds
+  setTimeout(() => {
+    notif.classList.remove('visible');
+    setTimeout(() => notif.remove(), 400);
+  }, 2000);
+}
+
+/**
+ * CRT TV turn-on wipe effect before the game starts.
+ * A white horizontal line expands from the centre, then fades out.
+ * Calls the callback once the animation finishes.
+ */
+function playCRTWipe(callback) {
+  const wipe = document.createElement('div');
+  wipe.className = 'crt-wipe';
+  document.getElementById('game-wrapper').appendChild(wipe);
+
+  // Phase 1: white line appears in centre
+  requestAnimationFrame(() => {
+    wipe.classList.add('crt-line');
+    // Phase 2: line expands to fill screen
+    setTimeout(() => {
+      wipe.classList.remove('crt-line');
+      wipe.classList.add('crt-expand');
+      // Phase 3: screen revealed, wipe fades out
+      setTimeout(() => {
+        wipe.classList.add('crt-fade');
+        setTimeout(() => {
+          wipe.remove();
+          if (callback) callback();
+        }, 300);
+      }, 250);
+    }, 350);
+  });
 }
 
 
@@ -1468,7 +1514,9 @@ function loop() {
 // Start game
 startBtn.addEventListener('click', () => {
   overlay.classList.add('hidden');
-  initGame();
+  playCRTWipe(() => {
+    initGame();
+  });
 });
 
 // Rules page
@@ -1519,7 +1567,9 @@ adminLoginBtn.addEventListener('click', async () => {
   try {
     await adminWipeScores(email, password);
     adminOverlay.classList.add('hidden');
-    await showScoreboard();
+    // Return to main menu with success notification
+    overlay.classList.remove('hidden');
+    showWipeNotification();
   } catch (err) {
     // Show a user-friendly error
     if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
