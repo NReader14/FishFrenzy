@@ -539,6 +539,38 @@ function playCRTWipe(callback) {
   });
 }
 
+/**
+ * Game-over CRT effect: wipe covers screen → canvas cleared to black
+ * → wipe fades out revealing clean board → callback (name entry).
+ */
+function playCRTGameOver(callback) {
+  const wipe = document.createElement('div');
+  wipe.className = 'crt-wipe';
+  document.getElementById('game-wrapper').appendChild(wipe);
+
+  requestAnimationFrame(() => {
+    wipe.classList.add('crt-line');
+    setTimeout(() => {
+      wipe.classList.remove('crt-line');
+      wipe.classList.add('crt-expand');
+      // While wipe fully covers the screen, clear the canvas underneath
+      setTimeout(() => {
+        ctx.fillStyle = '#080816';
+        ctx.fillRect(0, 0, W, H);
+        chompAnim = null;
+        // Brief hold so the wipe is fully opaque before fading
+        setTimeout(() => {
+          wipe.classList.add('crt-fade');
+          setTimeout(() => {
+            wipe.remove();
+            if (callback) callback();
+          }, 400);
+        }, 200);
+      }, 300);
+    }, 400);
+  });
+}
+
 
 // ═══════════════════════════════════════════════════════════════
 // SECTION 8: POWER-UP ACTIVATION FUNCTIONS
@@ -1257,9 +1289,9 @@ function endGame(won, msg) {
   }
 
   if (!won) {
-    // Chomp effect + CRT wipe on game over
+    // Chomp effect then CRT wipe → clear board → name entry
     chompAnim = { timer: 0, x: fish.x, y: fish.y };
-    playCRTWipe(() => showNameEntry(score, level, msg));
+    playCRTGameOver(() => showNameEntry(score, level, msg));
   } else {
     // Level complete — show win screen
     winOverlay.classList.remove('hidden');
