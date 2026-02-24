@@ -131,7 +131,6 @@ export async function saveHighScore(name, sc, lv) {
       name: cleanName,
       score: cleanScore,
       level: cleanLevel,
-      uid: currentUser ? currentUser.uid : "unknown",
       timestamp: serverTimestamp()
     });
 
