@@ -212,6 +212,10 @@ let swapAnim = null; // { phase, timer, old positions }
 // Chomp animation
 let chompAnim = null; // { timer, x, y }
 
+// Global high score (fetched from Firebase at game start)
+let globalHighScore = 0;
+let pbNotified = false;
+
 
 // ═══════════════════════════════════════════════════════════════
 // SECTION 4: FIREBASE INITIALISATION
@@ -422,7 +426,7 @@ function showNameEntry(finalScore, finalLevel, msg) {
         <button id="play-again-btn" class="btn-primary" style="padding:12px 20px;font-size:10px;">PLAY AGAIN</button>
         <button id="main-menu-btn" class="btn-secondary">MAIN MENU</button>
       </div>
-      <p class="controls-hint">ARROW KEYS / WASD TO SWIM</p>`;
+      <p class="controls-hint">ENTER TO PLAY AGAIN &middot; ESC FOR MENU</p>`;
     document.getElementById('play-again-btn').addEventListener('click', () => {
       endScreenOverlay.classList.add('hidden');
       playCRTWipe(() => initGame());
@@ -1093,9 +1097,19 @@ function updateFrenzyBar() {
 // ═══════════════════════════════════════════════════════════════
 
 /** Start a new game from level 1. */
-function initGame() {
+async function initGame() {
   level = 1;
   score = 0;
+  pbNotified = false;
+
+  // Fetch the current #1 score from the leaderboard
+  try {
+    const scores = await fetchHighScores();
+    globalHighScore = (scores.length > 0) ? scores[0].score : 0;
+  } catch (_) {
+    globalHighScore = 0;
+  }
+
   startLevel();
 }
 
@@ -1257,11 +1271,32 @@ function collectTreat(t) {
   if (cm >= 3) st.combo.classList.add('s-on', 's-combo');
   else st.combo.classList.remove('s-on', 's-combo');
 
+  // Streak messages at combo thresholds
+  const STREAK_MSGS = { 2: 'NICE!', 3: 'GREAT!', 4: 'UNSTOPPABLE!', 5: 'GODLIKE!' };
+  const STREAK_COLS = { 2: '#88ddff', 3: '#44ee88', 4: '#ffdd44', 5: '#ff44ff' };
+  if (STREAK_MSGS[cm]) {
+    scorePopups.push({
+      x: fish.x, y: fish.y - 34,
+      pts: STREAK_MSGS[cm], life: 1.2, decay: 0.02
+    });
+    spawnParticles(fish.x, fish.y, STREAK_COLS[cm], 10);
+  }
+
   // Calculate points
   const basePts = frenzyActive ? 20 : 10;
   const pts = basePts * cm;
   score += pts;
   scoreEl.textContent = score;
+
+  // Global high score check — "NEW HIGH SCORE!" if you beat the leaderboard #1
+  if (score > globalHighScore && globalHighScore > 0 && !pbNotified) {
+    pbNotified = true;
+    scorePopups.push({
+      x: W / 2, y: H / 2 - 40,
+      pts: '★ NEW HIGH SCORE! ★', life: 2.5, decay: 0.01
+    });
+    spawnParticles(fish.x, fish.y, '#ffdd44', 20);
+  }
 
   // Visual feedback
   spawnParticles(t.x, t.y, frenzyActive ? '#ff8800' : '#ffdd44', 8);
@@ -1299,7 +1334,7 @@ function endGame(won, msg) {
       <div class="result win">LEVEL COMPLETE</div>
       <p class="score-text">SCORE: ${score} &middot; LVL: ${level}</p>
       <button id="next-level-btn" class="btn-primary">NEXT LEVEL</button>
-      <p class="controls-hint">ARROW KEYS / WASD TO SWIM</p>`;
+      <p class="controls-hint">PRESS ENTER FOR NEXT LEVEL</p>`;
 
     document.getElementById('next-level-btn').addEventListener('click', () => {
       winOverlay.classList.add('hidden');
@@ -1320,8 +1355,44 @@ document.addEventListener('keydown', e => {
   const tag = document.activeElement?.tagName;
   if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 
+  const k = e.key;
+
+  // Enter/Space on overlay screens (when game is NOT running)
+  if (!gameRunning && (k === 'Enter' || k === ' ')) {
+    // Win screen — next level
+    const nextBtn = document.getElementById('next-level-btn');
+    if (nextBtn && !winOverlay.classList.contains('hidden')) {
+      e.preventDefault();
+      nextBtn.click();
+      return;
+    }
+    // End screen — play again
+    const playBtn = document.getElementById('play-again-btn');
+    if (playBtn && !endScreenOverlay.classList.contains('hidden')) {
+      e.preventDefault();
+      playBtn.click();
+      return;
+    }
+    // Main menu — start
+    if (!overlay.classList.contains('hidden')) {
+      e.preventDefault();
+      startBtn.click();
+      return;
+    }
+  }
+
+  // Escape on end/win screens — go to main menu
+  if (!gameRunning && k === 'Escape') {
+    const menuBtn = document.getElementById('main-menu-btn');
+    if (menuBtn && !endScreenOverlay.classList.contains('hidden')) {
+      e.preventDefault();
+      menuBtn.click();
+      return;
+    }
+  }
+
   // ESC toggles pause
-  if (e.key === 'Escape' && gameRunning) {
+  if (k === 'Escape' && gameRunning) {
     if (gamePaused && !swapAnim) {
       // Resume
       gamePaused = false;
@@ -1340,7 +1411,7 @@ document.addEventListener('keydown', e => {
     return;
   }
 
-  keys[e.key.toLowerCase()] = true;
+  keys[k.toLowerCase()] = true;
   e.preventDefault();
 });
 
