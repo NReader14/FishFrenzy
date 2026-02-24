@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // FISH FRENZY — MAIN GAME LOGIC
 // Handles all gameplay, rendering, UI overlays, and input.
-// Firebase operations are imported from firebase-config.js.
+// Firebase operations are imported from firebase-config.js..
 // ═══════════════════════════════════════════════════════════════
 
 import {
