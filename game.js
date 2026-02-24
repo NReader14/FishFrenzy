@@ -913,7 +913,7 @@ function activateGoop() {
   }, GOOP_DURATION);
 }
 
-const r = {}
+let r = {}
 
 async function loadRarities() {
   const config = await fetchGameConfig();
