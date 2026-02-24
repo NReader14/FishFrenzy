@@ -438,3 +438,5 @@ export function setupAdminEvents() {
     scoreboardOverlay.classList.remove('hidden');
   });
 }
+
+// smth 
