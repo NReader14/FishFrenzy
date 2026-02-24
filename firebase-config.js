@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // FIREBASE CONFIG & OPERATIONS
-// All Firebase interactions are isolated in this file.
+// All Firebase interactions are isolated in this file. .
 // ═══════════════════════════════════════════════════════════════
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
