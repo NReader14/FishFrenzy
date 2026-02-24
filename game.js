@@ -9,7 +9,11 @@ import {
   fetchHighScores,
   saveHighScore,
   adminWipeScores,
-  isFirebaseOnline
+  isFirebaseOnline,
+  fetchMaintenance,
+  setMaintenance,
+  fetchGameConfig,
+  saveGameConfig
 } from "./firebase-config.js";
 
 
@@ -22,7 +26,7 @@ import {
 const FRENZY_DURATION   = 3000;   // Frenzy: 2x points + speed boost
 const ICE_DURATION      = 4000;   // Ice: shark slowed
 const GHOST_DURATION    = 3000;   // Ghost: shark invisible & harmless
-const HOURGLASS_DURATION = 5000;  // Time Stop: timer & shark frozen
+const HOURGLASS_DURATION = 3500;  // Shortened  // Time Stop: timer & shark frozen
 const BUDDY_DURATION    = 3000;   // Buddy: helper fish collects treats
 const BOMB_DURATION     = 2000;   // Bomb: shark scared to corner
 const CRAZY_DURATION    = 5000;   // Crazy: mass treat spawn, then game over
@@ -31,19 +35,51 @@ const CRAZY_DURATION    = 5000;   // Crazy: mass treat spawn, then game over
 // Each rarity tier defines spawn chance multiplier and field lifetime.
 // 1 = Common, 2 = Uncommon, 3 = Rare, 4 = Epic, 5 = Mythical
 const RARITY = {
-  1: { name: 'Common',   spawnMul: 1.0,  life: 5000 },
-  2: { name: 'Uncommon', spawnMul: 0.6,  life: 4500 },
-  3: { name: 'Rare',     spawnMul: 0.3,  life: 3500 },
-  4: { name: 'Epic',     spawnMul: 0.12, life: 2500 },
-  5: { name: 'Mythical', spawnMul: 0.05, life: 2000 },
+  1: { name: 'Common',   spawnMul: 1.2,  life: 5000 },
+  2: { name: 'Uncommon', spawnMul: 0.75, life: 4500 },
+  3: { name: 'Rare',     spawnMul: 0.4,  life: 3500 },
+  4: { name: 'Epic',     spawnMul: 0.18, life: 2500 },
+  5: { name: 'Mythical', spawnMul: 0.08, life: 2000 },
 };
-const CRAZY_ITEM_LIFETIME   = 900;   // Crazy mushroom — its own thing
+const CRAZY_ITEM_LIFETIME   = 900;
+
+// ─── BUDGET: Max total rarity cost of items on field ───
+// Level 1 = 7, scales up to level 15 = 15
+function getFieldBudget() {
+  return Math.min(15, Math.floor(7 + (Math.max(1, level) - 1) * (8 / 14)));
+}
+
+function getFieldCost() {
+  let cost = 0;
+  for (const k in pwItems) {
+    if (pwItems[k]) {
+      const r = pwConfig[k]?.rarity || 0;
+      if (r > 0) cost += r; else if (r === 0) cost += 5; // Crazy = 5
+    }
+  }
+  return cost;
+}
+   // Crazy mushroom — its own thing
 const MAX_FIELD_ITEMS       = 3;     // Max power-up items on screen at once
+
+
+// ─── PROGRESSIVE SPEED ───
+const FISH_BASE_SPEED      = 2.5;
+const FISH_ACCEL_RATE      = 0.003; // Speed gain per frame in same direction
+const FISH_MAX_SPEED_BONUS = 0.8;   // Max extra speed from acceleration
+
+// ─── SHARK START DELAY ───
+const SHARK_START_DELAY = 90;  // Frames before shark moves (~1.5s at 60fps)
+
+// ─── GOOP DURATION ───
+const GOOP_DURATION = 4000;  // Goop: slows player for 4s
+const DECOY_DURATION = 4000;
+const STAR_DURATION = 3000;
 
 // ─── GAMEPLAY CONSTANTS ───
 const FRENZY_SPEED_BOOST = 1.2;  // Extra speed during frenzy
 const COMBO_WINDOW       = 1200; // ms to keep combo chain alive
-const PW_SPAWN_CHANCE    = 0.005; // Per-frame chance to spawn a power-up
+const PW_SPAWN_CHANCE    = 0.007; // Slightly increased // Per-frame chance to spawn a power-up
 const MAX_SCORES         = 5;    // Leaderboard size
 
 // ─── CANVAS ───
@@ -92,7 +128,7 @@ const rulesBtn          = document.getElementById('rules-btn');
 const rulesBackBtn      = document.getElementById('rules-back-btn');
 const scoreboardBtn     = document.getElementById('scoreboard-btn');
 const closeScoreboardBtn = document.getElementById('close-scoreboard-btn');
-const wipeScoreboardBtn = document.getElementById('wipe-scoreboard-btn');
+// wipeScoreboardBtn removed — wipe now in admin panel
 
 // Admin form
 const adminEmailInput    = document.getElementById('admin-email');
@@ -107,7 +143,7 @@ const scoreboardContent = document.getElementById('scoreboard-content');
 // Status bar indicators (power-up icons in the HUD)
 const st = {};
 ['frenzy','ice','shield','magnet','ghost','time','buddy','bomb','crazy','combo',
- 'decoy','star','hook'].forEach(
+ 'decoy','star','hook','goop'].forEach(
   k => st[k] = document.getElementById('st-' + k)
 );
 
@@ -135,16 +171,16 @@ let pwItems = {
   frenzy: null, ice: null, shield: null, magnet: null,
   ghost: null, hourglass: null, buddy: null, bomb: null, crazy: null,
   decoy: null, swap: null, star: null, double: null,
-  wave: null, poison: null, hook: null
+  wave: null, poison: null, hook: null, goop: null
 };
 
 // Active power-up states
 let frenzyActive = false, frenzyTimer = 0, frenzyTO = null;
-let iceActive = false, iceTO = null;
+let iceActive = false, iceTO = null, iceStartTime = 0;
 let shieldActive = false;
 let magnetActive = false;
 let ghostActive = false, ghostTO = null;
-let hourglassActive = false, hourglassTO = null, timerFrozen = false;
+let hourglassActive = false, hourglassTO = null, timerFrozen = false, hourglassStartTime = 0;
 let buddyActive = false, buddyTO = null;
 let bombActive = false, bombTO = null;
 let crazyActive = false, crazyTO = null;
@@ -155,6 +191,30 @@ let hookActive = false;
 // Combo system
 let comboCount = 0, comboTimer = 0;
 
+// Progressive speed
+let accelBonus = 0, lastMoveDir = { x: 0, y: 0 };
+
+// Shark start delay (frames)
+let sharkDelay = 0;
+
+// Last spawned power-up (prevent duplicates)
+let lastSpawnedPW = null;
+
+// Pause state
+let gamePaused = false;
+
+// Goop state
+let goopActive = false, goopTO = null, goopStartTime = 0;
+
+// Hook animation
+let hookLine = null; // { fx, fy, tx, ty, progress }
+
+// Swap animation
+let swapAnim = null; // { phase, timer, old positions }
+
+// Chomp animation
+let chompAnim = null; // { timer, x, y }
+
 
 // ═══════════════════════════════════════════════════════════════
 // SECTION 4: FIREBASE INITIALISATION
@@ -163,6 +223,50 @@ let comboCount = 0, comboTimer = 0;
 
 (async function boot() {
   await initAuth();
+  // Check maintenance mode
+  const maint = await fetchMaintenance();
+  if (maint) {
+    document.getElementById('game-wrapper').innerHTML = `
+      <div class="game-overlay" style="background:#0a0a16;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <h1 style="color:#ee5566;font-size:16px;font-family:'Press Start 2P',monospace;">UNDER MAINTENANCE</h1>
+        <p style="color:#5588aa;font-size:8px;margin-top:16px;font-family:'Press Start 2P',monospace;">WE'LL BE BACK SOON!</p>
+        <button id="maint-admin-btn" class="btn-secondary" style="margin-top:24px;">ADMIN LOGIN</button>
+      </div>`;
+    document.getElementById('maint-admin-btn').addEventListener('click', () => {
+      const wrapper = document.getElementById('game-wrapper');
+      wrapper.innerHTML = `
+        <div class="game-overlay" style="background:#0a0a16;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          <div class="admin-title" style="font-family:'Press Start 2P',monospace;font-size:10px;color:#44ddff;margin-bottom:16px;">ADMIN LOGIN</div>
+          <div class="admin-form" style="display:flex;flex-direction:column;gap:8px;width:240px;">
+            <input type="email" id="maint-email" class="admin-input" placeholder="Email" autocomplete="email">
+            <input type="password" id="maint-pass" class="admin-input" placeholder="Password" autocomplete="current-password">
+            <div id="maint-error" class="admin-error hidden" style="color:#ee5566;font-size:7px;margin:4px 0;"></div>
+            <button id="maint-login-btn" class="btn-primary" style="padding:10px 20px;font-size:9px;margin-top:8px;">DISABLE MAINTENANCE</button>
+          </div>
+        </div>`;
+      document.getElementById('maint-login-btn').addEventListener('click', async () => {
+        try {
+          await setMaintenance(false, document.getElementById('maint-email').value, document.getElementById('maint-pass').value);
+          location.reload();
+        } catch (err) {
+          const e = document.getElementById('maint-error');
+          e.textContent = 'LOGIN FAILED'; e.classList.remove('hidden');
+        }
+      });
+    });
+    return;
+  }
+  // Show welcome popup on first visit
+  if (!localStorage.getItem('fishFrenzyWelcomed')) {
+    const wo = document.getElementById('welcome-overlay');
+    if (wo) {
+      wo.classList.remove('hidden');
+      document.getElementById('welcome-close-btn')?.addEventListener('click', () => {
+        wo.classList.add('hidden');
+        localStorage.setItem('fishFrenzyWelcomed', '1');
+      });
+    }
+  }
 })();
 
 
@@ -193,7 +297,9 @@ function buildScoreboardHtml(scores, highlightIdx = -1) {
     const rankLabel = i < 3 ? medals[i] : `${i + 1}.`;
     html += `<tr class="${cls}">`;
     html += `<td class="rank">${rankLabel}</td>`;
-    html += `<td class="name-col">${s.name || '???'}</td>`;
+    const nameColours = ['#ffdd44', '#c0c0d0', '#cd7f32'];
+    const nStyle = i < 3 ? ` style="color:${nameColours[i]}"` : '';
+    html += `<td class="name-col"${nStyle}>${s.name || '???'}</td>`;
     html += `<td>${s.score}</td>`;
     html += `<td>${s.level}</td>`;
     html += '</tr>';
@@ -250,7 +356,7 @@ function showNameEntry(finalScore, finalLevel, msg) {
     }
 
     html += `</div>
-      <div class="name-entry-hint">TYPE A-Z ON YOUR KEYBOARD &middot; ARROWS TO SCROLL &middot; ENTER TO CONFIRM</div>
+      <div class="name-entry-hint">TYPE A-Z ON YOUR KEYBOARD<br>UP/DOWN TO SCROLL &middot; LEFT/RIGHT TO SELECT<br>ENTER TO CONFIRM</div>
       <button id="confirm-name-btn" class="btn-primary" style="padding:10px 28px;font-size:10px;">OK</button>`;
 
     nameEntryOverlay.innerHTML = html;
@@ -281,31 +387,34 @@ function showNameEntry(finalScore, finalLevel, msg) {
     document.getElementById('confirm-name-btn').addEventListener('click', tryConfirm);
   }
 
-  async function tryConfirm() {
-    if (!nameEntryActive) return;
+  let confirming = false;
 
+  function showConfirmDialog() {
     const name = slots.map(i => CHARS[i]).join('');
-    if (name.trim() === '') {
-      errorMsg = 'NAME CANNOT BE BLANK';
-      render();
-      return;
-    }
+    if (name.trim() === '') { errorMsg = 'NAME CANNOT BE BLANK'; render(); return; }
+    confirming = true;
+    nameEntryOverlay.innerHTML = `
+      <div class="name-entry-title">CONFIRM NAME</div>
+      <div class="name-confirm-display" style="font-size:24px;color:#44ddff;margin:16px 0;">${name}</div>
+      <p class="name-entry-hint" style="margin-bottom:20px;">SAVE AS <span style="color:#44ddff;">${name}</span>?</p>
+      <div style="display:flex;gap:16px;">
+        <button id="confirm-yes" class="btn-primary" style="padding:10px 20px;font-size:10px;border-color:#44ee88;color:#44ee88;">YES</button>
+        <button id="confirm-no" class="btn-secondary" style="border-color:#ee5566;color:#ee5566;">NO</button>
+      </div>`;
+    document.getElementById('confirm-yes').addEventListener('click', () => doSave(name));
+    document.getElementById('confirm-no').addEventListener('click', () => { confirming = false; render(); });
+  }
 
+  async function doSave(name) {
+    if (!nameEntryActive) return;
     nameEntryActive = false;
+    confirming = false;
     document.removeEventListener('keydown', onKey);
     nameEntryOverlay.classList.add('hidden');
-
-    // Show loading whilst saving to Firebase
     showLoading('SAVING SCORE...');
-
     const idx = await saveHighScore(name, finalScore, finalLevel);
-
     hideLoading();
-
-    // Fetch fresh scores for the end screen
     const scores = await fetchHighScores();
-
-    // Show end screen with updated scoreboard
     endScreenOverlay.classList.remove('hidden');
     endScreenOverlay.innerHTML = `
       <div class="result lose">GAME OVER</div>
@@ -317,7 +426,6 @@ function showNameEntry(finalScore, finalLevel, msg) {
         <button id="main-menu-btn" class="btn-secondary">MAIN MENU</button>
       </div>
       <p class="controls-hint">ARROW KEYS / WASD TO SWIM</p>`;
-
     document.getElementById('play-again-btn').addEventListener('click', () => {
       endScreenOverlay.classList.add('hidden');
       playCRTWipe(() => initGame());
@@ -327,6 +435,8 @@ function showNameEntry(finalScore, finalLevel, msg) {
       overlay.classList.remove('hidden');
     });
   }
+
+  async function tryConfirm() { showConfirmDialog(); }
 
   function onKey(e) {
     if (!nameEntryActive) return;
@@ -338,8 +448,15 @@ function showNameEntry(finalScore, finalLevel, msg) {
     else if (k === 'ArrowRight') { activeSlot = (activeSlot + 1) % 3; errorMsg = ''; render(); }
     else if (k === 'ArrowUp')    { slots[activeSlot] = (slots[activeSlot] - 1 + CHARS.length) % CHARS.length; errorMsg = ''; render(); }
     else if (k === 'ArrowDown')  { slots[activeSlot] = (slots[activeSlot] + 1) % CHARS.length; errorMsg = ''; render(); }
-    else if (k === 'Enter')      { tryConfirm(); }
-    else if (k === 'Backspace')  { slots[activeSlot] = CHARS.indexOf(' '); activeSlot = Math.max(0, activeSlot - 1); errorMsg = ''; render(); }
+    else if (k === 'Enter') {
+      if (confirming) { document.getElementById('confirm-yes')?.click(); }
+      else { tryConfirm(); }
+    }
+    else if (k === 'Escape') { if (confirming) { document.getElementById('confirm-no')?.click(); } }
+    else if (k === 'Backspace') {
+      if (confirming) { document.getElementById('confirm-no')?.click(); }
+      else { slots[activeSlot] = CHARS.indexOf(' '); activeSlot = Math.max(0, activeSlot - 1); errorMsg = ''; render(); }
+    }
     else if (k.length === 1) {
       const charIdx = CHARS.indexOf(k.toUpperCase());
       if (charIdx !== -1) {
@@ -433,14 +550,14 @@ function playCRTWipe(callback) {
 // ═══════════════════════════════════════════════════════════════
 
 function clearTO(t) { if (t) clearTimeout(t); return null; }
-function stOn(key, cls)  { st[key].classList.add('s-on', cls); }
-function stOff(key, cls) { st[key].classList.remove('s-on', cls); }
+function stOn(key, cls)  { if (st[key]) st[key].classList.add('s-on', cls); }
+function stOff(key, cls) { if (st[key]) st[key].classList.remove('s-on', cls); }
 
 // ─── FRENZY: 2x points + speed boost ───
 function activateFrenzy() {
   frenzyActive = true;
   frenzyTimer = Date.now();
-  fish.speed = 2.5 + FRENZY_SPEED_BOOST;
+  fish.speed = FISH_BASE_SPEED + FRENZY_SPEED_BOOST;
   frenzyHud.classList.add('active');
   frenzyBarEl.style.width = '100%';
   stOn('frenzy', 's-frenzy');
@@ -450,7 +567,7 @@ function activateFrenzy() {
 
 function deactivateFrenzy() {
   frenzyActive = false;
-  fish.speed = 2.5;
+  fish.speed = FISH_BASE_SPEED;
   frenzyHud.classList.remove('active');
   frenzyBarEl.style.width = '0%';
   stOff('frenzy', 's-frenzy');
@@ -460,6 +577,7 @@ function deactivateFrenzy() {
 // ─── ICE: Slow the shark ───
 function activateIce() {
   iceActive = true;
+  iceStartTime = Date.now();
   shark.savedSpeed = shark.speed;
   shark.speed *= 0.25;
   stOn('ice', 's-ice');
@@ -525,6 +643,7 @@ function deactivateGhost() {
 function activateHourglass() {
   hourglassActive = true;
   timerFrozen = true;
+  hourglassStartTime = Date.now();
   shark.savedSpeed2 = shark.speed;
   shark.speed = 0;
   timerBar.classList.add('frozen');
@@ -547,7 +666,7 @@ function deactivateHourglass() {
 // ─── BUDDY: Helper fish ───
 function activateBuddy() {
   buddyActive = true;
-  buddy = { x: fish.x - 30, y: fish.y, dir: 1, tailPhase: rand(0, Math.PI * 2) };
+  buddy = { x: W - fish.x, y: H - fish.y, dir: -fish.dir, tailPhase: rand(0, Math.PI * 2) };
   stOn('buddy', 's-buddy');
   scorePopups.push({ x: fish.x, y: fish.y - 20, pts: 'BUDDY!', life: 1, decay: 0.03 });
   buddyTO = clearTO(buddyTO);
@@ -636,17 +755,31 @@ function deactivateDecoy() {
   decoyTO = null;
 }
 
-// ─── SWAP: Swap positions with the shark ───
+// ─── SWAP: Pause, flicker 3x, then teleport ───
 function activateSwap() {
-  const oldFishX = fish.x, oldFishY = fish.y;
-  const oldSharkX = shark.x, oldSharkY = shark.y;
-  // Swap
-  fish.x = oldSharkX; fish.y = oldSharkY;
-  shark.x = oldFishX; shark.y = oldFishY;
-  // Visual feedback at both positions
-  spawnParticles(fish.x, fish.y, '#aa44ff', 16);
-  spawnParticles(shark.x, shark.y, '#aa44ff', 16);
-  scorePopups.push({ x: fish.x, y: fish.y - 20, pts: 'SWAP!', life: 1.2, decay: 0.025 });
+  swapAnim = {
+    phase: 'pause', timer: 0,
+    oldFishX: fish.x, oldFishY: fish.y,
+    oldSharkX: shark.x, oldSharkY: shark.y
+  };
+  gamePaused = true;
+  timerFrozen = true;
+}
+
+function updateSwapAnim() {
+  if (!swapAnim) return;
+  swapAnim.timer++;
+  if (swapAnim.phase === 'pause' && swapAnim.timer > 60) {
+    swapAnim.phase = 'flicker'; swapAnim.timer = 0;
+  }
+  if (swapAnim.phase === 'flicker' && swapAnim.timer > 36) {
+    fish.x = swapAnim.oldSharkX; fish.y = swapAnim.oldSharkY;
+    shark.x = swapAnim.oldFishX; shark.y = swapAnim.oldFishY;
+    spawnParticles(fish.x, fish.y, '#aa44ff', 16);
+    spawnParticles(shark.x, shark.y, '#aa44ff', 16);
+    scorePopups.push({ x: fish.x, y: fish.y - 20, pts: 'SWAP!', life: 1.2, decay: 0.025 });
+    swapAnim = null; gamePaused = false; timerFrozen = false;
+  }
 }
 
 // ─── STAR: Brief invincibility, shark bounces off ───
@@ -717,29 +850,79 @@ function activatePoison() {
   if (timeLeft <= 0) endGame(false, "Poisoned!");
 }
 
-// ─── HOOK: Grapple to nearest treat instantly ───
+// ─── HOOK: Pause + line animation + flicker + teleport (like swap) ───
 function activateHook() {
   if (treats.length === 0) return;
-  hookActive = true;
-  // Find nearest uncollected treat
   let nearest = null, nearestD = Infinity;
   for (const t of treats) {
-    if (t.collected) continue;
-    const d = dist(t, fish);
-    if (d < nearestD) { nearestD = d; nearest = t; }
+    if (!t.collected) { const d = dist(t, fish); if (d < nearestD) { nearestD = d; nearest = t; } }
   }
   if (nearest) {
-    // Teleport fish to the treat
-    spawnParticles(fish.x, fish.y, '#ccaa44', 8);
-    fish.x = nearest.x;
-    fish.y = nearest.y;
-    fish.vx = 0; fish.vy = 0;
-    spawnParticles(fish.x, fish.y, '#ccaa44', 8);
-    scorePopups.push({ x: fish.x, y: fish.y - 20, pts: 'HOOK!', life: 1, decay: 0.03 });
+    hookLine = {
+      fx: fish.x, fy: fish.y, tx: nearest.x, ty: nearest.y,
+      progress: 0, phase: 'line', flickerTimer: 0
+    };
+    hookActive = true;
+    gamePaused = true;
+    timerFrozen = true;
   }
-  hookActive = false;
 }
 
+function updateHookAnim() {
+  if (!hookLine) return;
+
+  if (hookLine.phase === 'line') {
+    // Draw line extending from fish to target
+    hookLine.progress += 0.05;
+    if (hookLine.progress >= 1) {
+      hookLine.phase = 'flicker';
+      hookLine.flickerTimer = 0;
+    }
+  } else if (hookLine.phase === 'flicker') {
+    // Fish flickers 3 times then teleports
+    hookLine.flickerTimer++;
+    if (hookLine.flickerTimer > 30) {
+      spawnParticles(fish.x, fish.y, '#ccaa44', 8);
+      fish.x = hookLine.tx; fish.y = hookLine.ty;
+      fish.vx = 0; fish.vy = 0;
+      spawnParticles(fish.x, fish.y, '#ccaa44', 12);
+      scorePopups.push({ x: fish.x, y: fish.y - 20, pts: 'HOOK!', life: 1, decay: 0.03 });
+      hookLine = null; hookActive = false;
+      gamePaused = false;
+      if (!hourglassActive) timerFrozen = false;
+    }
+  }
+}
+
+
+
+// ─── GOOP: Slows player for 4s (bad item) ───
+function activateGoop() {
+  goopActive = true;
+  goopStartTime = Date.now();
+  fish.speed = FISH_BASE_SPEED * 0.5;
+  stOn('goop', 's-goop');
+  spawnParticles(fish.x, fish.y, '#66cc44', 16);
+  scorePopups.push({ x: fish.x, y: fish.y - 20, pts: 'GOOPED!', life: 1.5, decay: 0.02 });
+  goopTO = clearTO(goopTO);
+  goopTO = setTimeout(() => {
+    goopActive = false;
+    fish.speed = frenzyActive ? FISH_BASE_SPEED + FRENZY_SPEED_BOOST : FISH_BASE_SPEED;
+    stOff('goop', 's-goop');
+    goopTO = null;
+  }, GOOP_DURATION);
+}
+
+const r = {}
+
+async function loadRarities() {
+  const config = await fetchGameConfig();
+  const rarities = config?.rarities;
+  r = rarities
+  console.log(rarities);
+}
+
+loadRarities();
 
 // ═══════════════════════════════════════════════════════════════
 // SECTION 9: POWER-UP SPAWNING & FIELD MANAGEMENT
@@ -759,11 +942,11 @@ const pwConfig = {
   poison:    { emoji: '☠️',  glow: '#44ff00', fn: activatePoison,    rarity: 2, ok: () => true },
   hourglass: { emoji: '⏳', glow: '#ffdd44', fn: activateHourglass, rarity: 3, ok: () => !hourglassActive },
   buddy:     { emoji: '🐠', glow: '#44ddaa', fn: activateBuddy,     rarity: 3, ok: () => !buddyActive },
-  hook:      { emoji: '🪝', glow: '#ccaa44', fn: activateHook,      rarity: 3, ok: () => treats.length > 0 },
+  hook:      { emoji: '🪝', glow: '#ccaa44', fn: activateHook,      rarity: 3, ok: () => treats.length > 0 && !hookActive },
   ghost:     { emoji: '👻', glow: '#ff8844', fn: activateGhost,     rarity: 4, ok: () => !ghostActive },
   bomb:      { emoji: '💣', glow: '#ff4444', fn: activateBomb,      rarity: 4, ok: () => !bombActive },
   decoy:     { emoji: '👁️', glow: '#ffaa44', fn: activateDecoy,     rarity: 4, ok: () => !decoyActive },
-  swap:      { emoji: '🔄', glow: '#aa44ff', fn: activateSwap,      rarity: 4, ok: () => true },
+  swap:      { emoji: '🔄', glow: '#aa44ff', fn: activateSwap,      rarity: 4, ok: () => !swapAnim },
   star:      { emoji: '🌟', glow: '#ffee44', fn: activateStar,      rarity: 5, ok: () => !starActive },
   double:    { emoji: '💎', glow: '#44ddff', fn: activateDouble,    rarity: 5, ok: () => treats.length > 0 },
   magnet:    { emoji: '🧲', glow: '#dd44ff', fn: activateMagnet,    rarity: 5, ok: () => !magnetActive },
@@ -771,46 +954,53 @@ const pwConfig = {
   crazy:     { emoji: '🍄', glow: '#ff00aa', fn: activateCrazy,     rarity: 0, ok: () => level > 9 && !crazyActive, life: CRAZY_ITEM_LIFETIME }
 };
 
-/** Spawn a power-up item at a random position away from the fish. */
+
+/** Check if a position overlaps existing items or treats. */
+function overlapsExisting(x, y, radius) {
+  for (const k in pwItems) {
+    const item = pwItems[k];
+    if (item && Math.hypot(item.x - x, item.y - y) < radius) return true;
+  }
+  for (const t of treats) {
+    if (!t.collected && Math.hypot(t.x - x, t.y - y) < radius) return true;
+  }
+  return false;
+}
+/** Spawn a power-up item at a random position, avoiding overlaps. */
 function spawnPW(type) {
   const cfg = pwConfig[type];
-  // Use explicit life override (crazy), else derive from rarity tier
   const lt = cfg.life || (RARITY[cfg.rarity] ? RARITY[cfg.rarity].life : 5000);
-  const item = {
-    x: rand(50, W - 50),
-    y: rand(50, H - 50),
-    r: 16,
-    bobPhase: rand(0, Math.PI * 2),
-    spawnTime: Date.now(),
-    lifetime: lt,
-    type
-  };
-  // Ensure it doesn't spawn on top of the fish
-  while (dist(item, fish) < 80) {
-    item.x = rand(50, W - 50);
-    item.y = rand(50, H - 50);
-  }
-  return item;
+  let x, y, attempts = 0;
+  do {
+    x = rand(50, W - 50);
+    y = rand(50, H - 50);
+    attempts++;
+  } while ((dist({ x, y }, fish) < 80 || overlapsExisting(x, y, 40)) && attempts < 30);
+  return { x, y, r: 16, bobPhase: rand(0, Math.PI * 2), spawnTime: Date.now(), lifetime: lt, type };
 }
 
-/** Each frame, randomly try to spawn power-ups that aren't already on field. */
+/** Each frame, randomly try to spawn power-ups (budget + duplicate check). */
 function trySpawnPowerups() {
-  // Count how many items are currently on the field
+  if (gamePaused) return;
   let fieldCount = 0;
   for (const k in pwItems) { if (pwItems[k]) fieldCount++; }
-
-  // Don't spawn if already at the cap
   if (fieldCount >= MAX_FIELD_ITEMS) return;
+
+  const budget = getFieldBudget();
+  const currentCost = getFieldCost();
 
   for (const [k, c] of Object.entries(pwConfig)) {
     if (fieldCount >= MAX_FIELD_ITEMS) break;
     if (pwItems[k] || !c.ok()) continue;
+    if (k === lastSpawnedPW) continue; // No same type in a row
 
-    // Spawn chance = base chance × rarity multiplier
-    // Crazy (rarity 0) uses a fixed low chance
+    const r = c.rarity === 0 ? 5 : c.rarity;
+    if (currentCost + r > budget) continue; // Would exceed budget
+
     const rarityMul = c.rarity === 0 ? 0.15 : RARITY[c.rarity].spawnMul;
     if (Math.random() < PW_SPAWN_CHANCE * rarityMul) {
       pwItems[k] = spawnPW(k);
+      lastSpawnedPW = k;
       fieldCount++;
     }
   }
@@ -872,7 +1062,7 @@ function initGame() {
 /** Set up a level: reset entities, timer, power-ups. */
 function startLevel() {
   // Timer scales down with level (minimum 15 seconds)
-  maxTime = Math.max(15, 32 - level * 2);
+  maxTime = Math.max(18, 35 - level);  // More forgiving timer
   timeLeft = maxTime;
   timerEl.textContent = timeLeft;
   timerBar.style.width = '100%';
@@ -885,7 +1075,7 @@ function startLevel() {
     x: W / 2, y: H / 2,
     w: 36, h: 22,
     vx: 0, vy: 0,
-    dir: 1, tailPhase: 0,
+    dir: 1, angle: 0, tailPhase: 0,
     speed: 2.5, friction: 0.88
   };
 
@@ -898,6 +1088,8 @@ function startLevel() {
     chaseTimer: 0,
     hidden: false
   };
+  sharkDelay = SHARK_START_DELAY;
+
   // Don't spawn shark too close to fish
   while (dist(shark, fish) < 150) {
     shark.x = rand(60, W - 60);
@@ -922,9 +1114,17 @@ function startLevel() {
   frenzyActive = iceActive = shieldActive = magnetActive = false;
   ghostActive = hourglassActive = buddyActive = bombActive = false;
   crazyActive = timerFrozen = false;
-  decoyActive = starActive = hookActive = false;
+  decoyActive = starActive = hookActive = goopActive = false;
   comboCount = 0;
   comboTimer = 0;
+  accelBonus = 0;
+  lastMoveDir = { x: 0, y: 0 };
+  lastSpawnedPW = null;
+  gamePaused = false;
+  goopActive = false;
+  hookLine = null;
+  swapAnim = null;
+  chompAnim = null;
 
   // Clear all power-up timeouts
   frenzyTO = clearTO(frenzyTO);
@@ -936,17 +1136,18 @@ function startLevel() {
   crazyTO = clearTO(crazyTO);
   decoyTO = clearTO(decoyTO);
   starTO = clearTO(starTO);
+  goopTO = clearTO(goopTO);
 
   // Reset HUD indicators
   frenzyHud.classList.remove('active');
   frenzyBarEl.style.width = '0%';
   for (const s of Object.values(st)) {
     s.classList.remove('s-on', 's-frenzy', 's-ice', 's-shield', 's-magnet',
-      's-ghost', 's-time', 's-buddy', 's-bomb', 's-combo', 's-crazy', 's-decoy', 's-star', 's-poison', 's-hook', 's-swap', 's-double', 's-wave');
+      's-ghost', 's-time', 's-buddy', 's-bomb', 's-combo', 's-crazy', 's-decoy', 's-star', 's-poison', 's-hook', 's-swap', 's-double', 's-wave', 's-goop');
     s.style.color = '';
   }
   st.combo.textContent = '⚡x1';
-  fish.speed = 2.5;
+  fish.speed = FISH_BASE_SPEED;
 
   // Start game
   gameRunning = true;
@@ -954,7 +1155,7 @@ function startLevel() {
   // Timer countdown (1 tick per second)
   if (timerInterval) clearInterval(timerInterval);
   timerInterval = setInterval(() => {
-    if (!gameRunning || timerFrozen) return;
+    if (!gameRunning || timerFrozen || gamePaused) return;
     timeLeft--;
     timerEl.textContent = Math.max(0, timeLeft);
     timerBar.style.width = (timeLeft / maxTime * 100) + '%';
@@ -972,7 +1173,7 @@ function startLevel() {
 function spawnTreat() {
   // Treats use distinct, food/nature themed emojis
   // These are visually different from power-up emojis
-  const types = ['🍤', '🪱', '🦐', '🫧', '⭐', '🍣', '🍙', '🍔'];
+  const types = ['🪱', '🦐', '🦀', '🐟', '🍤', '🍣', '🍔', '🍕', '🍟', '🍉'];
   const t = {
     x: rand(30, W - 30),
     y: rand(30, H - 30),
@@ -981,9 +1182,11 @@ function spawnTreat() {
     bobPhase: rand(0, Math.PI * 2),
     collected: false
   };
-  while (dist(t, fish) < 60) {
+  let attempts = 0;
+  while ((dist(t, fish) < 60 || overlapsExisting(t.x, t.y, 30)) && attempts < 30) {
     t.x = rand(30, W - 30);
     t.y = rand(30, H - 30);
+    attempts++;
   }
   treats.push(t);
 }
@@ -1037,20 +1240,21 @@ function endGame(won, msg) {
   [frenzyTO, iceTO, ghostTO, hourglassTO, buddyTO, bombTO, crazyTO, decoyTO, starTO].forEach(clearTO);
   frenzyActive = iceActive = ghostActive = hourglassActive = false;
   buddyActive = bombActive = crazyActive = timerFrozen = false;
-  decoyActive = starActive = hookActive = false;
+  decoyActive = starActive = hookActive = goopActive = false;
   decoyFish = null;
   frenzyHud.classList.remove('active');
 
   // Reset all status indicators
   for (const s of Object.values(st)) {
     s.classList.remove('s-on', 's-frenzy', 's-ice', 's-shield', 's-magnet',
-      's-ghost', 's-time', 's-buddy', 's-bomb', 's-combo', 's-crazy', 's-decoy', 's-star', 's-poison', 's-hook', 's-swap', 's-double', 's-wave');
+      's-ghost', 's-time', 's-buddy', 's-bomb', 's-combo', 's-crazy', 's-decoy', 's-star', 's-poison', 's-hook', 's-swap', 's-double', 's-wave', 's-goop');
     s.style.color = '';
   }
 
   if (!won) {
-    // Game over — show name entry
-    showNameEntry(score, level, msg);
+    // Chomp effect + CRT wipe on game over
+    chompAnim = { timer: 0, x: fish.x, y: fish.y };
+    playCRTWipe(() => showNameEntry(score, level, msg));
   } else {
     // Level complete — show win screen
     winOverlay.classList.remove('hidden');
@@ -1076,10 +1280,28 @@ function endGame(won, msg) {
 
 document.addEventListener('keydown', e => {
   if (nameEntryActive || !e.key) return;
-
-  // Don't intercept keypresses when typing in input fields (e.g. admin login)
   const tag = document.activeElement?.tagName;
   if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+  // ESC toggles pause
+  if (e.key === 'Escape' && gameRunning) {
+    if (gamePaused && !swapAnim) {
+      // Resume
+      gamePaused = false;
+      if (!hourglassActive) timerFrozen = false;
+      keys = {};
+      const po = document.getElementById('pause-overlay');
+      if (po) po.classList.add('hidden');
+    } else if (!gamePaused) {
+      // Pause
+      gamePaused = true;
+      timerFrozen = true;
+      const po = document.getElementById('pause-overlay');
+      if (po) po.classList.remove('hidden');
+    }
+    e.preventDefault();
+    return;
+  }
 
   keys[e.key.toLowerCase()] = true;
   e.preventDefault();
@@ -1097,42 +1319,70 @@ document.addEventListener('keyup', e => {
 // ═══════════════════════════════════════════════════════════════
 
 function updateFish() {
-  const s = fish.speed;
+  if (gamePaused) return;
 
-  // Movement input
-  if (keys['arrowleft'] || keys['a'])  { fish.vx -= s * 0.3; fish.dir = -1; }
-  if (keys['arrowright'] || keys['d']) { fish.vx += s * 0.3; fish.dir = 1; }
-  if (keys['arrowup'] || keys['w'])    { fish.vy -= s * 0.3; }
-  if (keys['arrowdown'] || keys['s'])  { fish.vy += s * 0.3; }
+  // Progressive acceleration: speed up when moving in the same direction
+  let moveX = 0, moveY = 0;
+  if (keys['arrowleft'] || keys['a'])  moveX -= 1;
+  if (keys['arrowright'] || keys['d']) moveX += 1;
+  if (keys['arrowup'] || keys['w'])    moveY -= 1;
+  if (keys['arrowdown'] || keys['s'])  moveY += 1;
 
-  // Apply friction and velocity
+  if (moveX !== 0 || moveY !== 0) {
+    if (moveX === lastMoveDir.x && moveY === lastMoveDir.y) {
+      accelBonus = Math.min(accelBonus + FISH_ACCEL_RATE, FISH_MAX_SPEED_BONUS);
+    } else {
+      accelBonus *= 0.5;
+    }
+    lastMoveDir = { x: moveX, y: moveY };
+  } else {
+    accelBonus *= 0.95;
+    lastMoveDir = { x: 0, y: 0 };
+  }
+
+  const s = fish.speed + accelBonus;
+
+  if (moveX < 0) { fish.vx -= s * 0.3; fish.dir = -1; }
+  if (moveX > 0) { fish.vx += s * 0.3; fish.dir = 1; }
+  if (moveY < 0) fish.vy -= s * 0.3;
+  if (moveY > 0) fish.vy += s * 0.3;
+
   fish.vx *= fish.friction;
   fish.vy *= fish.friction;
   fish.x += fish.vx;
   fish.y += fish.vy;
-
-  // Clamp to canvas bounds
   fish.x = Math.max(fish.w / 2, Math.min(W - fish.w / 2, fish.x));
   fish.y = Math.max(fish.h / 2, Math.min(H - fish.h / 2, fish.y));
 
-  // Animate tail
+  // Fish rotation — face movement direction, clamp to avoid upside-down
+  const spd = Math.hypot(fish.vx, fish.vy);
+  if (spd > 0.5) {
+    let targetAngle = Math.atan2(fish.vy, fish.vx * fish.dir);
+    targetAngle = Math.max(-1.4, Math.min(1.4, targetAngle)); // ~±80°
+    fish.angle = fish.angle + (targetAngle - fish.angle) * 0.12;
+  } else {
+    fish.angle = fish.angle + (0 - fish.angle) * 0.1;
+  }
+
+  // Flip direction at near-180° before going upside-down
+  if (fish.vx > 0.3) fish.dir = 1;
+  else if (fish.vx < -0.3) fish.dir = -1;
+
   fish.tailPhase += 0.15;
 
-  // Spawn bubbles behind fish
   if (Math.random() < 0.12) {
     bubbles.push({
-      x: fish.x - fish.dir * 16,
-      y: fish.y + rand(-4, 4),
-      r: rand(1.5, 3),
-      vy: rand(-0.5, -1.5),
-      life: 1,
-      decay: rand(0.015, 0.03)
+      x: fish.x - fish.dir * 16, y: fish.y + rand(-4, 4),
+      r: rand(1.5, 3), vy: rand(-0.5, -1.5), life: 1, decay: rand(0.015, 0.03)
     });
   }
 }
 
 function updateShark() {
-  if (shark.hidden || hourglassActive) return;
+  if (shark.hidden || hourglassActive || gamePaused) return;
+
+  // Start-of-level delay: shark waits before chasing
+  if (sharkDelay > 0) { sharkDelay--; shark.tailPhase += 0.06; return; }
 
   // Chase the decoy if active, otherwise chase the fish
   const target = (decoyActive && decoyFish) ? decoyFish : fish;
@@ -1159,6 +1409,13 @@ function updateShark() {
   shark.x = Math.max(20, Math.min(W - 20, shark.x));
   shark.y = Math.max(20, Math.min(H - 20, shark.y));
 
+  // Shark can eat the decoy
+  if (decoyActive && decoyFish && dist(shark, decoyFish) < 25) {
+    spawnParticles(decoyFish.x, decoyFish.y, '#ffaa44', 12);
+    scorePopups.push({ x: decoyFish.x, y: decoyFish.y - 14, pts: 'CHOMP!', life: 0.8, decay: 0.03 });
+    deactivateDecoy();
+  }
+
   // Collision with fish (body only, not tail)
   if (dist(shark, fish) < 30) {
     if (starActive) {
@@ -1179,23 +1436,26 @@ function updateShark() {
 }
 
 function updateBuddy() {
-  if (!buddyActive || !buddy) return;
+  if (!buddyActive || !buddy || gamePaused) return;
 
-  // Follow the fish with slight lag
-  const dx = fish.x - buddy.x - 20 * fish.dir;
-  const dy = fish.y - buddy.y;
-  buddy.x += dx * 0.08;
-  buddy.y += dy * 0.08;
-  buddy.dir = dx > 0 ? 1 : -1;
+  // Mirror movement: buddy mirrors fish position across canvas centre
+  const targetX = W - fish.x;
+  const targetY = H - fish.y;
+  buddy.x += (targetX - buddy.x) * 0.1;
+  buddy.y += (targetY - buddy.y) * 0.1;
+  buddy.x = Math.max(20, Math.min(W - 20, buddy.x));
+  buddy.y = Math.max(20, Math.min(H - 20, buddy.y));
+  buddy.dir = buddy.x > W / 2 ? -1 : 1;
   buddy.tailPhase += 0.2;
 
-  // Buddy collects treats it touches
+  // Buddy collects treats it touches (shark cannot catch buddy)
   for (const t of treats) {
     if (!t.collected && dist(t, buddy) < 24) collectTreat(t);
   }
 }
 
 function updateTreats() {
+  if (gamePaused) return;
   // Magnet: pull treats towards fish
   if (magnetActive) {
     for (const t of treats) {
@@ -1302,10 +1562,11 @@ function drawWater() {
 }
 
 // ─── PIXEL FISH (reusable for player and buddy) ───
-function drawPixelFish(x, y, dir, phase, c1, c2, c3) {
+function drawPixelFish(x, y, dir, angle, phase, c1, c2, c3) {
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(dir, 1);
+  ctx.rotate(angle || 0);
 
   // Body
   ctx.fillStyle = c1;
@@ -1349,27 +1610,37 @@ function drawFish() {
   const c1 = frenzyActive ? '#ffaa22' : '#ff8833';
   const c2 = frenzyActive ? '#ffcc44' : '#ffaa55';
   const c3 = frenzyActive ? '#ee7700' : '#cc5500';
-  drawPixelFish(fish.x, fish.y, fish.dir, fish.tailPhase, c1, c2, c3);
+  drawPixelFish(fish.x, fish.y, fish.dir, fish.angle, fish.tailPhase, c1, c2, c3);
 
-  // Shield outline
+  // Shield: elliptical glow fitting the fish shape
   if (shieldActive) {
     const p = 0.3 + Math.sin(Date.now() * 0.005) * 0.1;
-    ctx.strokeStyle = `rgba(68,238,136,${p})`;
-    ctx.lineWidth = 2;
-    ctx.strokeRect(fish.x - 22, fish.y - 18, 44, 36);
+    ctx.save(); ctx.translate(fish.x, fish.y);
+    ctx.beginPath(); ctx.ellipse(0, 0, 24, 18, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(68,238,136,${p})`; ctx.lineWidth = 2; ctx.stroke();
+    ctx.restore();
   }
 
-  // Star invincibility aura
+  // Star: circular aura + orbiting sparkles
   if (starActive) {
     const p = 0.25 + Math.sin(Date.now() * 0.008) * 0.15;
-    ctx.fillStyle = `rgba(255,238,68,${p})`;
-    ctx.fillRect(fish.x - 24, fish.y - 20, 48, 40);
-    // Orbiting sparkles
+    ctx.save(); ctx.translate(fish.x, fish.y);
+    ctx.beginPath(); ctx.arc(0, 0, 28, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,238,68,${p})`; ctx.fill();
     ctx.fillStyle = '#ffee44';
     for (let i = 0; i < 6; i++) {
       const a = Date.now() * 0.004 + (i / 6) * Math.PI * 2;
-      ctx.fillRect(fish.x + Math.cos(a) * 26 - 1, fish.y + Math.sin(a) * 26 - 1, 3, 3);
+      ctx.fillRect(Math.cos(a) * 26 - 1, Math.sin(a) * 26 - 1, 3, 3);
     }
+    ctx.restore();
+  }
+
+  // Goop tint on fish
+  if (goopActive) {
+    ctx.save(); ctx.translate(fish.x, fish.y);
+    ctx.beginPath(); ctx.ellipse(0, 0, 20, 14, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(102,204,68,0.2)'; ctx.fill();
+    ctx.restore();
   }
 }
 
@@ -1377,7 +1648,7 @@ function drawBuddy() {
   if (!buddyActive || !buddy) return;
   const pulse = 0.6 + Math.sin(Date.now() * 0.008) * 0.2;
   ctx.globalAlpha = pulse;
-  drawPixelFish(buddy.x, buddy.y, buddy.dir, buddy.tailPhase, '#22bbaa', '#44ddcc', '#119988');
+  drawPixelFish(buddy.x, buddy.y, buddy.dir, 0, buddy.tailPhase, '#22bbaa', '#44ddcc', '#119988');
   ctx.globalAlpha = 1;
 
   // Sparkle trail
@@ -1394,7 +1665,7 @@ function drawDecoy() {
   // Draw as translucent orange fish (flickering to look holographic)
   const flicker = 0.4 + Math.sin(Date.now() * 0.012) * 0.2;
   ctx.globalAlpha = flicker;
-  drawPixelFish(decoyFish.x, decoyFish.y, decoyFish.dir, decoyFish.tailPhase, '#ffaa44', '#ffcc66', '#dd8822');
+  drawPixelFish(decoyFish.x, decoyFish.y, decoyFish.dir, 0, decoyFish.tailPhase, '#ffaa44', '#ffcc66', '#dd8822');
   ctx.globalAlpha = 1;
   // Hologram sparkles
   ctx.fillStyle = '#ffcc44';
@@ -1494,8 +1765,9 @@ function drawShark() {
     }
     ctx.globalAlpha = 1;
   } else {
+    ctx.beginPath(); ctx.ellipse(4, 0, 28, 18, 0, 0, Math.PI * 2);
     ctx.fillStyle = `rgba(255,40,40,${0.06 + Math.sin(Date.now() * 0.005) * 0.03})`;
-    ctx.fillRect(-20, -22, 52, 36);
+    ctx.fill();
   }
 
   ctx.restore();
@@ -1534,20 +1806,21 @@ function drawPWItems() {
     ctx.save();
     ctx.translate(item.x, item.y + bob);
 
-    // Poison gets a pulsing red-green warning glow
-    if (k === 'poison') {
+    // Poison/Goop gets a pulsing warning glow (circular)
+    if (k === 'poison' || k === 'goop') {
       const pulse = 0.3 + Math.sin(Date.now() * 0.01) * 0.2;
-      ctx.fillStyle = `rgba(255,0,0,${pulse})`;
-      ctx.fillRect(-16, -16, 32, 32);
+      ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2);
+      ctx.fillStyle = k === 'poison' ? `rgba(255,0,0,${pulse})` : `rgba(100,200,50,${pulse})`;
+      ctx.fill();
     }
 
-    // Inner glow (distinguishes power-ups from treats)
-    ctx.fillStyle = c.glow + '26';
-    ctx.fillRect(-12, -12, 24, 24);
+    // Circular inner glow
+    ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2);
+    ctx.fillStyle = c.glow + '26'; ctx.fill();
 
-    // Outer glow
-    ctx.fillStyle = c.glow + '10';
-    ctx.fillRect(-18, -18, 36, 36);
+    // Circular outer glow
+    ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI * 2);
+    ctx.fillStyle = c.glow + '10'; ctx.fill();
 
     // Orbiting particle dots (only on power-ups)
     const t = Date.now() * 0.003;
@@ -1605,7 +1878,7 @@ function drawScorePopups() {
 // ─── SCREEN OVERLAYS (visual effects) ───
 function drawWarning() {
   const d = dist(shark, fish);
-  if (d < 120 && !shieldActive && !shark.hidden) {
+  if (d < 120 && !shieldActive && !shark.hidden && !starActive) {
     ctx.globalAlpha = (1 - d / 120) * 0.12;
     ctx.fillStyle = '#ff0000';
     ctx.fillRect(0, 0, W, H);
@@ -1660,10 +1933,12 @@ function drawCrazyOverlay() {
 
 function drawFishGlow() {
   if (!frenzyActive) return;
-  ctx.fillStyle = 'rgba(255,150,0,0.1)';
-  ctx.fillRect(fish.x - 24, fish.y - 24, 48, 48);
-  ctx.fillStyle = 'rgba(255,200,50,0.05)';
-  ctx.fillRect(fish.x - 32, fish.y - 32, 64, 64);
+  ctx.save(); ctx.translate(fish.x, fish.y);
+  ctx.beginPath(); ctx.arc(0, 0, 26, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,150,0,0.1)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(0, 0, 34, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,200,50,0.05)'; ctx.fill();
+  ctx.restore();
 }
 
 function drawMagnetLines() {
@@ -1684,8 +1959,137 @@ function drawMagnetLines() {
 function drawScanlines() {
   ctx.fillStyle = 'rgba(0,0,0,0.035)';
   for (let y = 0; y < H; y += 3) ctx.fillRect(0, y, W, 1);
+
+  // Vignette effect (dark edges for 3D depth)
+  const vg = ctx.createRadialGradient(W / 2, H / 2, W * 0.3, W / 2, H / 2, W * 0.7);
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(0,0,0,0.35)');
+  ctx.fillStyle = vg;
+  ctx.fillRect(0, 0, W, H);
 }
 
+
+
+// ─── CLOSEST TREAT ARROW ───
+function drawClosestTreatArrow() {
+  if (treats.length === 0) return;
+  let nearest = null, nearestD = Infinity;
+  for (const t of treats) { if (!t.collected) { const d = dist(t, fish); if (d < nearestD) { nearestD = d; nearest = t; } } }
+  if (!nearest || nearestD < 50) return;
+  const a = Math.atan2(nearest.y - fish.y, nearest.x - fish.x);
+  const ax = fish.x + Math.cos(a) * 32;
+  const ay = fish.y + Math.sin(a) * 32;
+  ctx.save(); ctx.translate(ax, ay); ctx.rotate(a);
+  ctx.fillStyle = `rgba(255,210,80,${0.25 + Math.sin(Date.now() * 0.005) * 0.1})`;
+  ctx.beginPath(); ctx.moveTo(7, 0); ctx.lineTo(-3, -4); ctx.lineTo(-3, 4); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+// ─── HOOK LINE + FLICKER ANIMATION ───
+function drawHookLine() {
+  if (!hookLine) return;
+  const p = Math.min(1, hookLine.progress);
+  const cx = hookLine.fx + (hookLine.tx - hookLine.fx) * p;
+  const cy = hookLine.fy + (hookLine.ty - hookLine.fy) * p;
+
+  // Draw line
+  ctx.globalAlpha = 0.7; ctx.strokeStyle = '#ccaa44'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(hookLine.fx, hookLine.fy); ctx.lineTo(cx, cy); ctx.stroke();
+  // Hook tip
+  ctx.fillStyle = '#ccaa44'; ctx.fillRect(cx - 2, cy - 2, 5, 5);
+  ctx.globalAlpha = 1;
+
+  // Dim overlay during hook
+  ctx.fillStyle = 'rgba(180,150,50,0.05)'; ctx.fillRect(0, 0, W, H);
+
+  // Glow at target
+  ctx.beginPath(); ctx.arc(hookLine.tx, hookLine.ty, 16, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(204,170,68,0.2)'; ctx.fill();
+
+  // Fish flicker during flicker phase
+  if (hookLine.phase === 'flicker' && Math.floor(hookLine.flickerTimer / 5) % 2 === 0) {
+    ctx.beginPath(); ctx.arc(fish.x, fish.y, 18, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(204,170,68,0.4)'; ctx.fill();
+  }
+}
+
+// ─── SWAP VISUAL EFFECT ───
+function drawSwapEffect() {
+  if (!swapAnim) return;
+  if (swapAnim.phase === 'pause') {
+    ctx.fillStyle = 'rgba(100,50,200,0.08)'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = 'rgba(170,68,255,0.3)';
+    ctx.beginPath(); ctx.arc(swapAnim.oldFishX, swapAnim.oldFishY, 22, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(swapAnim.oldSharkX, swapAnim.oldSharkY, 22, 0, Math.PI * 2); ctx.fill();
+  }
+  if (swapAnim.phase === 'flicker') {
+    if (Math.floor(swapAnim.timer / 6) % 2 === 0) {
+      ctx.fillStyle = 'rgba(170,68,255,0.4)';
+      ctx.beginPath(); ctx.arc(fish.x, fish.y, 18, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+}
+
+// ─── CHOMP TEXT ───
+function drawChomp() {
+  if (!chompAnim) return;
+  chompAnim.timer++;
+  if (chompAnim.timer > 40) { chompAnim = null; return; }
+  const alpha = 1 - chompAnim.timer / 40;
+  const scale = 1 + chompAnim.timer * 0.02;
+  ctx.save();
+  ctx.translate(chompAnim.x, chompAnim.y - chompAnim.timer * 0.5);
+  ctx.scale(scale, scale); ctx.globalAlpha = alpha;
+  ctx.font = '16px "Press Start 2P"'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#ff4444'; ctx.fillText('CHOMP!', 0, 0);
+  ctx.globalAlpha = 1; ctx.restore();
+}
+
+// ─── TIMED POWER-UP BARS + EDGE OUTLINES ───
+function drawPowerupTimerBars() {
+  const bars = [];
+  if (iceActive) {
+    const rem = Math.max(0, 1 - (Date.now() - iceStartTime) / ICE_DURATION);
+    bars.push({ colour: '#88ddff', label: '❄️', rem });
+  }
+  if (hourglassActive) {
+    const rem = Math.max(0, 1 - (Date.now() - hourglassStartTime) / HOURGLASS_DURATION);
+    bars.push({ colour: '#ffdd44', label: '⏳', rem });
+  }
+  if (goopActive) {
+    const goopRem = Math.max(0, 1 - (Date.now() - goopStartTime) / GOOP_DURATION);
+    bars.push({ colour: '#66cc44', label: '🧪', rem: goopRem });
+  }
+  if (frenzyActive) {
+    const rem = Math.max(0, 1 - (Date.now() - frenzyTimer) / FRENZY_DURATION);
+    bars.push({ colour: '#ff8800', label: '🔥', rem });
+  }
+  if (bars.length === 0) return;
+
+  bars.forEach((b, i) => {
+    // Edge outline in the power-up's colour
+    ctx.globalAlpha = 0.3 + b.rem * 0.3;
+    ctx.strokeStyle = b.colour;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, W - 2, H - 2);
+
+    // Timer bar at bottom of screen
+    const by = H - 10 - i * 14;
+    ctx.globalAlpha = 0.7;
+    // Background track
+    ctx.fillStyle = '#0a0a16';
+    ctx.fillRect(60, by - 4, W - 120, 8);
+    // Fill bar
+    ctx.fillStyle = b.colour;
+    ctx.fillRect(60, by - 4, (W - 120) * b.rem, 8);
+    // Label
+    ctx.font = '12px serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(b.label, 42, by);
+    ctx.globalAlpha = 1;
+  });
+}
 
 // ═══════════════════════════════════════════════════════════════
 // SECTION 14: MAIN GAME LOOP
@@ -1694,19 +2098,24 @@ function drawScanlines() {
 function loop() {
   if (!gameRunning) return;
 
-  // Update
-  updateFish();
-  updateShark();
-  updateBuddy();
-  updateTreats();
-  updateFrenzyBar();
-  updateParticles();
-  trySpawnPowerups();
-  updatePWItems();
+  // Update (skip most when paused, except swap animation)
+  updateSwapAnim();
+  updateHookAnim();
+  if (!gamePaused || swapAnim) {
+    updateFish();
+    updateShark();
+    updateBuddy();
+    updateTreats();
+    updateFrenzyBar();
+    updateParticles();
+    trySpawnPowerups();
+    updatePWItems();
+  }
 
   // Draw (order matters for layering)
   drawWater();
   drawMagnetLines();
+  drawHookLine();
   drawTreats();
   drawPWItems();
   drawParticles();
@@ -1714,18 +2123,43 @@ function loop() {
   drawDecoy();
   drawFish();
   drawFishGlow();
+  drawClosestTreatArrow();
   drawShark();
+  drawChomp();
+  drawSwapEffect();
   drawWarning();
   drawFrenzyOverlay();
   drawIceOverlay();
   drawHourglassOverlay();
   drawCrazyOverlay();
+  drawPowerupTimerBars();
   drawScorePopups();
   drawScanlines();
 
   gameLoop = requestAnimationFrame(loop);
 }
 
+
+
+// Pause on tab-out
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && gameRunning && !gamePaused) {
+    gamePaused = true;
+    timerFrozen = true;
+    const po = document.getElementById('pause-overlay');
+    if (po) po.classList.remove('hidden');
+  }
+});
+
+// Continue button
+document.getElementById('pause-continue-btn')?.addEventListener('click', () => {
+  if (!gameRunning) return;
+  gamePaused = false;
+  if (!hourglassActive) timerFrozen = false;
+  keys = {};
+  const po = document.getElementById('pause-overlay');
+  if (po) po.classList.add('hidden');
+});
 
 // ═══════════════════════════════════════════════════════════════
 // SECTION 15: UI EVENT HANDLERS
@@ -1762,8 +2196,10 @@ closeScoreboardBtn.addEventListener('click', () => {
   overlay.classList.remove('hidden');
 });
 
-// Wipe scoreboard — opens admin login
-wipeScoreboardBtn.addEventListener('click', () => {
+// Wipe scoreboard button removed — now accessed from admin panel
+
+// Admin panel button (on scoreboard page)
+document.getElementById('admin-panel-btn')?.addEventListener('click', () => {
   scoreboardOverlay.classList.add('hidden');
   adminOverlay.classList.remove('hidden');
   hideAdminError();
@@ -1772,7 +2208,9 @@ wipeScoreboardBtn.addEventListener('click', () => {
   adminEmailInput.focus();
 });
 
-// Admin login and wipe
+// Admin login — opens admin panel on success
+let adminCredentials = null; // Store temporarily for panel actions
+
 adminLoginBtn.addEventListener('click', async () => {
   const email = adminEmailInput.value.trim();
   const password = adminPasswordInput.value;
@@ -1786,13 +2224,15 @@ adminLoginBtn.addEventListener('click', async () => {
   hideAdminError();
 
   try {
-    await adminWipeScores(email, password);
+    // Verify credentials by attempting sign-in via admin wipe (which calls signInWithEmailAndPassword)
+    // We use a lightweight check: try to read maintenance after a test sign-in
+    const { verifyAdminCredentials } = await import('./firebase-config.js');
+    await verifyAdminCredentials(email, password);
+    adminCredentials = { email, password };
+    const maint = await fetchMaintenance();
     adminOverlay.classList.add('hidden');
-    // Return to main menu with success notification
-    overlay.classList.remove('hidden');
-    showWipeNotification();
+    openAdminPanel(maint);
   } catch (err) {
-    // Show a user-friendly error
     if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
       showAdminError('INVALID CREDENTIALS');
     } else if (err.code === 'auth/too-many-requests') {
@@ -1805,8 +2245,168 @@ adminLoginBtn.addEventListener('click', async () => {
   }
 });
 
-// Admin cancel
-adminCancelBtn.addEventListener('click', async () => {
+// ─── ADMIN PANEL LOGIC ───
+const DEFAULT_PW_CONFIG = {
+  frenzy: { rarity: r.frenzy ?? 1, label: '🔥 Frenzy' },
+  ice: { rarity: r.ice ?? 2, label: '❄️ Ice' },
+  shield: { rarity: r.shield ?? 2, label: '🛡️ Shield' },
+  poison: { rarity: r.poison ?? 2, label: '☠️ Poison' },
+  goop: { rarity: r.goop ?? 3, label: '🧪 Goop' },
+  hourglass: { rarity: r.hourglass ?? 3, label: '⏳ Time Stop' },
+  buddy: { rarity: r.buddy ?? 3, label: '🐠 Buddy' },
+  hook: { rarity: r.hook ?? 3, label: '🪝 Hook' },
+  ghost: { rarity: r.ghost ?? 4, label: '👻 Ghost' },
+  bomb: { rarity: r.bomb ?? 4, label: '💣 Bomb' },
+  decoy: { rarity: r.decoy ?? 4, label: '👁️ Decoy' },
+  swap: { rarity: r.swap ?? 4, label: '🔄 Swap' },
+  star: { rarity: r.star ?? 5, label: '🌟 Star' },
+  double: { rarity: r.double ?? 5, label: '💎 Double' },
+  magnet: { rarity: r.magnet ?? 5, label: '🧲 Magnet' },
+  wave: { rarity: r.wave ?? 5, label: '🌊 Wave' },
+};
+const RARITY_NAMES = { 1: 'Common', 2: 'Uncommon', 3: 'Rare', 4: 'Epic', 5: 'Mythical' };
+const RARITY_TAG_COLOURS = { 1: '#44ee88', 2: '#aaaacc', 3: '#4488ff', 4: '#ffdd44', 5: '#ff44ff' };
+
+function openAdminPanel(currentMaint) {
+  const panel = document.getElementById('admin-panel-overlay');
+  if (!panel) return;
+  panel.classList.remove('hidden');
+
+  // Maintenance status
+  const statusEl = document.getElementById('maint-status');
+  if (currentMaint) {
+    statusEl.textContent = 'ON — SITE IS DOWN';
+    statusEl.className = 'admin-status on';
+  } else {
+    statusEl.textContent = 'OFF — SITE IS LIVE';
+    statusEl.className = 'admin-status off';
+  }
+
+  // Build variable editor grid
+  buildVarEditor();
+
+  // Clear messages
+  const msgEl = document.getElementById('admin-panel-msg');
+  msgEl.classList.add('hidden');
+}
+
+function buildVarEditor() {
+  const grid = document.getElementById('admin-var-editor');
+  if (!grid) return;
+
+  let html = '<div class="admin-var-label" style="color:#44ddff;">ITEM</div><div class="admin-var-label" style="color:#44ddff;">RARITY</div><div class="admin-var-label" style="color:#44ddff;">TIER</div>';
+
+  for (const [key, cfg] of Object.entries(DEFAULT_PW_CONFIG)) {
+    const currentRarity = pwConfig[key]?.rarity ?? cfg.rarity;
+    const tierName = RARITY_NAMES[currentRarity] || '?';
+    const tierColour = RARITY_TAG_COLOURS[currentRarity] || '#888';
+
+    html += `<div class="admin-var-label">${cfg.label}</div>`;
+    html += `<input type="number" class="admin-var-input" data-pw="${key}" min="1" max="5" value="${currentRarity}">`;
+    html += `<div class="admin-var-tag" data-pw-tag="${key}" style="color:${tierColour};">${tierName}</div>`;
+  }
+
+  grid.innerHTML = html;
+
+  // Update tier label on input change
+  grid.querySelectorAll('.admin-var-input').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const v = parseInt(inp.value) || 1;
+      const tag = grid.querySelector(`[data-pw-tag="${inp.dataset.pw}"]`);
+      if (tag) {
+        tag.textContent = RARITY_NAMES[v] || '?';
+        tag.style.color = RARITY_TAG_COLOURS[v] || '#888';
+      }
+    });
+  });
+}
+
+function showPanelMsg(msg, isError) {
+  const el = document.getElementById('admin-panel-msg');
+  el.textContent = msg;
+  el.style.color = isError ? '#ee5566' : '#44ee88';
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 3000);
+}
+
+// Maintenance toggle
+document.getElementById('maint-toggle-btn')?.addEventListener('click', async () => {
+  if (!adminCredentials) { showPanelMsg('NOT LOGGED IN', true); return; }
+  const statusEl = document.getElementById('maint-status');
+  const isCurrentlyOn = statusEl.classList.contains('on');
+  statusEl.textContent = 'UPDATING...';
+
+  try {
+    await setMaintenance(!isCurrentlyOn, adminCredentials.email, adminCredentials.password);
+    if (!isCurrentlyOn) {
+      statusEl.textContent = 'ON — SITE IS DOWN';
+      statusEl.className = 'admin-status on';
+    } else {
+      statusEl.textContent = 'OFF — SITE IS LIVE';
+      statusEl.className = 'admin-status off';
+    }
+    showPanelMsg('MAINTENANCE ' + (!isCurrentlyOn ? 'ENABLED' : 'DISABLED'), false);
+  } catch (err) {
+    statusEl.textContent = 'ERROR';
+    showPanelMsg('FAILED: ' + (err.message || 'UNKNOWN'), true);
+  }
+});
+
+// Wipe scoreboard from admin panel
+document.getElementById('admin-wipe-btn')?.addEventListener('click', async () => {
+  if (!adminCredentials) { showPanelMsg('NOT LOGGED IN', true); return; }
+  if (!confirm('Are you sure? This permanently deletes ALL scores.')) return;
+
+  try {
+    await adminWipeScores(adminCredentials.email, adminCredentials.password);
+    showPanelMsg('SCOREBOARD WIPED', false);
+  } catch (err) {
+    showPanelMsg('WIPE FAILED: ' + (err.message || 'UNKNOWN'), true);
+  }
+});
+
+// Save config to Firebase
+document.getElementById('admin-save-config-btn')?.addEventListener('click', async () => {
+  if (!adminCredentials) { showPanelMsg('NOT LOGGED IN', true); return; }
+
+  const grid = document.getElementById('admin-var-editor');
+  const config = {};
+  grid.querySelectorAll('.admin-var-input').forEach(inp => {
+    const key = inp.dataset.pw;
+    const val = Math.max(1, Math.min(5, parseInt(inp.value) || 1));
+    config[key] = val;
+  });
+
+  try {
+    await saveGameConfig({ rarities: config }, adminCredentials.email, adminCredentials.password);
+    // Apply locally too
+    for (const [key, rarity] of Object.entries(config)) {
+      if (pwConfig[key]) pwConfig[key].rarity = rarity;
+    }
+    showPanelMsg('CONFIG SAVED & APPLIED', false);
+  } catch (err) {
+    showPanelMsg('SAVE FAILED: ' + (err.message || 'UNKNOWN'), true);
+  }
+});
+
+// Reset config to defaults
+document.getElementById('admin-reset-config-btn')?.addEventListener('click', () => {
+  for (const [key, cfg] of Object.entries(DEFAULT_PW_CONFIG)) {
+    if (pwConfig[key]) pwConfig[key].rarity = cfg.rarity;
+  }
+  buildVarEditor();
+  showPanelMsg('RESET TO DEFAULTS (NOT SAVED YET)', false);
+});
+
+// Close admin panel
+document.getElementById('admin-panel-close-btn')?.addEventListener('click', () => {
+  document.getElementById('admin-panel-overlay')?.classList.add('hidden');
+  adminCredentials = null;
+  overlay.classList.remove('hidden');
+});
+
+// Admin cancel — return to scoreboard
+adminCancelBtn.addEventListener('click', () => {
   adminOverlay.classList.add('hidden');
-  await showScoreboard();
+  scoreboardOverlay.classList.remove('hidden');
 });

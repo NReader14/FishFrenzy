@@ -15,7 +15,7 @@
 <div id="game-wrapper">
 
   <!-- AI DISCLAIMER BANNER -->
-  <div id="ai-banner">MADE BY THE AI CLAUDE, NOT A DISPLAY OF THE CREATOR'S SKILLS</div>
+  <div id="ai-banner">MADE IN COLLABORATION WITH THE AI CLAUDE</div>
 
   <!-- HUD — Score, timer, level, treats remaining -->
   <div id="hud">
@@ -41,6 +41,7 @@
     <div class="status-item" id="st-decoy">👁DCY</div>
     <div class="status-item" id="st-star">🌟STR</div>
     <div class="status-item" id="st-hook">🪝HKD</div>
+    <div class="status-item" id="st-goop">🧪GOP</div>
     <div class="status-item" id="st-crazy">🍄CRZ</div>
     <div class="status-item" id="st-combo">⚡x1</div>
   </div>
@@ -89,36 +90,60 @@
       <div class="rules-section">
         <div class="rules-heading">TREATS</div>
         <p class="rules-text">
-          🍤 🪱 🦐 🫧 ⭐ 🐟 🦈 🍔 — Collect them all to complete the level. Each treat is worth 10 points (20 during Frenzy). Combo multiplier increases when you collect treats quickly in succession (max x5).
+          🪱 🦐 🦀 🐟 🍤 🍣 🍔 🍕 🍟 🍉 — Collect them all to complete the level. Each treat is worth 10 points (20 during Frenzy). Combo multiplier increases when you collect treats quickly in succession (max x5).
         </p>
       </div>
 
       <div class="rules-section">
         <div class="rules-heading">POWER-UPS</div>
+        <p class="rules-text" style="margin-bottom:8px;">Items grouped by rarity. Rarer items spawn less often.</p>
+
+        <div class="rules-rarity-label" style="color:#44ee88;">★ COMMON</div>
         <div class="rules-powerup-grid">
-          <div class="rules-pw"><span class="pw-icon">🔥</span><strong>FRENZY</strong> — 2x points, speed boost for 3s</div>
-          <div class="rules-pw"><span class="pw-icon">❄️</span><strong>ICE</strong> — Slows the shark for 4s</div>
-          <div class="rules-pw"><span class="pw-icon">🛡️</span><strong>SHIELD</strong> — Blocks one shark hit</div>
-          <div class="rules-pw"><span class="pw-icon">☠️</span><strong>POISON</strong> — Bad! Lose 3 seconds off the timer</div>
-          <div class="rules-pw"><span class="pw-icon">⏳</span><strong>TIME STOP</strong> — Freezes timer &amp; shark for 5s</div>
-          <div class="rules-pw"><span class="pw-icon">🐠</span><strong>BUDDY</strong> — Helper fish collects treats for 3s</div>
-          <div class="rules-pw"><span class="pw-icon">🪝</span><strong>HOOK</strong> — Grapple to the nearest treat instantly</div>
-          <div class="rules-pw"><span class="pw-icon">👻</span><strong>GHOST</strong> — Shark vanishes for 3s</div>
-          <div class="rules-pw"><span class="pw-icon">💣</span><strong>BOMB</strong> — Blasts shark to farthest corner</div>
-          <div class="rules-pw"><span class="pw-icon">👁️</span><strong>DECOY</strong> — Spawns a fake fish to distract the shark</div>
-          <div class="rules-pw"><span class="pw-icon">🔄</span><strong>SWAP</strong> — Swap positions with the shark</div>
-          <div class="rules-pw"><span class="pw-icon">🌟</span><strong>STAR</strong> — Brief invincibility, shark bounces off you</div>
-          <div class="rules-pw"><span class="pw-icon">💎</span><strong>DOUBLE</strong> — Duplicates all treats on the field</div>
-          <div class="rules-pw"><span class="pw-icon">🧲</span><strong>MAGNET</strong> — Pulls all treats towards you</div>
-          <div class="rules-pw"><span class="pw-icon">🌊</span><strong>WAVE</strong> — Pushes all treats to the nearest wall</div>
-          <div class="rules-pw"><span class="pw-icon">🍄</span><strong>CRAZY</strong> — Spawns masses of treats for 5s, but the level ends when time's up! (Level 10+)</div>
+          <div class="rules-pw rarity-common"><span class="pw-icon">🔥</span><strong>FRENZY</strong> — 2x points + speed boost for 3s</div>
+        </div>
+
+        <div class="rules-rarity-label" style="color:#aaaacc;">★★ UNCOMMON</div>
+        <div class="rules-powerup-grid">
+          <div class="rules-pw rarity-uncommon"><span class="pw-icon">❄️</span><strong>ICE</strong> — Slows the shark for 4s</div>
+          <div class="rules-pw rarity-uncommon"><span class="pw-icon">🛡️</span><strong>SHIELD</strong> — Blocks one shark hit</div>
+          <div class="rules-pw rarity-uncommon"><span class="pw-icon">☠️</span><strong style="color:#ff4444;">POISON</strong> — Bad! Lose 3 seconds</div>
+        </div>
+
+        <div class="rules-rarity-label" style="color:#4488ff;">★★★ RARE</div>
+        <div class="rules-powerup-grid">
+          <div class="rules-pw rarity-rare"><span class="pw-icon">⏳</span><strong>TIME STOP</strong> — Freezes timer &amp; shark for 3.5s</div>
+          <div class="rules-pw rarity-rare"><span class="pw-icon">🐠</span><strong>BUDDY</strong> — Mirror fish collects treats for 3s</div>
+          <div class="rules-pw rarity-rare"><span class="pw-icon">🪝</span><strong>HOOK</strong> — Grapple to the nearest treat</div>
+          <div class="rules-pw rarity-rare"><span class="pw-icon">🧪</span><strong style="color:#ff4444;">GOOP</strong> — Bad! Slows you for 4s</div>
+        </div>
+
+        <div class="rules-rarity-label" style="color:#ffdd44;">★★★★ EPIC</div>
+        <div class="rules-powerup-grid">
+          <div class="rules-pw rarity-epic"><span class="pw-icon">👻</span><strong>GHOST</strong> — Shark vanishes for 3s</div>
+          <div class="rules-pw rarity-epic"><span class="pw-icon">💣</span><strong>BOMB</strong> — Blasts shark to farthest corner</div>
+          <div class="rules-pw rarity-epic"><span class="pw-icon">👁️</span><strong>DECOY</strong> — Fake fish distracts the shark</div>
+          <div class="rules-pw rarity-epic"><span class="pw-icon">🔄</span><strong>SWAP</strong> — Swap places with the shark</div>
+        </div>
+
+        <div class="rules-rarity-label rules-rarity-mythical">★★★★★ MYTHICAL</div>
+        <div class="rules-powerup-grid">
+          <div class="rules-pw rarity-mythical"><span class="pw-icon">🌟</span><strong>STAR</strong> — Brief invincibility, shark bounces off</div>
+          <div class="rules-pw rarity-mythical"><span class="pw-icon">💎</span><strong>DOUBLE</strong> — Duplicates all treats on the field</div>
+          <div class="rules-pw rarity-mythical"><span class="pw-icon">🧲</span><strong>MAGNET</strong> — Pulls all treats towards you</div>
+          <div class="rules-pw rarity-mythical"><span class="pw-icon">🌊</span><strong>WAVE</strong> — Pushes all treats to nearest wall</div>
+        </div>
+
+        <div class="rules-rarity-label" style="color:#ff00aa;">☢ SPECIAL</div>
+        <div class="rules-powerup-grid">
+          <div class="rules-pw rarity-crazy"><span class="pw-icon">🍄</span><strong>CRAZY</strong> — Masses of treats for 5s, then game over! (Lv10+)</div>
         </div>
       </div>
 
       <div class="rules-section">
         <div class="rules-heading">TIPS</div>
         <p class="rules-text">
-          Rarer power-ups appear less often and vanish faster — grab them quickly! Watch out for ☠️ Poison. The shark gets faster each level. Build combos for massive scores! Max 3 power-ups on screen at once.
+          Rarer power-ups appear less often and vanish faster — grab them quickly! Watch out for ☠️ Poison and 🧪 Goop. The shark gets faster each level. Build combos for massive scores! Max 3 power-ups on screen at once — limited by a budget that increases each level.
         </p>
       </div>
     </div>
@@ -140,15 +165,15 @@
     <div id="scoreboard-content"><p class="loading-text">LOADING...</p></div>
     <div class="scoreboard-actions">
       <button id="close-scoreboard-btn" class="btn-secondary">BACK</button>
-      <button id="wipe-scoreboard-btn" class="btn-danger">WIPE</button>
+      <button id="admin-panel-btn" class="btn-secondary" style="border-color:#44ddff;color:#44ddff;">ADMIN</button>
     </div>
   </div>
 
-  <!-- ADMIN LOGIN OVERLAY -->
+  <!-- ADMIN LOGIN OVERLAY (gateway to admin panel) -->
   <div id="admin-overlay" class="game-overlay hidden">
     <div class="admin-container">
       <div class="admin-title">ADMIN LOGIN</div>
-      <p class="admin-text">Enter admin credentials to wipe the scoreboard.</p>
+      <p class="admin-text">Enter admin credentials to access the control panel.</p>
       <div class="admin-form">
         <label class="admin-label">EMAIL</label>
         <input type="email" id="admin-email" class="admin-input" placeholder="admin@email.com" autocomplete="email">
@@ -156,11 +181,73 @@
         <input type="password" id="admin-password" class="admin-input" placeholder="••••••••" autocomplete="current-password">
         <div id="admin-error" class="admin-error hidden"></div>
         <div class="admin-btn-row">
-          <button id="admin-login-btn" class="btn-primary" style="padding:10px 20px;font-size:9px;">LOGIN &amp; WIPE</button>
+          <button id="admin-login-btn" class="btn-primary" style="padding:10px 20px;font-size:9px;">LOGIN</button>
           <button id="admin-cancel-btn" class="btn-secondary">CANCEL</button>
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- ADMIN PANEL OVERLAY (shown after successful login) -->
+  <div id="admin-panel-overlay" class="game-overlay hidden">
+    <div class="admin-panel-container">
+      <div class="admin-title" style="margin-bottom:14px;">⚙ ADMIN PANEL</div>
+
+      <!-- MAINTENANCE TOGGLE -->
+      <div class="admin-section">
+        <div class="admin-section-title">MAINTENANCE MODE</div>
+        <div class="admin-row">
+          <span id="maint-status" class="admin-status">CHECKING...</span>
+          <button id="maint-toggle-btn" class="btn-primary" style="padding:6px 14px;font-size:8px;">TOGGLE</button>
+        </div>
+      </div>
+
+      <!-- SCOREBOARD WIPE -->
+      <div class="admin-section">
+        <div class="admin-section-title">SCOREBOARD</div>
+        <div class="admin-row">
+          <span style="color:#5588aa;font-size:7px;">Permanently delete all scores</span>
+          <button id="admin-wipe-btn" class="btn-danger" style="padding:6px 14px;font-size:8px;">WIPE ALL</button>
+        </div>
+      </div>
+
+      <!-- VARIABLE EDITOR -->
+      <div class="admin-section">
+        <div class="admin-section-title">POWER-UP EDITOR</div>
+        <div id="admin-var-editor" class="admin-var-grid">
+          <p class="loading-text" style="font-size:7px;">LOADING...</p>
+        </div>
+        <div class="admin-row" style="margin-top:8px;">
+          <button id="admin-save-config-btn" class="btn-primary" style="padding:6px 14px;font-size:8px;">SAVE TO FIREBASE</button>
+          <button id="admin-reset-config-btn" class="btn-secondary" style="padding:6px 14px;font-size:8px;">RESET DEFAULTS</button>
+        </div>
+      </div>
+
+      <div id="admin-panel-msg" class="admin-error hidden" style="margin-top:10px;"></div>
+      <button id="admin-panel-close-btn" class="btn-secondary" style="margin-top:14px;">CLOSE</button>
+    </div>
+  </div>
+
+
+  <!-- PAUSE OVERLAY (tab-out) -->
+  <div id="pause-overlay" class="game-overlay hidden">
+    <div class="result win">PAUSED</div>
+    <p class="score-text" style="margin:16px 0;">GAME PAUSED</p>
+    <button id="pause-continue-btn" class="btn-primary">CONTINUE</button>
+    <p class="controls-hint" style="margin-top:12px;">PRESS ESC OR SWITCH TABS TO PAUSE</p>
+  </div>
+
+  <!-- WELCOME POPUP (first visit) -->
+  <div id="welcome-overlay" class="game-overlay hidden">
+    <h1 style="font-size:20px;color:#ff8833;">🐟 FISH FRENZY 🐟</h1>
+    <p class="subtitle" style="margin:12px 0 6px;">WELCOME, ANGLER!</p>
+    <p class="rules-text" style="max-width:360px;text-align:center;line-height:1.8;margin:8px auto;">
+      Swim around, collect treats, dodge the shark!<br>
+      Power-ups will help you... or hinder you! ☠️<br>
+      Check the RULES page for full details.
+    </p>
+    <p style="color:#44ddff;font-size:8px;margin:14px 0 6px;">🐟 "Fish tee hee hee!" 🐟</p>
+    <button id="welcome-close-btn" class="btn-primary" style="padding:10px 28px;font-size:10px;margin-top:10px;">GOT IT!</button>
   </div>
 
   <!-- LOADING OVERLAY — Shown during Firebase operations -->
