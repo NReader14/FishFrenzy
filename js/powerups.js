@@ -12,7 +12,7 @@ import {
   FISH_BASE_SPEED, FRENZY_SPEED_BOOST,
   W, H, rand, dist
 } from './constants.js';
-import { fetchGameConfig } from '../../firebase-config.js';
+import { fetchGameConfig } from '..firebase-config.js';
 
 // ─── HELPERS ───
 export function clearTO(t) { if (t) clearTimeout(t); return null; }
