@@ -15,7 +15,7 @@ import {
   fetchHighScores, saveHighScore, isFirebaseOnline,
   adminWipeScores, fetchMaintenance, setMaintenance,
   saveGameConfig
-} from '../../firebase-config.js';
+} from '../firebase-config.js';
 import { pwConfig, clearTO } from './powerups.js';
 
 // Forward references (set by main.js)
