@@ -44,10 +44,13 @@ body::after {
 
 
 /* ─── GAME WRAPPER (CRT-style frame) ─── */
+/* FIX #5: Width is now driven by the canvas width + border/padding.
+   The wrapper no longer has a fixed 740px that doesn't match the
+   720px canvas, causing the canvas to not fill the space. */
 #game-wrapper {
   position: relative;
   z-index: 1;
-  width: 740px;
+  width: 720px;
   max-width: 95vw;
   border: 4px solid #334;
   border-radius: 4px;
@@ -209,6 +212,7 @@ body::after {
 .s-swap   { color: #aa44ff !important; }
 .s-double { color: #44ddff !important; }
 .s-wave   { color: #4488ff !important; }
+.s-goop   { color: #66cc44 !important; text-shadow: 0 0 4px #66cc44; }
 
 @keyframes star-pulse {
   0%, 100% { text-shadow: 0 0 8px rgba(255,238,68,.5); }
@@ -223,56 +227,14 @@ body::after {
 
 
 /* ─── CANVAS ─── */
+/* FIX #5: Canvas stretches to fill the wrapper width */
 canvas {
   display: block;
+  width: 100%;
+  height: auto;
   background: #080816;
   cursor: none;
   image-rendering: pixelated;
-}
-
-
-/* ─── FRENZY HUD (floating above canvas) ─── */
-#frenzy-hud {
-  position: absolute;
-  top: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 10px;
-  color: #ffdd44;
-  text-shadow: 0 0 12px rgba(255,150,0,.7), 2px 2px 0 #442200;
-  z-index: 5;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity .15s;
-  letter-spacing: 2px;
-  text-align: center;
-}
-
-#frenzy-hud.active {
-  opacity: 1;
-  animation: frenzy-pulse .35s ease-in-out infinite alternate;
-}
-
-@keyframes frenzy-pulse {
-  from { transform: translateX(-50%) scale(1); }
-  to   { transform: translateX(-50%) scale(1.06); }
-}
-
-#frenzy-bar-bg-hud {
-  width: 100px;
-  height: 6px;
-  background: #111;
-  margin: 6px auto 0;
-  overflow: hidden;
-  border: 2px solid #332200;
-  border-radius: 1px;
-}
-
-#frenzy-bar {
-  height: 100%;
-  width: 100%;
-  background: #ff8800;
-  transition: width .1s linear;
 }
 
 
@@ -678,6 +640,8 @@ canvas {
   margin-bottom: 22px;
   letter-spacing: .5px;
   line-height: 2;
+  text-align: center !important;
+  width: 100%;
 }
 
 
@@ -792,7 +756,6 @@ canvas {
 
 
 /* ─── CRT TV WIPE TRANSITION ─── */
-/* Soft CRT turn-on: gentle blue line → expands → fades gently */
 .crt-wipe {
   position: absolute;
   inset: 0;
@@ -802,7 +765,6 @@ canvas {
   opacity: 0;
 }
 
-/* Phase 1: thin horizontal line in the centre */
 .crt-wipe.crt-line {
   opacity: 0.6;
   clip-path: inset(49% 0 49% 0);
@@ -815,7 +777,6 @@ canvas {
   100% { clip-path: inset(49% 0 49% 0); opacity: 0.6; }
 }
 
-/* Phase 2: line expands vertically */
 .crt-wipe.crt-expand {
   opacity: 0.6;
   animation: crt-open .3s ease-in-out forwards;
@@ -826,7 +787,6 @@ canvas {
   100% { clip-path: inset(0 0 0 0); }
 }
 
-/* Phase 3: gentle fade out */
 .crt-wipe.crt-fade {
   animation: crt-fadeout .4s ease-out forwards;
 }
@@ -864,9 +824,6 @@ canvas {
   transform: translate(-50%, -50%) scale(1);
 }
 
-
-/* ─── GOOP STATUS INDICATOR ─── */
-.s-goop { color: #66cc44 !important; text-shadow: 0 0 4px #66cc44; }
 
 /* ─── RULES: RARITY COLOURS ─── */
 .rules-rarity-label {
@@ -908,105 +865,6 @@ canvas {
   letter-spacing: 8px;
 }
 
-/* ─── VIGNETTE for 3D depth ─── */
-/* Applied to canvas container only to avoid black line overflow */
-canvas#game {
-  position: relative;
-}
-
-
-/* ─── NAME ENTRY HINT CENTER ─── */
-.name-entry-hint {
-  text-align: center !important;
-  width: 100%;
-}
-
-/* ─── ADMIN PANEL ─── */
-.admin-panel-container {
-  max-width: 420px;
-  width: 100%;
-  max-height: 90%;
-  overflow-y: auto;
-  padding: 8px;
-}
-
-.admin-section {
-  background: rgba(10, 20, 40, 0.6);
-  border: 1px solid #1a2a44;
-  border-radius: 4px;
-  padding: 10px;
-  margin-bottom: 10px;
-}
-
-.admin-section-title {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 7px;
-  color: #44ddff;
-  margin-bottom: 8px;
-  letter-spacing: 1px;
-}
-
-.admin-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.admin-status {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 7px;
-  color: #5588aa;
-}
-
-.admin-status.on { color: #ee5566; }
-.admin-status.off { color: #44ee88; }
-
-.admin-var-grid {
-  display: grid;
-  grid-template-columns: 1fr 80px 60px;
-  gap: 4px 8px;
-  align-items: center;
-  max-height: 180px;
-  overflow-y: auto;
-  padding-right: 4px;
-}
-
-.admin-var-grid::-webkit-scrollbar { width: 4px; }
-.admin-var-grid::-webkit-scrollbar-track { background: #0a0a16; }
-.admin-var-grid::-webkit-scrollbar-thumb { background: #1a2a44; border-radius: 2px; }
-
-.admin-var-label {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 6px;
-  color: #7799bb;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.admin-var-input {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 7px;
-  background: #0a0a16;
-  border: 1px solid #1a2a44;
-  color: #aaccee;
-  padding: 3px 4px;
-  text-align: center;
-  width: 100%;
-}
-
-.admin-var-input:focus {
-  border-color: #44ddff;
-  outline: none;
-}
-
-.admin-var-tag {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 5px;
-  text-align: center;
-  padding: 2px 0;
-}
 
 /* ─── ADMIN PANEL ─── */
 .admin-panel-container {
@@ -1061,10 +919,17 @@ canvas#game {
   padding: 4px 0;
 }
 
+.admin-var-grid::-webkit-scrollbar { width: 4px; }
+.admin-var-grid::-webkit-scrollbar-track { background: #0a0a16; }
+.admin-var-grid::-webkit-scrollbar-thumb { background: #1a2a44; border-radius: 2px; }
+
 .admin-var-label {
   font-family: 'Press Start 2P', monospace;
   font-size: 6px;
   color: #8899bb;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .admin-var-input {
@@ -1085,6 +950,8 @@ canvas#game {
 .admin-var-tag {
   font-family: 'Press Start 2P', monospace;
   font-size: 6px;
+  text-align: center;
+  padding: 2px 0;
 }
 
 /* Danger button */

@@ -119,8 +119,6 @@ const timerEl     = document.getElementById('timer');
 const timerBar    = document.getElementById('timer-bar');
 const levelEl     = document.getElementById('level');
 const treatsLeftEl = document.getElementById('treats-left');
-const frenzyHud   = document.getElementById('frenzy-hud');
-const frenzyBarEl = document.getElementById('frenzy-bar');
 
 // Buttons
 const startBtn          = document.getElementById('start-btn');
@@ -128,7 +126,6 @@ const rulesBtn          = document.getElementById('rules-btn');
 const rulesBackBtn      = document.getElementById('rules-back-btn');
 const scoreboardBtn     = document.getElementById('scoreboard-btn');
 const closeScoreboardBtn = document.getElementById('close-scoreboard-btn');
-// wipeScoreboardBtn removed — wipe now in admin panel
 
 // Admin form
 const adminEmailInput    = document.getElementById('admin-email');
@@ -558,8 +555,6 @@ function activateFrenzy() {
   frenzyActive = true;
   frenzyTimer = Date.now();
   fish.speed = FISH_BASE_SPEED + FRENZY_SPEED_BOOST;
-  frenzyHud.classList.add('active');
-  frenzyBarEl.style.width = '100%';
   stOn('frenzy', 's-frenzy');
   frenzyTO = clearTO(frenzyTO);
   frenzyTO = setTimeout(deactivateFrenzy, FRENZY_DURATION);
@@ -568,8 +563,6 @@ function activateFrenzy() {
 function deactivateFrenzy() {
   frenzyActive = false;
   fish.speed = FISH_BASE_SPEED;
-  frenzyHud.classList.remove('active');
-  frenzyBarEl.style.width = '0%';
   stOff('frenzy', 's-frenzy');
   frenzyTO = null;
 }
@@ -913,13 +906,25 @@ function activateGoop() {
   }, GOOP_DURATION);
 }
 
-let r = {}
+// ─── FIREBASE RARITY LOADING ───
+// FIX #1: Rarities are now loaded properly from Firebase and applied
+// to pwConfig AFTER the async fetch completes, rather than being
+// evaluated at module load time when `r` is still empty.
+let firebaseRarities = {};
 
 async function loadRarities() {
   const config = await fetchGameConfig();
   const rarities = config?.rarities;
-  r = rarities
-  console.log(rarities);
+  if (rarities) {
+    firebaseRarities = rarities;
+    // Apply loaded rarities directly to pwConfig
+    for (const [key, rarity] of Object.entries(rarities)) {
+      if (pwConfig[key] && rarity >= 1 && rarity <= 5) {
+        pwConfig[key].rarity = rarity;
+      }
+    }
+    console.log("[Config] Rarities loaded from Firebase:", rarities);
+  }
 }
 
 loadRarities();
@@ -934,12 +939,17 @@ loadRarities();
  * Power-up configuration table.
  * Each entry defines the emoji, glow colour, activation function,
  * relative spawn chance, eligibility check, and field lifetime.
+ *
+ * FIX #2: Goop is now included in this table so it can actually spawn.
+ * Previously it was missing entirely from pwConfig despite having
+ * an entry in pwItems and a full activation function.
  */
 const pwConfig = {
   frenzy:    { emoji: '🔥', glow: '#ff8800', fn: activateFrenzy,    rarity: 1, ok: () => !frenzyActive },
   ice:       { emoji: '❄️',  glow: '#88ddff', fn: activateIce,       rarity: 2, ok: () => !iceActive },
   shield:    { emoji: '🛡️', glow: '#44ee88', fn: activateShield,    rarity: 2, ok: () => !shieldActive },
   poison:    { emoji: '☠️',  glow: '#44ff00', fn: activatePoison,    rarity: 2, ok: () => true },
+  goop:      { emoji: '🧪', glow: '#66cc44', fn: activateGoop,      rarity: 3, ok: () => !goopActive },
   hourglass: { emoji: '⏳', glow: '#ffdd44', fn: activateHourglass, rarity: 3, ok: () => !hourglassActive },
   buddy:     { emoji: '🐠', glow: '#44ddaa', fn: activateBuddy,     rarity: 3, ok: () => !buddyActive },
   hook:      { emoji: '🪝', glow: '#ccaa44', fn: activateHook,      rarity: 3, ok: () => treats.length > 0 && !hookActive },
@@ -1040,10 +1050,8 @@ function updatePWItems() {
 
 /** Update the frenzy progress bar in the HUD. */
 function updateFrenzyBar() {
-  if (frenzyActive) {
-    const remaining = Math.max(0, 1 - (Date.now() - frenzyTimer) / FRENZY_DURATION);
-    frenzyBarEl.style.width = (remaining * 100) + '%';
-  }
+  // FIX #4: Removed — top frenzy HUD no longer exists.
+  // Frenzy timer is shown via the bottom power-up timer bars only.
 }
 
 
@@ -1139,8 +1147,6 @@ function startLevel() {
   goopTO = clearTO(goopTO);
 
   // Reset HUD indicators
-  frenzyHud.classList.remove('active');
-  frenzyBarEl.style.width = '0%';
   for (const s of Object.values(st)) {
     s.classList.remove('s-on', 's-frenzy', 's-ice', 's-shield', 's-magnet',
       's-ghost', 's-time', 's-buddy', 's-bomb', 's-combo', 's-crazy', 's-decoy', 's-star', 's-poison', 's-hook', 's-swap', 's-double', 's-wave', 's-goop');
@@ -1242,7 +1248,6 @@ function endGame(won, msg) {
   buddyActive = bombActive = crazyActive = timerFrozen = false;
   decoyActive = starActive = hookActive = goopActive = false;
   decoyFish = null;
-  frenzyHud.classList.remove('active');
 
   // Reset all status indicators
   for (const s of Object.values(st)) {
@@ -1971,17 +1976,53 @@ function drawScanlines() {
 
 
 // ─── CLOSEST TREAT ARROW ───
+// FIX #3: Arrow is now much bolder — larger, thicker, brighter, with a glow
 function drawClosestTreatArrow() {
   if (treats.length === 0) return;
   let nearest = null, nearestD = Infinity;
   for (const t of treats) { if (!t.collected) { const d = dist(t, fish); if (d < nearestD) { nearestD = d; nearest = t; } } }
   if (!nearest || nearestD < 50) return;
   const a = Math.atan2(nearest.y - fish.y, nearest.x - fish.x);
-  const ax = fish.x + Math.cos(a) * 32;
-  const ay = fish.y + Math.sin(a) * 32;
-  ctx.save(); ctx.translate(ax, ay); ctx.rotate(a);
-  ctx.fillStyle = `rgba(255,210,80,${0.25 + Math.sin(Date.now() * 0.005) * 0.1})`;
-  ctx.beginPath(); ctx.moveTo(7, 0); ctx.lineTo(-3, -4); ctx.lineTo(-3, 4); ctx.closePath(); ctx.fill();
+  const ax = fish.x + Math.cos(a) * 36;
+  const ay = fish.y + Math.sin(a) * 36;
+
+  ctx.save();
+  ctx.translate(ax, ay);
+  ctx.rotate(a);
+
+  const pulse = 0.6 + Math.sin(Date.now() * 0.006) * 0.2;
+
+  // Outer glow
+  ctx.globalAlpha = pulse * 0.3;
+  ctx.fillStyle = '#ffdd44';
+  ctx.beginPath();
+  ctx.moveTo(14, 0);
+  ctx.lineTo(-6, -8);
+  ctx.lineTo(-6, 8);
+  ctx.closePath();
+  ctx.fill();
+
+  // Main arrow body
+  ctx.globalAlpha = pulse;
+  ctx.fillStyle = '#ffdd44';
+  ctx.beginPath();
+  ctx.moveTo(11, 0);
+  ctx.lineTo(-4, -6);
+  ctx.lineTo(-4, 6);
+  ctx.closePath();
+  ctx.fill();
+
+  // Bright core
+  ctx.globalAlpha = Math.min(1, pulse + 0.2);
+  ctx.fillStyle = '#fff8dd';
+  ctx.beginPath();
+  ctx.moveTo(8, 0);
+  ctx.lineTo(-2, -3);
+  ctx.lineTo(-2, 3);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.globalAlpha = 1;
   ctx.restore();
 }
 
@@ -2177,6 +2218,7 @@ startBtn.addEventListener('click', () => {
 // Rules page
 rulesBtn.addEventListener('click', () => {
   overlay.classList.add('hidden');
+  buildRulesHTML();
   rulesOverlay.classList.remove('hidden');
 });
 
@@ -2195,8 +2237,6 @@ closeScoreboardBtn.addEventListener('click', () => {
   scoreboardOverlay.classList.add('hidden');
   overlay.classList.remove('hidden');
 });
-
-// Wipe scoreboard button removed — now accessed from admin panel
 
 // Admin panel button (on scoreboard page)
 document.getElementById('admin-panel-btn')?.addEventListener('click', () => {
@@ -2224,8 +2264,6 @@ adminLoginBtn.addEventListener('click', async () => {
   hideAdminError();
 
   try {
-    // Verify credentials by attempting sign-in via admin wipe (which calls signInWithEmailAndPassword)
-    // We use a lightweight check: try to read maintenance after a test sign-in
     const { verifyAdminCredentials } = await import('./firebase-config.js');
     await verifyAdminCredentials(email, password);
     adminCredentials = { email, password };
@@ -2246,26 +2284,112 @@ adminLoginBtn.addEventListener('click', async () => {
 });
 
 // ─── ADMIN PANEL LOGIC ───
-const DEFAULT_PW_CONFIG = {
-  frenzy: { rarity: r.frenzy ?? 1, label: '🔥 Frenzy' },
-  ice: { rarity: r.ice ?? 2, label: '❄️ Ice' },
-  shield: { rarity: r.shield ?? 2, label: '🛡️ Shield' },
-  poison: { rarity: r.poison ?? 2, label: '☠️ Poison' },
-  goop: { rarity: r.goop ?? 3, label: '🧪 Goop' },
-  hourglass: { rarity: r.hourglass ?? 3, label: '⏳ Time Stop' },
-  buddy: { rarity: r.buddy ?? 3, label: '🐠 Buddy' },
-  hook: { rarity: r.hook ?? 3, label: '🪝 Hook' },
-  ghost: { rarity: r.ghost ?? 4, label: '👻 Ghost' },
-  bomb: { rarity: r.bomb ?? 4, label: '💣 Bomb' },
-  decoy: { rarity: r.decoy ?? 4, label: '👁️ Decoy' },
-  swap: { rarity: r.swap ?? 4, label: '🔄 Swap' },
-  star: { rarity: r.star ?? 5, label: '🌟 Star' },
-  double: { rarity: r.double ?? 5, label: '💎 Double' },
-  magnet: { rarity: r.magnet ?? 5, label: '🧲 Magnet' },
-  wave: { rarity: r.wave ?? 5, label: '🌊 Wave' },
-};
+// FIX #1 (continued): DEFAULT_PW_CONFIG now reads live from pwConfig
+// (which has already been patched by loadRarities if Firebase had data).
+// Previously it read from `r` which was an empty object at module load.
 const RARITY_NAMES = { 1: 'Common', 2: 'Uncommon', 3: 'Rare', 4: 'Epic', 5: 'Mythical' };
 const RARITY_TAG_COLOURS = { 1: '#44ee88', 2: '#aaaacc', 3: '#4488ff', 4: '#ffdd44', 5: '#ff44ff' };
+
+// Labels for the admin editor (static — only used for display names)
+const PW_LABELS = {
+  frenzy: '🔥 Frenzy',
+  ice: '❄️ Ice',
+  shield: '🛡️ Shield',
+  poison: '☠️ Poison',
+  goop: '🧪 Goop',
+  hourglass: '⏳ Time Stop',
+  buddy: '🐠 Buddy',
+  hook: '🪝 Hook',
+  ghost: '👻 Ghost',
+  bomb: '💣 Bomb',
+  decoy: '👁️ Decoy',
+  swap: '🔄 Swap',
+  star: '🌟 Star',
+  double: '💎 Double',
+  magnet: '🧲 Magnet',
+  wave: '🌊 Wave',
+};
+
+// Default rarities (used for "Reset Defaults" button)
+const DEFAULT_RARITIES = {
+  frenzy: 1, ice: 2, shield: 2, poison: 2, goop: 3,
+  hourglass: 3, buddy: 3, hook: 3, ghost: 4, bomb: 4,
+  decoy: 4, swap: 4, star: 5, double: 5, magnet: 5, wave: 5,
+};
+
+// ─── POWER-UP DESCRIPTIONS (for dynamic rules page) ───
+const PW_DESCRIPTIONS = {
+  frenzy:    { name: 'FRENZY',    desc: '2x points + speed boost for 3s' },
+  ice:       { name: 'ICE',       desc: 'Slows the shark for 4s' },
+  shield:    { name: 'SHIELD',    desc: 'Blocks one shark hit' },
+  poison:    { name: 'POISON',    desc: 'Bad! Lose 3 seconds', bad: true },
+  goop:      { name: 'GOOP',      desc: 'Bad! Slows you for 4s', bad: true },
+  hourglass: { name: 'TIME STOP', desc: 'Freezes timer &amp; shark for 3.5s' },
+  buddy:     { name: 'BUDDY',     desc: 'Mirror fish collects treats for 3s' },
+  hook:      { name: 'HOOK',      desc: 'Grapple to the nearest treat' },
+  ghost:     { name: 'GHOST',     desc: 'Shark vanishes for 3s' },
+  bomb:      { name: 'BOMB',      desc: 'Blasts shark to farthest corner' },
+  decoy:     { name: 'DECOY',     desc: 'Fake fish distracts the shark' },
+  swap:      { name: 'SWAP',      desc: 'Swap places with the shark' },
+  star:      { name: 'STAR',      desc: 'Brief invincibility, shark bounces off' },
+  double:    { name: 'DOUBLE',    desc: 'Duplicates all treats on the field' },
+  magnet:    { name: 'MAGNET',    desc: 'Pulls all treats towards you' },
+  wave:      { name: 'WAVE',      desc: 'Pushes all treats to nearest wall' },
+};
+
+const RARITY_STARS = { 1: '★', 2: '★★', 3: '★★★', 4: '★★★★', 5: '★★★★★' };
+const RARITY_CSS_CLASS = { 1: 'common', 2: 'uncommon', 3: 'rare', 4: 'epic', 5: 'mythical' };
+
+/**
+ * Build the power-ups section of the rules page dynamically
+ * from pwConfig so it reflects current Firebase rarities.
+ */
+function buildRulesHTML() {
+  const container = document.getElementById('rules-powerups-dynamic');
+  if (!container) return;
+
+  // Group power-ups by their current rarity (read live from pwConfig)
+  const groups = { 1: [], 2: [], 3: [], 4: [], 5: [] };
+  for (const [key, cfg] of Object.entries(pwConfig)) {
+    if (key === 'crazy') continue; // Crazy gets its own section
+    const r = cfg.rarity;
+    if (r >= 1 && r <= 5) {
+      groups[r].push(key);
+    }
+  }
+
+  let html = '';
+
+  for (let tier = 1; tier <= 5; tier++) {
+    if (groups[tier].length === 0) continue;
+
+    const cls = RARITY_CSS_CLASS[tier];
+    // Mythical gets the rainbow class, others get inline colour
+    if (tier === 5) {
+      html += `<div class="rules-rarity-label rules-rarity-mythical">${RARITY_STARS[tier]} ${RARITY_NAMES[tier].toUpperCase()}</div>`;
+    } else {
+      html += `<div class="rules-rarity-label" style="color:${RARITY_TAG_COLOURS[tier]};">${RARITY_STARS[tier]} ${RARITY_NAMES[tier].toUpperCase()}</div>`;
+    }
+
+    html += '<div class="rules-powerup-grid">';
+    for (const key of groups[tier]) {
+      const pw = PW_DESCRIPTIONS[key];
+      if (!pw) continue;
+      const emoji = pwConfig[key].emoji;
+      const nameStyle = pw.bad ? ' style="color:#ff4444;"' : '';
+      html += `<div class="rules-pw rarity-${cls}"><span class="pw-icon">${emoji}</span><strong${nameStyle}>${pw.name}</strong> — ${pw.desc}</div>`;
+    }
+    html += '</div>';
+  }
+
+  // Crazy always at the bottom as SPECIAL
+  html += `<div class="rules-rarity-label" style="color:#ff00aa;">☢ SPECIAL</div>`;
+  html += `<div class="rules-powerup-grid">`;
+  html += `<div class="rules-pw rarity-crazy"><span class="pw-icon">🍄</span><strong>CRAZY</strong> — Masses of treats for 5s, then game over! (Lv10+)</div>`;
+  html += `</div>`;
+
+  container.innerHTML = html;
+}
 
 function openAdminPanel(currentMaint) {
   const panel = document.getElementById('admin-panel-overlay');
@@ -2296,12 +2420,13 @@ function buildVarEditor() {
 
   let html = '<div class="admin-var-label" style="color:#44ddff;">ITEM</div><div class="admin-var-label" style="color:#44ddff;">RARITY</div><div class="admin-var-label" style="color:#44ddff;">TIER</div>';
 
-  for (const [key, cfg] of Object.entries(DEFAULT_PW_CONFIG)) {
-    const currentRarity = pwConfig[key]?.rarity ?? cfg.rarity;
+  for (const [key, label] of Object.entries(PW_LABELS)) {
+    // Read the LIVE rarity from pwConfig (which loadRarities has already patched)
+    const currentRarity = pwConfig[key]?.rarity ?? DEFAULT_RARITIES[key] ?? 1;
     const tierName = RARITY_NAMES[currentRarity] || '?';
     const tierColour = RARITY_TAG_COLOURS[currentRarity] || '#888';
 
-    html += `<div class="admin-var-label">${cfg.label}</div>`;
+    html += `<div class="admin-var-label">${label}</div>`;
     html += `<input type="number" class="admin-var-input" data-pw="${key}" min="1" max="5" value="${currentRarity}">`;
     html += `<div class="admin-var-tag" data-pw-tag="${key}" style="color:${tierColour};">${tierName}</div>`;
   }
@@ -2391,8 +2516,8 @@ document.getElementById('admin-save-config-btn')?.addEventListener('click', asyn
 
 // Reset config to defaults
 document.getElementById('admin-reset-config-btn')?.addEventListener('click', () => {
-  for (const [key, cfg] of Object.entries(DEFAULT_PW_CONFIG)) {
-    if (pwConfig[key]) pwConfig[key].rarity = cfg.rarity;
+  for (const [key, rarity] of Object.entries(DEFAULT_RARITIES)) {
+    if (pwConfig[key]) pwConfig[key].rarity = rarity;
   }
   buildVarEditor();
   showPanelMsg('RESET TO DEFAULTS (NOT SAVED YET)', false);

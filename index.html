@@ -49,12 +49,6 @@
   <!-- GAME CANVAS -->
   <canvas id="game" width="720" height="480"></canvas>
 
-  <!-- FRENZY MODE HUD — Shows when frenzy power-up is active -->
-  <div id="frenzy-hud">
-    FRENZY x2
-    <div id="frenzy-bar-bg-hud"><div id="frenzy-bar"></div></div>
-  </div>
-
   <!-- ═══════════════════════════════════════════════ -->
   <!-- OVERLAYS — Menu screens layered over the canvas -->
   <!-- ═══════════════════════════════════════════════ -->
@@ -97,47 +91,7 @@
       <div class="rules-section">
         <div class="rules-heading">POWER-UPS</div>
         <p class="rules-text" style="margin-bottom:8px;">Items grouped by rarity. Rarer items spawn less often.</p>
-
-        <div class="rules-rarity-label" style="color:#44ee88;">★ COMMON</div>
-        <div class="rules-powerup-grid">
-          <div class="rules-pw rarity-common"><span class="pw-icon">🔥</span><strong>FRENZY</strong> — 2x points + speed boost for 3s</div>
-        </div>
-
-        <div class="rules-rarity-label" style="color:#aaaacc;">★★ UNCOMMON</div>
-        <div class="rules-powerup-grid">
-          <div class="rules-pw rarity-uncommon"><span class="pw-icon">❄️</span><strong>ICE</strong> — Slows the shark for 4s</div>
-          <div class="rules-pw rarity-uncommon"><span class="pw-icon">🛡️</span><strong>SHIELD</strong> — Blocks one shark hit</div>
-          <div class="rules-pw rarity-uncommon"><span class="pw-icon">☠️</span><strong style="color:#ff4444;">POISON</strong> — Bad! Lose 3 seconds</div>
-        </div>
-
-        <div class="rules-rarity-label" style="color:#4488ff;">★★★ RARE</div>
-        <div class="rules-powerup-grid">
-          <div class="rules-pw rarity-rare"><span class="pw-icon">⏳</span><strong>TIME STOP</strong> — Freezes timer &amp; shark for 3.5s</div>
-          <div class="rules-pw rarity-rare"><span class="pw-icon">🐠</span><strong>BUDDY</strong> — Mirror fish collects treats for 3s</div>
-          <div class="rules-pw rarity-rare"><span class="pw-icon">🪝</span><strong>HOOK</strong> — Grapple to the nearest treat</div>
-          <div class="rules-pw rarity-rare"><span class="pw-icon">🧪</span><strong style="color:#ff4444;">GOOP</strong> — Bad! Slows you for 4s</div>
-        </div>
-
-        <div class="rules-rarity-label" style="color:#ffdd44;">★★★★ EPIC</div>
-        <div class="rules-powerup-grid">
-          <div class="rules-pw rarity-epic"><span class="pw-icon">👻</span><strong>GHOST</strong> — Shark vanishes for 3s</div>
-          <div class="rules-pw rarity-epic"><span class="pw-icon">💣</span><strong>BOMB</strong> — Blasts shark to farthest corner</div>
-          <div class="rules-pw rarity-epic"><span class="pw-icon">👁️</span><strong>DECOY</strong> — Fake fish distracts the shark</div>
-          <div class="rules-pw rarity-epic"><span class="pw-icon">🔄</span><strong>SWAP</strong> — Swap places with the shark</div>
-        </div>
-
-        <div class="rules-rarity-label rules-rarity-mythical">★★★★★ MYTHICAL</div>
-        <div class="rules-powerup-grid">
-          <div class="rules-pw rarity-mythical"><span class="pw-icon">🌟</span><strong>STAR</strong> — Brief invincibility, shark bounces off</div>
-          <div class="rules-pw rarity-mythical"><span class="pw-icon">💎</span><strong>DOUBLE</strong> — Duplicates all treats on the field</div>
-          <div class="rules-pw rarity-mythical"><span class="pw-icon">🧲</span><strong>MAGNET</strong> — Pulls all treats towards you</div>
-          <div class="rules-pw rarity-mythical"><span class="pw-icon">🌊</span><strong>WAVE</strong> — Pushes all treats to nearest wall</div>
-        </div>
-
-        <div class="rules-rarity-label" style="color:#ff00aa;">☢ SPECIAL</div>
-        <div class="rules-powerup-grid">
-          <div class="rules-pw rarity-crazy"><span class="pw-icon">🍄</span><strong>CRAZY</strong> — Masses of treats for 5s, then game over! (Lv10+)</div>
-        </div>
+        <div id="rules-powerups-dynamic"></div>
       </div>
 
       <div class="rules-section">
@@ -227,7 +181,6 @@
       <button id="admin-panel-close-btn" class="btn-secondary" style="margin-top:14px;">CLOSE</button>
     </div>
   </div>
-
 
   <!-- PAUSE OVERLAY (tab-out) -->
   <div id="pause-overlay" class="game-overlay hidden">

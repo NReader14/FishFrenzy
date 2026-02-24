@@ -49,7 +49,6 @@ let isOnline = true;
 // ─── AUTH ───
 
 export async function initAuth() {
-  // If already authenticated (admin or anon), don’t override session
   if (auth.currentUser) {
     currentUser = auth.currentUser;
     console.log("[Firebase] Existing session:", currentUser.uid);
