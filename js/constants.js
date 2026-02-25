@@ -26,10 +26,10 @@ export const CRAZY_ITEM_LIFETIME = 900;
 export const MAX_FIELD_ITEMS     = 3;
 
 // Fish movement
-export const FISH_BASE_SPEED      = 2.5;
+export const FISH_BASE_SPEED      = 2.0;
 export const FISH_ACCEL_RATE      = 0.003;
 export const FISH_MAX_SPEED_BONUS = 0.8;
-export const FRENZY_SPEED_BOOST   = 1.2;
+export const FRENZY_SPEED_BOOST   = 1.0;
 
 // Shark
 export const SHARK_START_DELAY = 90;

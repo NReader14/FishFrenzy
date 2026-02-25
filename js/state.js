@@ -78,6 +78,11 @@ const S = {
 
   // Admin credentials (temporary)
   adminCredentials: null,
+
+  // User settings (persisted to localStorage)
+  settings: {
+    mysteryBlocks: false,
+  },
 };
 
 export default S;

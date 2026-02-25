@@ -9,7 +9,7 @@ import {
   rand, dist
 } from './js/constants.js';
 import {
-  ctx, overlay, winOverlay, endScreenOverlay, scoreboardOverlay,
+  ctx, overlay, winOverlay, scoreboardOverlay,
   rulesOverlay, adminOverlay, scoreEl, timerEl, timerBar,
   levelEl, treatsLeftEl, startBtn, rulesBtn, rulesBackBtn,
   scoreboardBtn, closeScoreboardBtn, adminEmailInput,
@@ -33,7 +33,7 @@ import {
 } from './js/drawing.js';
 import { collectTreat } from './js/scoring.js';
 import {
-  showNameEntry, showScoreboard, showLoading, hideLoading,
+  showNameEntry, showScoreboard, showFullLeaderboard, showLoading, hideLoading,
   showAdminError, hideAdminError, buildRulesHTML, openAdminPanel,
   setupAdminEvents, setInitGame
 } from './js/overlays.js';
@@ -41,6 +41,8 @@ import {
   initAuth, fetchHighScores, fetchMaintenance, setMaintenance,
   verifyAdminCredentials
 } from './firebase-config.js';
+import { initControls } from './js/controls.js';
+import { initSettings } from './js/settings.js';
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -182,7 +184,7 @@ function startLevel() {
   S.crazyActive = S.timerFrozen = false;
   S.decoyActive = S.starActive = S.hookActive = S.goopActive = false;
   S.comboCount = 0; S.comboTimer = 0;
-  S.accelBonus = 0; S.lastMoveDir = { x: 0, y: 0 };
+  S.accelBonus = 0; S.lastMoveDir = { x: 0, y: 0 }; S.keys = {};
   S.lastSpawnedPW = null;
   S.gamePaused = false; S.goopActive = false;
   S.hookLine = null; S.swapAnim = null; S.chompAnim = null;
@@ -261,7 +263,7 @@ function endGame(won, msg) {
 // UPDATE FUNCTIONS
 // ═══════════════════════════════════════════════════════════════
 
-function updateFish() {
+function updateFish(dt = 1) {
   if (S.gamePaused) return;
 
   let moveX = 0, moveY = 0;
@@ -272,13 +274,13 @@ function updateFish() {
 
   if (moveX !== 0 || moveY !== 0) {
     if (moveX === S.lastMoveDir.x && moveY === S.lastMoveDir.y) {
-      S.accelBonus = Math.min(S.accelBonus + FISH_ACCEL_RATE, FISH_MAX_SPEED_BONUS);
+      S.accelBonus = Math.min(S.accelBonus + FISH_ACCEL_RATE * dt, FISH_MAX_SPEED_BONUS);
     } else {
-      S.accelBonus *= 0.5;
+      S.accelBonus *= Math.pow(0.5, dt);
     }
     S.lastMoveDir = { x: moveX, y: moveY };
   } else {
-    S.accelBonus *= 0.95;
+    S.accelBonus *= Math.pow(0.95, dt);
     S.lastMoveDir = { x: 0, y: 0 };
   }
 
@@ -420,13 +422,18 @@ function updateTreats() {
 // MAIN GAME LOOP
 // ═══════════════════════════════════════════════════════════════
 
-function loop() {
+let lastTimestamp = 0;
+
+function loop(timestamp) {
   if (!S.gameRunning) return;
+
+  const dt = (lastTimestamp && timestamp) ? Math.min((timestamp - lastTimestamp) / (1000 / 60), 3) : 1;
+  lastTimestamp = timestamp;
 
   updateSwapAnim();
   updateHookAnim();
   if (!S.gamePaused || S.swapAnim) {
-    updateFish();
+    updateFish(dt);
     updateShark();
     updateBuddy();
     updateTreats();
@@ -466,85 +473,8 @@ function loop() {
 // INPUT HANDLING
 // ═══════════════════════════════════════════════════════════════
 
-document.addEventListener('keydown', e => {
-  if (S.nameEntryActive || !e.key) return;
-  const tag = document.activeElement?.tagName;
-  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-
-  const k = e.key;
-
-  // Enter/Space on overlay screens
-  if (!S.gameRunning && (k === 'Enter' || k === ' ')) {
-    const nextBtn = document.getElementById('next-level-btn');
-    if (nextBtn && !winOverlay.classList.contains('hidden')) {
-      e.preventDefault(); nextBtn.click(); return;
-    }
-    const playBtn = document.getElementById('play-again-btn');
-    if (playBtn && !endScreenOverlay.classList.contains('hidden')) {
-      e.preventDefault(); playBtn.click(); return;
-    }
-    if (!overlay.classList.contains('hidden')) {
-      e.preventDefault(); startBtn.click(); return;
-    }
-  }
-
-  // Escape on end screen
-  if (!S.gameRunning && k === 'Escape') {
-    const menuBtn = document.getElementById('main-menu-btn');
-    if (menuBtn && !endScreenOverlay.classList.contains('hidden')) {
-      e.preventDefault(); menuBtn.click(); return;
-    }
-  }
-
-  // ESC toggles pause
-  if (k === 'Escape' && S.gameRunning) {
-    if (S.gamePaused && !S.swapAnim) {
-      S.gamePaused = false;
-      if (!S.hourglassActive) S.timerFrozen = false;
-      S.keys = {};
-      const po = document.getElementById('pause-overlay');
-      if (po) po.classList.add('hidden');
-    } else if (!S.gamePaused) {
-      S.gamePaused = true;
-      S.timerFrozen = true;
-      const po = document.getElementById('pause-overlay');
-      if (po) po.classList.remove('hidden');
-    }
-    e.preventDefault();
-    return;
-  }
-
-  S.keys[k.toLowerCase()] = true;
-  e.preventDefault();
-});
-
-document.addEventListener('keyup', e => {
-  if (!e.key) return;
-  S.keys[e.key.toLowerCase()] = false;
-});
-
-
-// ═══════════════════════════════════════════════════════════════
-// PAUSE / VISIBILITY
-// ═══════════════════════════════════════════════════════════════
-
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden && S.gameRunning && !S.gamePaused) {
-    S.gamePaused = true;
-    S.timerFrozen = true;
-    const po = document.getElementById('pause-overlay');
-    if (po) po.classList.remove('hidden');
-  }
-});
-
-document.getElementById('pause-continue-btn')?.addEventListener('click', () => {
-  if (!S.gameRunning) return;
-  S.gamePaused = false;
-  if (!S.hourglassActive) S.timerFrozen = false;
-  S.keys = {};
-  const po = document.getElementById('pause-overlay');
-  if (po) po.classList.add('hidden');
-});
+initControls();
+initSettings();
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -575,6 +505,10 @@ scoreboardBtn.addEventListener('click', async () => {
 closeScoreboardBtn.addEventListener('click', () => {
   scoreboardOverlay.classList.add('hidden');
   overlay.classList.remove('hidden');
+});
+
+document.getElementById('view-all-scores-btn')?.addEventListener('click', () => {
+  showFullLeaderboard();
 });
 
 // Admin panel button (on scoreboard page)

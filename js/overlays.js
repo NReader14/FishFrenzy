@@ -12,7 +12,7 @@ import {
 import { CHARS } from './constants.js';
 import { playCRTWipe } from './animations.js';
 import {
-  fetchHighScores, saveHighScore, isFirebaseOnline,
+  fetchHighScores, fetchAllScores, saveHighScore, isFirebaseOnline,
   adminWipeScores, fetchMaintenance, setMaintenance,
   saveGameConfig
 } from '../firebase-config.js';
@@ -70,6 +70,30 @@ export function buildScoreboardHtml(scores, highlightIdx = -1) {
 
   html += '</tbody></table>';
   return html;
+}
+
+export async function showFullLeaderboard() {
+  const el = document.getElementById('full-leaderboard-overlay');
+  const scoreboardOverlay = document.getElementById('scoreboard-overlay');
+  el.innerHTML = '<p class="loading-text">LOADING...</p>';
+  el.classList.remove('hidden');
+  scoreboardOverlay.classList.add('hidden');
+
+  const scores = await fetchAllScores(100);
+
+  const tableHtml = buildScoreboardHtml(scores);
+  el.innerHTML = `
+    <div class="scoreboard-title">ALL SCORES</div>
+    <div class="full-lb-count">${scores.length} ENTR${scores.length === 1 ? 'Y' : 'IES'}</div>
+    <div class="full-lb-scroll">${tableHtml}</div>
+    <div class="scoreboard-actions">
+      <button id="full-lb-back-btn" class="btn-secondary">BACK</button>
+    </div>`;
+
+  document.getElementById('full-lb-back-btn').addEventListener('click', () => {
+    el.classList.add('hidden');
+    scoreboardOverlay.classList.remove('hidden');
+  });
 }
 
 export async function showScoreboard(highlightIdx = -1) {

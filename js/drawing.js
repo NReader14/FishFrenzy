@@ -270,22 +270,43 @@ export function drawPWItems() {
       ctx.fill();
     }
 
+    const mysteryGlow = S.settings.mysteryBlocks ? '#f7b800' : c.glow;
+
     ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2);
-    ctx.fillStyle = c.glow + '26'; ctx.fill();
+    ctx.fillStyle = mysteryGlow + '26'; ctx.fill();
     ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI * 2);
-    ctx.fillStyle = c.glow + '10'; ctx.fill();
+    ctx.fillStyle = mysteryGlow + '10'; ctx.fill();
 
     const t = Date.now() * 0.003;
     for (let i = 0; i < 6; i++) {
       const a = t + (i / 6) * Math.PI * 2;
-      ctx.fillStyle = c.glow;
+      ctx.fillStyle = mysteryGlow;
       ctx.fillRect(Math.cos(a) * 14 - 1, Math.sin(a) * 14 - 1, 3, 3);
     }
 
-    ctx.font = '22px serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(c.emoji, 0, 0);
+    if (S.settings.mysteryBlocks) {
+      // Mario-style mystery block
+      ctx.fillStyle = '#c87000';
+      ctx.fillRect(-13, -13, 26, 26);
+      ctx.fillStyle = '#f7b800';
+      ctx.fillRect(-11, -11, 22, 18);
+      ctx.fillStyle = '#ffd84d';
+      ctx.fillRect(-11, -11, 22, 5);
+      ctx.fillRect(-11, -11, 5, 22);
+      ctx.fillStyle = '#c87000';
+      ctx.fillRect(-11, 9, 22, 3);
+      ctx.fillRect(9, -11, 3, 22);
+      ctx.font = 'bold 15px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fff';
+      ctx.fillText('?', 0, 1);
+    } else {
+      ctx.font = '22px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(c.emoji, 0, 0);
+    }
 
     ctx.restore();
   }

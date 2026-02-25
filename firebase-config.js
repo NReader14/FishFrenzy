@@ -73,6 +73,28 @@ onAuthStateChanged(auth, (user) => {
 
 // ─── SCORES ───
 
+export async function fetchAllScores(max = 100) {
+  try {
+    const q = query(
+      collection(db, SCORES_COLLECTION),
+      orderBy("score", "desc"),
+      limit(max)
+    );
+    const snapshot = await getDocs(q);
+    const scores = [];
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      scores.push({ id: docSnap.id, name: data.name || "???", score: data.score || 0, level: data.level || 1 });
+    });
+    isOnline = true;
+    return scores;
+  } catch (err) {
+    console.warn("[Firebase] Failed to fetch all scores:", err.message);
+    isOnline = false;
+    return getOfflineScores();
+  }
+}
+
 export async function fetchHighScores() {
   try {
     const q = query(

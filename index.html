@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Fish Frenzy!</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐟</text></svg>">
   <link rel="stylesheet" href="styles.css">
@@ -55,14 +55,16 @@
 
   <!-- MAIN MENU OVERLAY -->
   <div id="overlay" class="game-overlay">
-    <h1>FISH<br>FRENZY</h1>
+    <h1>FISH FRENZY</h1>
     <p class="subtitle">EAT ALL TREATS &middot; ESCAPE THE SHARK</p>
     <div class="menu-buttons">
       <button id="start-btn" class="btn-primary">START</button>
       <button id="rules-btn" class="btn-secondary">RULES</button>
       <button id="scoreboard-btn" class="btn-secondary">HI-SCORES</button>
+      <button id="settings-btn" class="btn-secondary">SETTINGS</button>
     </div>
     <p class="controls-hint">ARROW KEYS / WASD TO SWIM</p>
+      <p class="controls-hint controls-hint-touch">TAP &amp; DRAG ANYWHERE TO SWIM</p>
     <p class="insert-coin">PRESS START</p>
   </div>
 
@@ -109,6 +111,19 @@
     <button id="rules-back-btn" class="btn-secondary">BACK</button>
   </div>
 
+  <!-- SETTINGS OVERLAY -->
+  <div id="settings-overlay" class="game-overlay hidden">
+    <div class="settings-title">SETTINGS</div>
+    <div class="settings-section">
+      <div class="settings-row">
+        <span class="settings-label">MYSTERY BLOCKS</span>
+        <button id="toggle-mystery-btn" class="settings-toggle">OFF</button>
+      </div>
+      <p class="settings-hint">Hides power-up icons — collect to reveal!</p>
+    </div>
+    <button id="settings-back-btn" class="btn-secondary">BACK</button>
+  </div>
+
   <!-- NAME ENTRY OVERLAY -->
   <div id="name-entry-overlay" class="game-overlay hidden"></div>
 
@@ -124,9 +139,13 @@
     <div id="scoreboard-content"><p class="loading-text">LOADING...</p></div>
     <div class="scoreboard-actions">
       <button id="close-scoreboard-btn" class="btn-secondary">BACK</button>
+      <button id="view-all-scores-btn" class="btn-secondary" style="border-color:#88ffcc;color:#88ffcc;">VIEW ALL</button>
       <button id="admin-panel-btn" class="btn-secondary" style="border-color:#44ddff;color:#44ddff;">ADMIN</button>
     </div>
   </div>
+
+  <!-- FULL LEADERBOARD OVERLAY -->
+  <div id="full-leaderboard-overlay" class="game-overlay hidden"></div>
 
   <!-- ADMIN LOGIN OVERLAY (gateway to admin panel) -->
   <div id="admin-overlay" class="game-overlay hidden">
