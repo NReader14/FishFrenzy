@@ -270,6 +270,7 @@ const PW_DESCRIPTIONS = {
   double:    { name: 'DOUBLE',    desc: 'Duplicates all treats on the field' },
   magnet:    { name: 'MAGNET',    desc: 'Pulls all treats towards you' },
   wave:      { name: 'WAVE',      desc: 'Pushes all treats to nearest wall' },
+  rainbow:   { name: 'RAINBOW',   desc: 'ULTRA! Activates Frenzy, Ice, Time Stop, Shield, Buddy, Decoy &amp; Star at once! (Lv6+)' },
 };
 
 export function buildRulesHTML() {
@@ -278,7 +279,7 @@ export function buildRulesHTML() {
 
   const groups = { 1: [], 2: [], 3: [], 4: [], 5: [] };
   for (const [key, cfg] of Object.entries(pwConfig)) {
-    if (key === 'crazy') continue;
+    if (key === 'crazy' || key === 'rainbow') continue;
     const r = cfg.rarity;
     if (r >= 1 && r <= 5) groups[r].push(key);
   }
@@ -302,9 +303,10 @@ export function buildRulesHTML() {
     }
     html += '</div>';
   }
-  html += `<div class="rules-rarity-label" style="color:#ff00aa;">☢ SPECIAL</div>`;
+  html += `<div class="rules-rarity-label" style="color:#ff00aa;">☢ SPECIAL (LV6+)</div>`;
   html += `<div class="rules-powerup-grid">`;
-  html += `<div class="rules-pw rarity-crazy"><span class="pw-icon">🍄</span><strong>CRAZY</strong> — Masses of treats for 5s, then game over! (Lv10+)</div>`;
+  html += `<div class="rules-pw rarity-crazy"><span class="pw-icon">🍄</span><strong>CRAZY</strong> — Masses of treats for 5s, then game over!</div>`;
+  html += `<div class="rules-pw rarity-rainbow"><span class="pw-icon">🌈</span><strong style="background:linear-gradient(90deg,#ff4444,#ff8800,#ffee00,#44ee44,#44aaff,#aa44ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">RAINBOW</strong> — ULTRA! Activates Frenzy, Ice, Time Stop, Shield, Buddy, Decoy &amp; Star at once!</div>`;
   html += `</div>`;
   container.innerHTML = html;
 }
@@ -322,12 +324,13 @@ const PW_LABELS = {
   buddy: '🐠 Buddy', hook: '🪝 Hook', ghost: '👻 Ghost',
   bomb: '💣 Bomb', decoy: '👁️ Decoy', swap: '🔄 Swap',
   star: '🌟 Star', double: '💎 Double', magnet: '🧲 Magnet', wave: '🌊 Wave',
+  rainbow: '🌈 Rainbow',
 };
 
 const DEFAULT_RARITIES = {
   frenzy: 1, ice: 2, shield: 2, poison: 2, goop: 3,
   hourglass: 3, buddy: 3, hook: 3, ghost: 4, bomb: 4,
-  decoy: 4, swap: 4, star: 5, double: 5, magnet: 5, wave: 5,
+  decoy: 4, swap: 4, star: 5, double: 5, magnet: 5, wave: 5, rainbow: 5,
 };
 
 function buildVarEditor() {

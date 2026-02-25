@@ -221,6 +221,17 @@ body::after {
 .s-double { color: #44ddff !important; }
 .s-wave   { color: #4488ff !important; }
 .s-goop   { color: #66cc44 !important; text-shadow: 0 0 4px #66cc44; }
+.s-rainbow { animation: rainbow-cycle .6s linear infinite !important; }
+
+@keyframes rainbow-cycle {
+  0%   { color: #ff4444; text-shadow: 0 0 8px #ff4444; }
+  17%  { color: #ff8800; text-shadow: 0 0 8px #ff8800; }
+  33%  { color: #ffee00; text-shadow: 0 0 8px #ffee00; }
+  50%  { color: #44ee44; text-shadow: 0 0 8px #44ee44; }
+  67%  { color: #44aaff; text-shadow: 0 0 8px #44aaff; }
+  83%  { color: #aa44ff; text-shadow: 0 0 8px #aa44ff; }
+  100% { color: #ff4444; text-shadow: 0 0 8px #ff4444; }
+}
 
 @keyframes star-pulse {
   0%, 100% { text-shadow: 0 0 8px rgba(255,238,68,.5); }
@@ -989,9 +1000,9 @@ canvas {
 
 .admin-section-title {
   font-family: 'Press Start 2P', monospace;
-  font-size: 7px;
+  font-size: 9px;
   color: #44ddff;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   letter-spacing: 1px;
 }
 
@@ -1012,10 +1023,10 @@ canvas {
 /* Variable editor grid */
 .admin-var-grid {
   display: grid;
-  grid-template-columns: 1fr 50px 70px;
-  gap: 4px 8px;
+  grid-template-columns: 1fr 56px 80px;
+  gap: 6px 10px;
   align-items: center;
-  max-height: 220px;
+  max-height: 320px;
   overflow-y: auto;
   padding: 4px 0;
 }
@@ -1026,7 +1037,7 @@ canvas {
 
 .admin-var-label {
   font-family: 'Press Start 2P', monospace;
-  font-size: 6px;
+  font-size: 8px;
   color: #8899bb;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1034,10 +1045,10 @@ canvas {
 }
 
 .admin-var-input {
-  width: 42px;
-  padding: 3px 4px;
+  width: 50px;
+  padding: 5px 4px;
   font-family: 'Press Start 2P', monospace;
-  font-size: 7px;
+  font-size: 9px;
   color: #44ddff;
   background: #0a0e1a;
   border: 1px solid #1a2a44;
@@ -1050,9 +1061,9 @@ canvas {
 
 .admin-var-tag {
   font-family: 'Press Start 2P', monospace;
-  font-size: 6px;
+  font-size: 8px;
   text-align: center;
-  padding: 2px 0;
+  padding: 3px 0;
 }
 
 /* Danger button */

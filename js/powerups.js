@@ -309,6 +309,29 @@ function activateHook() {
   }
 }
 
+// ─── RAINBOW ───
+function activateRainbow() {
+  S.rainbowActive = true;
+  stOn('rainbow', 's-rainbow');
+  S.scorePopups.push({ x: S.fish.x, y: S.fish.y - 30, pts: '🌈 ULTRA!', life: 2, decay: 0.015 });
+  spawnParticles(S.fish.x, S.fish.y, '#ff88ff', 50);
+
+  activateFrenzy();
+  activateIce();
+  activateHourglass();
+  activateShield();
+  activateBuddy();
+  activateDecoy();
+  activateStar();
+
+  S.rainbowTO = clearTO(S.rainbowTO);
+  S.rainbowTO = setTimeout(() => {
+    S.rainbowActive = false;
+    stOff('rainbow', 's-rainbow');
+    S.rainbowTO = null;
+  }, 1500);
+}
+
 // ─── GOOP ───
 function activateGoop() {
   S.goopActive = true;
@@ -348,7 +371,8 @@ export const pwConfig = {
   double:    { emoji: '💎', glow: '#44ddff', fn: activateDouble,    rarity: 5, ok: () => S.treats.length > 0 },
   magnet:    { emoji: '🧲', glow: '#dd44ff', fn: activateMagnet,    rarity: 5, ok: () => !S.magnetActive },
   wave:      { emoji: '🌊', glow: '#4488ff', fn: activateWave,      rarity: 5, ok: () => S.treats.length > 0 },
-  crazy:     { emoji: '🍄', glow: '#ff00aa', fn: activateCrazy,     rarity: 0, ok: () => S.level > 9 && !S.crazyActive, life: CRAZY_ITEM_LIFETIME }
+  crazy:     { emoji: '🍄', glow: '#ff00aa', fn: activateCrazy,     rarity: 0, ok: () => S.level >= 6 && !S.crazyActive, life: CRAZY_ITEM_LIFETIME },
+  rainbow:   { emoji: '🌈', glow: '#ff88ff', fn: activateRainbow,  rarity: 5, ok: () => !S.rainbowActive, life: 1500 }
 };
 
 
@@ -473,5 +497,5 @@ export function updatePWItems() {
 
 export function clearAllPowerupTimeouts() {
   [S.frenzyTO, S.iceTO, S.ghostTO, S.hourglassTO, S.buddyTO,
-   S.bombTO, S.crazyTO, S.decoyTO, S.starTO].forEach(clearTO);
+   S.bombTO, S.crazyTO, S.decoyTO, S.starTO, S.rainbowTO].forEach(clearTO);
 }

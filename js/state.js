@@ -32,7 +32,7 @@ const S = {
     frenzy: null, ice: null, shield: null, magnet: null,
     ghost: null, hourglass: null, buddy: null, bomb: null, crazy: null,
     decoy: null, swap: null, star: null, double: null,
-    wave: null, poison: null, hook: null, goop: null
+    wave: null, poison: null, hook: null, goop: null, rainbow: null
   },
 
   // Active power-up states
@@ -49,6 +49,7 @@ const S = {
   starActive: false, starTO: null,
   hookActive: false,
   goopActive: false, goopTO: null, goopStartTime: 0,
+  rainbowActive: false, rainbowTO: null,
 
   // Combo system
   comboCount: 0,

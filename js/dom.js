@@ -43,6 +43,6 @@ export const scoreboardContent = document.getElementById('scoreboard-content');
 // Status bar indicators
 export const st = {};
 ['frenzy','ice','shield','magnet','ghost','time','buddy','bomb','crazy','combo',
- 'decoy','star','hook','goop'].forEach(
+ 'decoy','star','hook','goop','rainbow'].forEach(
   k => st[k] = document.getElementById('st-' + k)
 );

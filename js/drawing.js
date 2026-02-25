@@ -270,7 +270,8 @@ export function drawPWItems() {
       ctx.fill();
     }
 
-    const mysteryGlow = S.settings.mysteryBlocks ? '#f7b800' : c.glow;
+    const rainbowGlow = k === 'rainbow' ? `hsl(${(Date.now() * 0.3) % 360}, 100%, 65%)` : c.glow;
+    const mysteryGlow = S.settings.mysteryBlocks ? '#f7b800' : rainbowGlow;
 
     ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2);
     ctx.fillStyle = mysteryGlow + '26'; ctx.fill();
