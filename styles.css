@@ -246,6 +246,7 @@ body::after {
 }
 .s-prompt { color: #aa66ff !important; animation: prompt-pulse .5s ease-in-out infinite; }
 .s-claude { animation: claude-glow .45s ease-in-out infinite; }
+.s-bodyswap { animation: bodyswap-flash .4s ease-in-out infinite; }
 
 @keyframes prompt-pulse {
   0%, 100% { text-shadow: 0 0 8px rgba(170,102,255,.5); color: #aa66ff; }
@@ -255,6 +256,11 @@ body::after {
 @keyframes claude-glow {
   0%, 100% { color: #cc88ff !important; text-shadow: 0 0 10px #cc88ff; }
   50%       { color: #ffcc44 !important; text-shadow: 0 0 18px #ffcc44; }
+}
+
+@keyframes bodyswap-flash {
+  0%, 100% { color: #ff4488 !important; text-shadow: 0 0 10px #ff4488; }
+  50%       { color: #44ff88 !important; text-shadow: 0 0 14px #44ff88; }
 }
 
 @keyframes rainbow-cycle {

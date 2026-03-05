@@ -326,6 +326,7 @@ const PW_DESCRIPTIONS = {
   wave:      { name: 'WAVE',      desc: 'Pushes all treats to nearest wall' },
   rainbow:   { name: 'RAINBOW',   desc: 'ULTRA! Activates Frenzy, Ice, Time Stop, Shield, Buddy, Decoy &amp; Star at once! (Lv6+)' },
   prompt:    { name: 'PROMPT',    desc: 'Confuses the shark! Freezes it 1s then sends it wandering randomly for 5s' },
+  bodyswap:  { name: 'BODY SWAP', desc: 'YOU become the shark! Collect treats as the shark while the fish hunts you for 8s' },
 };
 
 export function buildRulesHTML() {
@@ -359,7 +360,7 @@ export function buildRulesHTML() {
     html += '</div>';
   }
 
-  // Legendary tier
+  // Legendary tier (bodyswap is rarity 5 so already in the tier groups above)
   html += `<div class="rules-rarity-label rarity-legendary-label">${RARITY_STARS[6]} ${RARITY_NAMES[6].toUpperCase()}</div>`;
   html += `<div class="rules-powerup-grid">`;
   html += `<div class="rules-pw rarity-legendary"><span class="pw-icon">🍄</span><strong style="color:#ff00aa;">CRAZY</strong> — Masses of treats for 5s, then game over! (Lv9+)</div>`;
@@ -384,13 +385,14 @@ const PW_LABELS = {
   bomb: '💣 Bomb', decoy: '👁️ Decoy', swap: '🔄 Swap',
   star: '🌟 Star', double: '💎 Double', magnet: '🧲 Magnet', wave: '🌊 Wave',
   rainbow: '🌈 Rainbow', crazy: '🍄 Crazy', prompt: '✍️ Prompt', claude: '🤖 The Claude',
+  bodyswap: '🎭 Body Swap',
 };
 
 const DEFAULT_RARITIES = {
   frenzy: 1, ice: 2, shield: 2, poison: 2, goop: 3,
   hourglass: 3, buddy: 3, hook: 3, ghost: 4, bomb: 4,
   decoy: 4, swap: 4, star: 5, double: 5, magnet: 5, wave: 5,
-  rainbow: 6, crazy: 6, prompt: 3, claude: 6,
+  rainbow: 6, crazy: 6, prompt: 3, claude: 6, bodyswap: 5,
 };
 
 function buildVarEditor() {

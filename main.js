@@ -187,6 +187,7 @@ function startLevel() {
   S.rainbowActive = false;
   S.promptActive = false; S.promptWandering = false; S.promptWanderTimer = 0;
   S.claudeActive = false; S.claudeAnim = null;
+  S.bodySwapActive = false; S.bodySwapTO = clearTO(S.bodySwapTO);
   S.comboCount = 0; S.comboTimer = 0;
   S.accelBonus = 0; S.lastMoveDir = { x: 0, y: 0 }; S.keys = {};
   S.lastSpawnedPW = null;
@@ -204,7 +205,7 @@ function startLevel() {
     s.classList.remove('s-on', 's-frenzy', 's-ice', 's-shield', 's-magnet',
       's-ghost', 's-time', 's-buddy', 's-bomb', 's-combo', 's-crazy',
       's-decoy', 's-star', 's-poison', 's-hook', 's-swap', 's-double', 's-wave', 's-goop', 's-rainbow',
-      's-prompt', 's-claude');
+      's-prompt', 's-claude', 's-bodyswap');
     s.style.color = '';
   }
   st.combo.textContent = '⚡x1';
@@ -239,13 +240,14 @@ function endGame(won, msg) {
   S.rainbowActive = false;
   S.promptActive = false; S.promptWandering = false;
   S.claudeActive = false; S.claudeAnim = null;
+  S.bodySwapActive = false;
   S.decoyFish = null;
 
   for (const s of Object.values(st)) {
     s.classList.remove('s-on', 's-frenzy', 's-ice', 's-shield', 's-magnet',
       's-ghost', 's-time', 's-buddy', 's-bomb', 's-combo', 's-crazy',
       's-decoy', 's-star', 's-poison', 's-hook', 's-swap', 's-double', 's-wave', 's-goop', 's-rainbow',
-      's-prompt', 's-claude');
+      's-prompt', 's-claude', 's-bodyswap');
     s.style.color = '';
   }
 
@@ -487,17 +489,19 @@ function updateBuddy() {
 function updateTreats() {
   if (S.gamePaused) return;
 
+  const collectTarget = S.bodySwapActive ? S.shark : S.fish;
+
   if (S.magnetActive) {
     for (const t of S.treats) {
       if (t.collected) continue;
-      const dx = S.fish.x - t.x, dy = S.fish.y - t.y;
+      const dx = collectTarget.x - t.x, dy = collectTarget.y - t.y;
       const d = Math.hypot(dx, dy);
       if (d > 5) { t.x += dx / d * 18; t.y += dy / d * 18; }
     }
   }
 
   for (const t of S.treats) {
-    if (!t.collected && dist(t, S.fish) < 24) collectTreat(t);
+    if (!t.collected && dist(t, collectTarget) < 24) collectTreat(t);
   }
 
   S.treats = S.treats.filter(t => !t.collected);
