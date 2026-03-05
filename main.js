@@ -29,7 +29,7 @@ import {
   drawWater, drawFish, drawBuddy, drawDecoy, drawShark,
   drawTreats, drawPWItems, drawWarning, drawFrenzyOverlay, drawIceOverlay,
   drawHourglassOverlay, drawCrazyOverlay, drawFishGlow, drawMagnetLines,
-  drawScanlines, drawClosestTreatArrow, drawPowerupTimerBars
+  drawScanlines, drawClosestTreatArrow, drawPowerupTimerBars, drawRainbowOverlay
 } from './js/drawing.js';
 import { collectTreat } from './js/scoring.js';
 import {
@@ -183,6 +183,7 @@ function startLevel() {
   S.ghostActive = S.hourglassActive = S.buddyActive = S.bombActive = false;
   S.crazyActive = S.timerFrozen = false;
   S.decoyActive = S.starActive = S.hookActive = S.goopActive = false;
+  S.rainbowActive = false;
   S.comboCount = 0; S.comboTimer = 0;
   S.accelBonus = 0; S.lastMoveDir = { x: 0, y: 0 }; S.keys = {};
   S.lastSpawnedPW = null;
@@ -194,11 +195,12 @@ function startLevel() {
   S.buddyTO = clearTO(S.buddyTO); S.bombTO = clearTO(S.bombTO);
   S.crazyTO = clearTO(S.crazyTO); S.decoyTO = clearTO(S.decoyTO);
   S.starTO = clearTO(S.starTO); S.goopTO = clearTO(S.goopTO);
+  S.rainbowTO = clearTO(S.rainbowTO);
 
   for (const s of Object.values(st)) {
     s.classList.remove('s-on', 's-frenzy', 's-ice', 's-shield', 's-magnet',
       's-ghost', 's-time', 's-buddy', 's-bomb', 's-combo', 's-crazy',
-      's-decoy', 's-star', 's-poison', 's-hook', 's-swap', 's-double', 's-wave', 's-goop');
+      's-decoy', 's-star', 's-poison', 's-hook', 's-swap', 's-double', 's-wave', 's-goop', 's-rainbow');
     s.style.color = '';
   }
   st.combo.textContent = '⚡x1';
@@ -230,12 +232,13 @@ function endGame(won, msg) {
   S.frenzyActive = S.iceActive = S.ghostActive = S.hourglassActive = false;
   S.buddyActive = S.bombActive = S.crazyActive = S.timerFrozen = false;
   S.decoyActive = S.starActive = S.hookActive = S.goopActive = false;
+  S.rainbowActive = false;
   S.decoyFish = null;
 
   for (const s of Object.values(st)) {
     s.classList.remove('s-on', 's-frenzy', 's-ice', 's-shield', 's-magnet',
       's-ghost', 's-time', 's-buddy', 's-bomb', 's-combo', 's-crazy',
-      's-decoy', 's-star', 's-poison', 's-hook', 's-swap', 's-double', 's-wave', 's-goop');
+      's-decoy', 's-star', 's-poison', 's-hook', 's-swap', 's-double', 's-wave', 's-goop', 's-rainbow');
     s.style.color = '';
   }
 
@@ -458,6 +461,7 @@ function loop(timestamp) {
   drawSwapEffect();
   drawWarning();
   drawFrenzyOverlay();
+  drawRainbowOverlay();
   drawIceOverlay();
   drawHourglassOverlay();
   drawCrazyOverlay();

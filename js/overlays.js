@@ -113,6 +113,8 @@ export function showNameEntry(finalScore, finalLevel, msg) {
   let activeSlot = 0;
   let errorMsg = '';
 
+  const isTouch = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+
   function render() {
     const errH = errorMsg ? `<div class="name-error">${errorMsg}</div>` : '';
 
@@ -132,9 +134,22 @@ export function showNameEntry(finalScore, finalLevel, msg) {
         </div>`;
     }
 
+    const hintText = isTouch
+      ? 'TAP &#9650;&#9660; TO CHANGE &middot; TAP SLOT TO SELECT<br>TAP "TYPE NAME" TO USE KEYBOARD<br>ENTER TO CONFIRM'
+      : 'TYPE A-Z ON YOUR KEYBOARD<br>UP/DOWN TO SCROLL &middot; LEFT/RIGHT TO SELECT<br>ENTER TO CONFIRM';
+
     html += `</div>
-      <div class="name-entry-hint">TYPE A-Z ON YOUR KEYBOARD<br>UP/DOWN TO SCROLL &middot; LEFT/RIGHT TO SELECT<br>ENTER TO CONFIRM</div>
-      <button id="confirm-name-btn" class="btn-primary" style="padding:10px 28px;font-size:10px;">OK</button>`;
+      <div class="name-entry-hint">${hintText}</div>`;
+
+    if (isTouch) {
+      html += `<button id="mobile-kb-btn" class="btn-secondary" style="font-size:7px;padding:6px 14px;margin:6px 0 4px;">&#9000; TYPE NAME</button>`;
+    }
+
+    html += `<button id="confirm-name-btn" class="btn-primary" style="padding:10px 28px;font-size:10px;">OK</button>
+      <input type="text" id="name-mobile-input" autocomplete="off" autocorrect="off" autocapitalize="characters"
+        spellcheck="false" inputmode="text"
+        style="position:fixed;opacity:0.01;width:1px;height:1px;top:50%;left:50%;font-size:16px;
+               border:none;outline:none;background:transparent;color:transparent;padding:0;pointer-events:auto;">`;
 
     nameEntryOverlay.innerHTML = html;
 
@@ -155,6 +170,42 @@ export function showNameEntry(finalScore, finalLevel, msg) {
     });
 
     document.getElementById('confirm-name-btn').addEventListener('click', tryConfirm);
+
+    // "Type Name" button — user gesture needed on iOS to trigger keyboard
+    const mobileKbBtn = document.getElementById('mobile-kb-btn');
+    if (mobileKbBtn) {
+      mobileKbBtn.addEventListener('click', function() {
+        const mi = document.getElementById('name-mobile-input');
+        if (mi) mi.focus();
+      });
+    }
+
+    // Mobile input — handles keyboard typing without rebuilding DOM (keeps keyboard open)
+    const mobileInput = document.getElementById('name-mobile-input');
+    if (mobileInput) {
+      mobileInput.addEventListener('input', function(e) {
+        if (confirming) return;
+        const char = e.data ? e.data.toUpperCase() : null;
+        if (char && CHARS.indexOf(char) !== -1) {
+          slots[activeSlot] = CHARS.indexOf(char);
+          if (activeSlot < 2) activeSlot++;
+          errorMsg = '';
+        } else if (e.inputType === 'deleteContentBackward') {
+          slots[activeSlot] = CHARS.indexOf(' ');
+          activeSlot = Math.max(0, activeSlot - 1);
+          errorMsg = '';
+        }
+        this.value = '';
+        // Update only slot chars in-place to avoid closing mobile keyboard
+        nameEntryOverlay.querySelectorAll('.slot-char').forEach((el, i) => {
+          el.textContent = CHARS[slots[i]];
+          el.classList.toggle('active', i === activeSlot);
+        });
+        const errEl = nameEntryOverlay.querySelector('.name-error');
+        if (errEl) errEl.remove();
+        this.focus();
+      });
+    }
   }
 
   let confirming = false;
@@ -210,9 +261,12 @@ export function showNameEntry(finalScore, finalLevel, msg) {
 
   function onKey(e) {
     if (!S.nameEntryActive) return;
+    const k = e.key;
+    // Mobile input handles letter typing via 'input' event; skip here to avoid double-processing
+    const mobileInput = document.getElementById('name-mobile-input');
+    if (mobileInput && document.activeElement === mobileInput && k.length === 1 && k !== 'Enter') return;
     e.preventDefault();
     e.stopPropagation();
-    const k = e.key;
 
     if (k === 'ArrowLeft')  { activeSlot = (activeSlot - 1 + 3) % 3; errorMsg = ''; render(); }
     else if (k === 'ArrowRight') { activeSlot = (activeSlot + 1) % 3; errorMsg = ''; render(); }

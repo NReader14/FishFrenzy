@@ -136,18 +136,14 @@ function initJoystick() {
   // Floating joystick: activates on touches OUTSIDE the game canvas so the
   // screen stays unobstructed. Works on either side — left or right handed.
   const gameWrapper = document.getElementById('game-wrapper');
+  // On landscape full-screen, the wrapper fills the viewport so "outside" never
+  // exists — allow joystick anywhere except buttons/inputs/links.
   document.body.addEventListener('touchstart', e => {
     if (active || !S.gameRunning || S.gamePaused) return;
-    if (e.target.closest('button, input, a')) return;
+    if (!e.changedTouches || !e.changedTouches.length) return;
+    if (e.target.closest('button, input, a, .slot-arrow, .slot-char')) return;
 
     const t = e.changedTouches[0];
-    const rect = gameWrapper.getBoundingClientRect();
-    const insideCanvas = (
-      t.clientX >= rect.left && t.clientX <= rect.right &&
-      t.clientY >= rect.top  && t.clientY <= rect.bottom
-    );
-    if (insideCanvas) return; // keep canvas taps free for UI
-
     e.preventDefault();
     touchId = t.identifier;
     showAt(t.clientX, t.clientY);
@@ -155,7 +151,7 @@ function initJoystick() {
   }, { passive: false });
 
   document.addEventListener('touchmove', e => {
-    if (!active) return;
+    if (!active || !e.changedTouches) return;
     let t = null;
     for (let i = 0; i < e.changedTouches.length; i++) {
       if (e.changedTouches[i].identifier === touchId) { t = e.changedTouches[i]; break; }
@@ -180,12 +176,14 @@ function initJoystick() {
   }, { passive: false });
 
   document.addEventListener('touchend', e => {
+    if (!e.changedTouches) { hide(); return; }
     for (let i = 0; i < e.changedTouches.length; i++) {
       if (e.changedTouches[i].identifier === touchId) { hide(); return; }
     }
   });
 
   document.addEventListener('touchcancel', e => {
+    if (!e.changedTouches) { hide(); return; }
     for (let i = 0; i < e.changedTouches.length; i++) {
       if (e.changedTouches[i].identifier === touchId) { hide(); return; }
     }

@@ -324,6 +324,39 @@ export function drawWarning() {
   }
 }
 
+export function drawRainbowOverlay() {
+  if (!S.rainbowActive) return;
+  const t = Date.now() * 0.004;
+  const th = 12, seg = 6;
+
+  // Thick fast-cycling rainbow border
+  ctx.globalAlpha = 0.95;
+  for (let x = 0; x < W; x += seg) {
+    const hue = (t * 300 + x * 3) % 360;
+    ctx.fillStyle = 'hsl(' + hue + ',100%,65%)';
+    ctx.fillRect(x, 0, seg + 1, th);
+    ctx.fillStyle = 'hsl(' + ((hue + 60) % 360) + ',100%,65%)';
+    ctx.fillRect(x, H - th, seg + 1, th);
+  }
+  for (let y = 0; y < H; y += seg) {
+    const hue = (t * 300 + y * 3) % 360;
+    ctx.fillStyle = 'hsl(' + hue + ',100%,65%)';
+    ctx.fillRect(0, y, th, seg + 1);
+    ctx.fillStyle = 'hsl(' + ((hue + 60) % 360) + ',100%,65%)';
+    ctx.fillRect(W - th, y, th, seg + 1);
+  }
+
+  // Pulsing rainbow screen tint — two layers cycling opposite hues
+  ctx.globalAlpha = 0.14 + Math.sin(t * 8) * 0.07;
+  ctx.fillStyle = 'hsl(' + ((t * 200) % 360) + ',100%,60%)';
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalAlpha = 0.10 + Math.cos(t * 6) * 0.05;
+  ctx.fillStyle = 'hsl(' + ((t * 200 + 150) % 360) + ',100%,60%)';
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.globalAlpha = 1;
+}
+
 export function drawFrenzyOverlay() {
   if (!S.frenzyActive) return;
   const t = Date.now() * 0.002, th = 5, seg = 12;

@@ -247,6 +247,10 @@
 <!-- SCRIPTS — Firebase first, then game logic          -->
 <!-- ═══════════════════════════════════════════════════- --> 
 <script type="module" src="main.js"></script>
+<!-- Shown only in browsers that don't support ES modules (IE, very old Safari) -->
+<script nomodule>
+  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:monospace;color:#44ddff;font-size:14px;text-align:center;padding:20px;">PLEASE UPDATE YOUR BROWSER TO PLAY FISH FRENZY!</div>';
+</script>
 
 </body>
 </html>

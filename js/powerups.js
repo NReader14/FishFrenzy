@@ -313,8 +313,21 @@ function activateHook() {
 function activateRainbow() {
   S.rainbowActive = true;
   stOn('rainbow', 's-rainbow');
-  S.scorePopups.push({ x: S.fish.x, y: S.fish.y - 30, pts: '🌈 ULTRA!', life: 2, decay: 0.015 });
-  spawnParticles(S.fish.x, S.fish.y, '#ff88ff', 50);
+  S.scorePopups.push({ x: S.fish.x, y: S.fish.y - 36, pts: '🌈 ULTRA RAINBOW! 🌈', life: 3, decay: 0.01 });
+
+  // Staggered multi-colour particle bursts
+  const burstColors = ['#ff4444', '#ff8800', '#ffee00', '#44ee44', '#44aaff', '#aa44ff', '#ff44ff'];
+  burstColors.forEach((color, i) => {
+    setTimeout(() => {
+      if (S.gameRunning) spawnParticles(S.fish.x, S.fish.y, color, 24);
+    }, i * 70);
+  });
+  // Second wave of bursts
+  burstColors.forEach((color, i) => {
+    setTimeout(() => {
+      if (S.gameRunning) spawnParticles(S.fish.x, S.fish.y, color, 14);
+    }, 500 + i * 60);
+  });
 
   activateFrenzy();
   activateIce();
@@ -329,7 +342,7 @@ function activateRainbow() {
     S.rainbowActive = false;
     stOff('rainbow', 's-rainbow');
     S.rainbowTO = null;
-  }, 1500);
+  }, 2500);
 }
 
 // ─── GOOP ───
@@ -371,7 +384,7 @@ export const pwConfig = {
   double:    { emoji: '💎', glow: '#44ddff', fn: activateDouble,    rarity: 5, ok: () => S.treats.length > 0 },
   magnet:    { emoji: '🧲', glow: '#dd44ff', fn: activateMagnet,    rarity: 5, ok: () => !S.magnetActive },
   wave:      { emoji: '🌊', glow: '#4488ff', fn: activateWave,      rarity: 5, ok: () => S.treats.length > 0 },
-  crazy:     { emoji: '🍄', glow: '#ff00aa', fn: activateCrazy,     rarity: 0, ok: () => S.level >= 6 && !S.crazyActive, life: CRAZY_ITEM_LIFETIME },
+  crazy:     { emoji: '🍄', glow: '#ff00aa', fn: activateCrazy,     rarity: 0, ok: () => S.level >= 9 && !S.crazyActive, life: CRAZY_ITEM_LIFETIME },
   rainbow:   { emoji: '🌈', glow: '#ff88ff', fn: activateRainbow,  rarity: 5, ok: () => !S.rainbowActive, life: 1500 }
 };
 
