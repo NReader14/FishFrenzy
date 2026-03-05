@@ -6,7 +6,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 /* ─── RESET & BASE ─── */
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* {
+  margin: 0; padding: 0; box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent; /* remove tap flash on all browsers */
+}
 
 body {
   background: #030305;
@@ -14,10 +17,14 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  min-height: 100dvh; /* respects browser chrome on modern mobile */
   font-family: 'Press Start 2P', monospace;
   overflow: hidden;
   overscroll-behavior: none;
-  image-rendering: pixelated;
+  -webkit-overflow-scrolling: touch; /* smooth momentum scroll on iOS */
+  image-rendering: -webkit-optimize-contrast; /* Safari */
+  image-rendering: crisp-edges;               /* Firefox */
+  image-rendering: pixelated;                 /* Chrome / Brave / Opera */
 }
 
 /* Subtle grid background — very faint, deep in the background */
@@ -45,14 +52,14 @@ body::after {
 
 
 /* ─── GAME WRAPPER (CRT-style frame) ─── */
-/* FIX #5: Width is now driven by the canvas width + border/padding.
-   The wrapper no longer has a fixed 740px that doesn't match the
-   720px canvas, causing the canvas to not fill the space. */
 #game-wrapper {
   position: relative;
   z-index: 1;
   width: 720px;
-  max-width: 95vw;
+  max-width: 100vw; /* fill the screen edge-to-edge on any device */
+  overflow: hidden;  /* nothing escapes the box */
+  user-select: none;
+  -webkit-user-select: none;
   border: 4px solid #334;
   border-radius: 4px;
   box-shadow:
@@ -246,14 +253,16 @@ body::after {
 
 
 /* ─── CANVAS ─── */
-/* FIX #5: Canvas stretches to fill the wrapper width */
 canvas {
   display: block;
   width: 100%;
   height: auto;
   background: #080816;
   cursor: none;
-  image-rendering: pixelated;
+  touch-action: none;                         /* prevent scroll/zoom while playing */
+  image-rendering: -webkit-optimize-contrast; /* Safari */
+  image-rendering: crisp-edges;               /* Firefox */
+  image-rendering: pixelated;                 /* Chrome / Brave / Opera */
 }
 
 
@@ -271,7 +280,18 @@ canvas {
   background: rgba(4,4,12,.92);
   z-index: 70;
   transition: opacity .2s;
+  /* Allow overlays to scroll on small screens so nothing is ever cut off */
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; /* momentum scroll on iOS */
+  scrollbar-width: thin;
+  scrollbar-color: #223 #0a0a16;
+  padding: 16px 8px; /* breathing room at top and bottom */
 }
+
+.game-overlay::-webkit-scrollbar { width: 4px; }
+.game-overlay::-webkit-scrollbar-track { background: #0a0a16; }
+.game-overlay::-webkit-scrollbar-thumb { background: #223; border-radius: 2px; }
 
 .game-overlay.hidden { display: none; }
 
@@ -339,6 +359,7 @@ canvas {
   box-shadow: 0 0 16px rgba(68,221,255,.15), inset 0 0 16px rgba(68,221,255,.05);
   transition: all .15s;
   letter-spacing: 1px;
+  touch-action: manipulation; /* instant tap, no 300ms delay */
 }
 
 .btn-primary:hover {
@@ -359,6 +380,7 @@ canvas {
   background: transparent;
   transition: all .15s;
   letter-spacing: 1px;
+  touch-action: manipulation;
 }
 
 .btn-secondary:hover {
@@ -377,6 +399,7 @@ canvas {
   color: #c55;
   background: transparent;
   transition: all .15s;
+  touch-action: manipulation;
 }
 
 .btn-danger:hover {
@@ -396,8 +419,10 @@ canvas {
 /* ─── RULES PAGE ─── */
 .rules-container {
   max-width: 580px;
-  max-height: 380px;
+  /* use dvh so it adapts to any phone height */
+  max-height: min(380px, 55dvh);
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 0 20px 10px;
   margin-bottom: 16px;
   scrollbar-width: thin;
@@ -566,6 +591,7 @@ canvas {
 #full-leaderboard-overlay {
   justify-content: flex-start;
   padding: 20px 10px;
+  /* inner .full-lb-scroll handles its own scroll; overlay just needs flex */
   overflow: hidden;
 }
 
@@ -580,6 +606,7 @@ canvas {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   min-height: 0;
   width: 100%;
   margin-bottom: 14px;
@@ -1127,13 +1154,9 @@ canvas {
   .slot-arrow          { height: 36px; }
 }
 
-/* Phone portrait (≤ 500px wide) */
-@media (max-width: 500px) {
-  body {
-    align-items: flex-start;
-    min-height: 100dvh;
-  }
-
+/* ─── TABLET / LARGE PHONE (501–1024px) ─── */
+/* Stretch the wrapper edge-to-edge on every device up to desktop size */
+@media (max-width: 1024px) {
   #game-wrapper {
     width: 100vw;
     max-width: 100vw;
@@ -1141,17 +1164,36 @@ canvas {
     border-right: none;
     border-radius: 0;
   }
+}
+
+/* ─── PHONE PORTRAIT (≤ 500px wide) ─── */
+/* Goal: maximize canvas on narrow screens by shrinking surrounding chrome */
+@media (max-width: 500px) {
+  body {
+    align-items: flex-start;
+    /* fills the full dynamic viewport incl. browser-chrome on iOS/Android */
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  #game-wrapper {
+    width: 100vw;
+    max-width: 100vw;
+  }
+
+  /* AI banner — keep tiny so it steals as little space as possible */
+  #ai-banner { padding: 4px 8px; font-size: 4px; }
 
   /* HUD — tighten up so it fits on narrow screens */
-  #hud { padding: 8px 10px; gap: 4px; }
-  .hud-item { font-size: 7px; gap: 4px; }
-  .hud-item span { font-size: 9px; }
-  #timer-bar-bg { width: 80px; height: 12px; }
-  .timer-group { gap: 4px; }
+  #hud { padding: 6px 8px; gap: 3px; }
+  .hud-item { font-size: 6px; gap: 3px; }
+  .hud-item span { font-size: 8px; }
+  #timer-bar-bg { width: 70px; height: 10px; }
+  .timer-group { gap: 3px; }
 
-  /* Status bar */
-  #status-bar { gap: 6px; padding: 4px 8px; }
-  .status-item { font-size: 6px; gap: 2px; }
+  /* Status bar — single compact row, no wrap */
+  #status-bar { gap: 5px; padding: 3px 6px; min-height: 22px; flex-wrap: nowrap; overflow: hidden; }
+  .status-item { font-size: 5px; gap: 2px; }
 
   /* Main menu */
   #overlay h1 { font-size: 20px; }
@@ -1159,7 +1201,7 @@ canvas {
   .insert-coin { font-size: 10px; margin-top: 16px; }
 
   /* Rules */
-  .rules-container { max-width: 95vw; max-height: 50vh; padding: 0 10px 10px; }
+  .rules-container { max-width: 95vw; max-height: 50dvh; padding: 0 10px 10px; }
   .rules-title { font-size: 11px; }
   .rules-heading { font-size: 8px; }
   .rules-text { font-size: 7px; }
@@ -1196,25 +1238,36 @@ canvas {
   .full-lb-scroll .scoreboard-table th { padding: 4px 3px; font-size: 6px; }
   .full-lb-scroll .scoreboard-table tbody tr:nth-child(1) td { font-size: 6px; }
 
+  /* Overlays — reduce padding and switch to scroll on small phones */
+  .game-overlay { padding: 12px 6px; justify-content: flex-start; }
+  #scoreboard-overlay { padding: 12px 6px; }
+  #full-leaderboard-overlay { padding: 10px 2px; }
+  .scoreboard-actions { flex-wrap: wrap; gap: 8px; justify-content: center; }
+
+  /* Settings section fits without side-scroll */
+  .settings-section { width: 90vw; }
+
   /* Joystick — slightly larger touch target on portrait phones */
   #joystick-base  { width: 110px; height: 110px; }
   #joystick-thumb { width: 48px;  height: 48px; }
 }
 
-/* Phone landscape (short screen) — clamp wrapper height so canvas fits */
+/* ─── PHONE LANDSCAPE (short viewport) ─── */
+/* Clamp wrapper width so the canvas never taller than the viewport */
 @media (orientation: landscape) and (max-height: 500px) {
-  /* Canvas aspect ratio 720:480 = 1.5; ~110px goes to banner + HUD + status */
+  /* Canvas aspect ratio 720:480 = 1.5; subtract ~90px for banner+HUD+status */
   #game-wrapper {
-    max-width: min(95vw, calc((100vh - 110px) * 1.5));
+    max-width: min(100vw, calc((100dvh - 90px) * 1.5));
   }
 
-  #hud { padding: 6px 10px; }
-  .hud-item { font-size: 7px; }
-  .hud-item span { font-size: 9px; }
-  #timer-bar-bg { width: 100px; height: 12px; }
+  #hud { padding: 5px 8px; }
+  .hud-item { font-size: 6px; }
+  .hud-item span { font-size: 8px; }
+  #timer-bar-bg { width: 90px; height: 10px; }
 
-  #status-bar { padding: 3px 8px; min-height: 22px; gap: 8px; }
-  .status-item { font-size: 6px; }
+  #ai-banner { padding: 3px 8px; font-size: 4px; }
+  #status-bar { padding: 2px 8px; min-height: 20px; gap: 8px; }
+  .status-item { font-size: 5px; }
 
   /* Smaller joystick ring in landscape */
   #joystick-base  { width: 80px;  height: 80px; }
