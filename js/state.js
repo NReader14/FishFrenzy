@@ -33,7 +33,7 @@ const S = {
     ghost: null, hourglass: null, buddy: null, bomb: null, crazy: null,
     decoy: null, swap: null, star: null, double: null,
     wave: null, poison: null, hook: null, goop: null, rainbow: null,
-    prompt: null, claude: null
+    prompt: null, claude: null, bodyswap: null
   },
 
   // Active power-up states
@@ -53,6 +53,7 @@ const S = {
   rainbowActive: false, rainbowTO: null,
   promptActive: false, promptWandering: false, promptWanderAngle: 0, promptWanderTimer: 0, promptTO: null, promptTO2: null,
   claudeActive: false, claudeAnim: null, claudeTO: null,
+  bodySwapActive: false, bodySwapTO: null, bodySwapStartTime: 0,
 
   // Combo system
   comboCount: 0,

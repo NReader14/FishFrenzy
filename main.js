@@ -276,6 +276,40 @@ function endGame(won, msg) {
 function updateFish(dt = 1) {
   if (S.gamePaused) return;
 
+  // Body swap: fish becomes an AI predator chasing the shark
+  if (S.bodySwapActive) {
+    const chaseSpeed = S.shark.speed * 0.75;
+    const a = Math.atan2(S.shark.y - S.fish.y, S.shark.x - S.fish.x);
+    const wobble = Math.sin(Date.now() * 0.003) * 0.3;
+    S.fish.vx = Math.cos(a + wobble) * chaseSpeed;
+    S.fish.vy = Math.sin(a + wobble) * chaseSpeed;
+    S.fish.x += S.fish.vx;
+    S.fish.y += S.fish.vy;
+    S.fish.x = Math.max(S.fish.w / 2, Math.min(W - S.fish.w / 2, S.fish.x));
+    S.fish.y = Math.max(S.fish.h / 2, Math.min(H - S.fish.h / 2, S.fish.y));
+    if (S.fish.vx > 0.3) S.fish.dir = 1;
+    else if (S.fish.vx < -0.3) S.fish.dir = -1;
+    S.fish.tailPhase += 0.18;
+
+    // Fish (enemy) catches shark (player)
+    if (dist(S.fish, S.shark) < 30) {
+      if (S.starActive) {
+        const ba = Math.atan2(S.fish.y - S.shark.y, S.fish.x - S.shark.x);
+        S.fish.x += Math.cos(ba) * 80;
+        S.fish.y += Math.sin(ba) * 80;
+        S.fish.x = Math.max(S.fish.w / 2, Math.min(W - S.fish.w / 2, S.fish.x));
+        S.fish.y = Math.max(S.fish.h / 2, Math.min(H - S.fish.h / 2, S.fish.y));
+        spawnParticles(S.shark.x, S.shark.y, '#ffee44', 12);
+        S.scorePopups.push({ x: S.shark.x, y: S.shark.y - 20, pts: 'BOUNCE!', life: 0.8, decay: 0.03 });
+      } else if (S.shieldActive) {
+        useShield();
+      } else {
+        endGame(false, 'The fish got you!');
+      }
+    }
+    return;
+  }
+
   let moveX = 0, moveY = 0;
   if (S.keys['arrowleft'] || S.keys['a'])  moveX -= 1;
   if (S.keys['arrowright'] || S.keys['d']) moveX += 1;
@@ -334,6 +368,30 @@ function updateShark() {
   if (S.shark.hidden || S.hourglassActive || S.gamePaused) return;
 
   if (S.sharkDelay > 0) { S.sharkDelay--; S.shark.tailPhase += 0.06; return; }
+
+  // Body swap: player controls the shark
+  if (S.bodySwapActive) {
+    let moveX = 0, moveY = 0;
+    if (S.keys['arrowleft'] || S.keys['a'])  moveX -= 1;
+    if (S.keys['arrowright'] || S.keys['d']) moveX += 1;
+    if (S.keys['arrowup'] || S.keys['w'])    moveY -= 1;
+    if (S.keys['arrowdown'] || S.keys['s'])  moveY += 1;
+
+    if (moveX !== 0 || moveY !== 0) {
+      const len = Math.hypot(moveX, moveY);
+      S.shark.x += (moveX / len) * S.shark.speed;
+      S.shark.y += (moveY / len) * S.shark.speed;
+      const ta = Math.atan2(moveY, moveX);
+      let diff = ta - S.shark.angle;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      S.shark.angle += diff * 0.15;
+    }
+    S.shark.x = Math.max(20, Math.min(W - 20, S.shark.x));
+    S.shark.y = Math.max(20, Math.min(H - 20, S.shark.y));
+    S.shark.tailPhase += 0.12;
+    return;
+  }
 
   // Prompt: freeze phase — just wag tail, no movement or targeting
   if (S.promptActive && !S.promptWandering) {

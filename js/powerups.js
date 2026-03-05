@@ -10,7 +10,7 @@ import {
   FRENZY_DURATION, ICE_DURATION, GHOST_DURATION, HOURGLASS_DURATION,
   BUDDY_DURATION, BOMB_DURATION, CRAZY_DURATION, GOOP_DURATION,
   CRAZY_ITEM_LIFETIME, CLAUDE_ITEM_LIFETIME,
-  PROMPT_FREEZE_DURATION, PROMPT_WANDER_DURATION,
+  PROMPT_FREEZE_DURATION, PROMPT_WANDER_DURATION, BODY_SWAP_DURATION,
   MAX_FIELD_ITEMS, RARITY, PW_SPAWN_CHANCE,
   FISH_BASE_SPEED, FRENZY_SPEED_BOOST,
   W, H, rand, dist
@@ -401,6 +401,33 @@ export function deactivatePrompt() {
   S.promptTO2 = clearTO(S.promptTO2);
 }
 
+// ─── BODY SWAP ───
+function activateBodySwap() {
+  S.bodySwapActive = true;
+  S.bodySwapStartTime = Date.now();
+  // Zero out fish velocity so AI starts fresh
+  S.fish.vx = 0; S.fish.vy = 0;
+  stOn('bodyswap', 's-bodyswap');
+  spawnParticles(S.fish.x, S.fish.y, '#ff4488', 20);
+  spawnParticles(S.shark.x, S.shark.y, '#44ff88', 16);
+  S.scorePopups.push({ x: W / 2, y: H / 2 - 20, pts: '🎭 BODY SWAP!', life: 2, decay: 0.015 });
+  S.scorePopups.push({ x: W / 2, y: H / 2 + 14, pts: 'YOU ARE THE SHARK!', life: 2.5, decay: 0.012 });
+
+  S.bodySwapTO = clearTO(S.bodySwapTO);
+  S.bodySwapTO = setTimeout(deactivateBodySwap, BODY_SWAP_DURATION);
+}
+
+export function deactivateBodySwap() {
+  if (!S.bodySwapActive) return;
+  S.bodySwapActive = false;
+  S.fish.vx = 0; S.fish.vy = 0;
+  stOff('bodyswap', 's-bodyswap');
+  spawnParticles(S.fish.x, S.fish.y, '#ff4488', 10);
+  spawnParticles(S.shark.x, S.shark.y, '#44ff88', 10);
+  S.scorePopups.push({ x: W / 2, y: H / 2, pts: 'BACK TO NORMAL!', life: 1.5, decay: 0.02 });
+  S.bodySwapTO = null;
+}
+
 // ─── THE CLAUDE ───
 function activateClaude() {
   S.claudeActive = true;
@@ -466,6 +493,7 @@ export const pwConfig = {
   double:    { emoji: '💎', glow: '#44ddff', fn: activateDouble,    rarity: 5, ok: () => S.treats.length > 0 },
   magnet:    { emoji: '🧲', glow: '#dd44ff', fn: activateMagnet,    rarity: 5, ok: () => !S.magnetActive },
   wave:      { emoji: '🌊', glow: '#4488ff', fn: activateWave,      rarity: 5, ok: () => S.treats.length > 0 },
+  bodyswap:  { emoji: '🎭', glow: '#ff4488', fn: activateBodySwap,  rarity: 5, ok: () => !S.bodySwapActive },
   crazy:     { emoji: '🍄', glow: '#ff00aa', fn: activateCrazy,     rarity: 6, ok: () => S.level >= 9 && !S.crazyActive, life: CRAZY_ITEM_LIFETIME },
   rainbow:   { emoji: '🌈', glow: '#ff88ff', fn: activateRainbow,  rarity: 6, ok: () => !S.rainbowActive, life: 1500 },
   prompt:    { emoji: '✍️', glow: '#aa66ff', fn: activatePrompt,   rarity: 3, ok: () => !S.promptActive },
@@ -592,5 +620,5 @@ export function updatePWItems() {
 export function clearAllPowerupTimeouts() {
   [S.frenzyTO, S.iceTO, S.ghostTO, S.hourglassTO, S.buddyTO,
    S.bombTO, S.crazyTO, S.decoyTO, S.starTO, S.rainbowTO,
-   S.promptTO, S.promptTO2, S.claudeTO].forEach(clearTO);
+   S.promptTO, S.promptTO2, S.claudeTO, S.bodySwapTO].forEach(clearTO);
 }

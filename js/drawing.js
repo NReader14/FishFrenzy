@@ -91,9 +91,15 @@ export function drawPixelFish(x, y, dir, angle, phase, c1, c2, c3) {
 
 // ─── PLAYER FISH ───
 export function drawFish() {
-  const c1 = S.frenzyActive ? '#ffaa22' : '#ff8833';
-  const c2 = S.frenzyActive ? '#ffcc44' : '#ffaa55';
-  const c3 = S.frenzyActive ? '#ee7700' : '#cc5500';
+  // During body swap, fish is drawn as an angry red predator
+  let c1, c2, c3;
+  if (S.bodySwapActive) {
+    c1 = '#cc2222'; c2 = '#ee4444'; c3 = '#aa0000';
+  } else {
+    c1 = S.frenzyActive ? '#ffaa22' : '#ff8833';
+    c2 = S.frenzyActive ? '#ffcc44' : '#ffaa55';
+    c3 = S.frenzyActive ? '#ee7700' : '#cc5500';
+  }
   drawPixelFish(S.fish.x, S.fish.y, S.fish.dir, S.fish.angle, S.fish.tailPhase, c1, c2, c3);
 
   if (S.shieldActive) {
@@ -242,6 +248,17 @@ export function drawShark() {
   }
 
   ctx.restore();
+
+  // Player-controlled glow on shark during body swap
+  if (S.bodySwapActive) {
+    const p = 0.5 + Math.sin(Date.now() * 0.008) * 0.2;
+    ctx.save(); ctx.translate(S.shark.x, S.shark.y);
+    ctx.beginPath(); ctx.ellipse(0, 0, 38, 26, S.shark.angle, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(68,255,136,${p})`; ctx.lineWidth = 3; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(0, 0, 48, 32, S.shark.angle, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(68,255,136,${p * 0.35})`; ctx.lineWidth = 2; ctx.stroke();
+    ctx.restore();
+  }
 
   // "..." speech bubble when prompted
   if (S.promptActive) {
@@ -448,12 +465,12 @@ export function drawRainbowOverlay() {
     ctx.fillRect(W - th, y, th, seg + 1);
   }
 
-  // Pulsing rainbow screen tint — two layers cycling opposite hues
-  ctx.globalAlpha = 0.14 + Math.sin(t * 8) * 0.07;
-  ctx.fillStyle = 'hsl(' + ((t * 200) % 360) + ',100%,60%)';
+  // Gentle rainbow screen tint — slow hue cycle, no strobing
+  ctx.globalAlpha = 0.07 + Math.sin(t * 1.5) * 0.02;
+  ctx.fillStyle = 'hsl(' + ((t * 40) % 360) + ',100%,60%)';
   ctx.fillRect(0, 0, W, H);
-  ctx.globalAlpha = 0.10 + Math.cos(t * 6) * 0.05;
-  ctx.fillStyle = 'hsl(' + ((t * 200 + 150) % 360) + ',100%,60%)';
+  ctx.globalAlpha = 0.05 + Math.cos(t * 1.2) * 0.02;
+  ctx.fillStyle = 'hsl(' + ((t * 40 + 150) % 360) + ',100%,60%)';
   ctx.fillRect(0, 0, W, H);
 
   ctx.globalAlpha = 1;
@@ -543,12 +560,14 @@ export function drawScanlines() {
 // ─── CLOSEST TREAT ARROW ───
 export function drawClosestTreatArrow() {
   if (S.treats.length === 0) return;
+  // During body swap, arrow points from shark (player) to nearest treat
+  const origin = S.bodySwapActive ? S.shark : S.fish;
   let nearest = null, nearestD = Infinity;
-  for (const t of S.treats) { if (!t.collected) { const d = dist(t, S.fish); if (d < nearestD) { nearestD = d; nearest = t; } } }
+  for (const t of S.treats) { if (!t.collected) { const d = dist(t, origin); if (d < nearestD) { nearestD = d; nearest = t; } } }
   if (!nearest || nearestD < 50) return;
-  const a = Math.atan2(nearest.y - S.fish.y, nearest.x - S.fish.x);
-  const ax = S.fish.x + Math.cos(a) * 36;
-  const ay = S.fish.y + Math.sin(a) * 36;
+  const a = Math.atan2(nearest.y - origin.y, nearest.x - origin.x);
+  const ax = origin.x + Math.cos(a) * 36;
+  const ay = origin.y + Math.sin(a) * 36;
 
   ctx.save();
   ctx.translate(ax, ay);
