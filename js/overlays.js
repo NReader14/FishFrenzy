@@ -302,10 +302,10 @@ export function showNameEntry(finalScore, finalLevel, msg) {
 // DYNAMIC RULES PAGE
 // ═══════════════════════════════════════════════════════════════
 
-const RARITY_NAMES = { 1: 'Common', 2: 'Uncommon', 3: 'Rare', 4: 'Epic', 5: 'Mythical' };
-const RARITY_TAG_COLOURS = { 1: '#44ee88', 2: '#aaaacc', 3: '#4488ff', 4: '#ffdd44', 5: '#ff44ff' };
-const RARITY_STARS = { 1: '★', 2: '★★', 3: '★★★', 4: '★★★★', 5: '★★★★★' };
-const RARITY_CSS_CLASS = { 1: 'common', 2: 'uncommon', 3: 'rare', 4: 'epic', 5: 'mythical' };
+const RARITY_NAMES = { 1: 'Common', 2: 'Uncommon', 3: 'Rare', 4: 'Epic', 5: 'Mythical', 6: 'Legendary' };
+const RARITY_TAG_COLOURS = { 1: '#44ee88', 2: '#aaaacc', 3: '#4488ff', 4: '#ffdd44', 5: '#ff44ff', 6: '#cc88ff' };
+const RARITY_STARS = { 1: '★', 2: '★★', 3: '★★★', 4: '★★★★', 5: '★★★★★', 6: '★★★★★★' };
+const RARITY_CSS_CLASS = { 1: 'common', 2: 'uncommon', 3: 'rare', 4: 'epic', 5: 'mythical', 6: 'legendary' };
 
 const PW_DESCRIPTIONS = {
   frenzy:    { name: 'FRENZY',    desc: '2x points + speed boost for 3s' },
@@ -325,6 +325,7 @@ const PW_DESCRIPTIONS = {
   magnet:    { name: 'MAGNET',    desc: 'Pulls all treats towards you' },
   wave:      { name: 'WAVE',      desc: 'Pushes all treats to nearest wall' },
   rainbow:   { name: 'RAINBOW',   desc: 'ULTRA! Activates Frenzy, Ice, Time Stop, Shield, Buddy, Decoy &amp; Star at once! (Lv6+)' },
+  prompt:    { name: 'PROMPT',    desc: 'Confuses the shark! Freezes it 1s then sends it wandering randomly for 5s' },
 };
 
 export function buildRulesHTML() {
@@ -333,7 +334,7 @@ export function buildRulesHTML() {
 
   const groups = { 1: [], 2: [], 3: [], 4: [], 5: [] };
   for (const [key, cfg] of Object.entries(pwConfig)) {
-    if (key === 'crazy' || key === 'rainbow') continue;
+    if (cfg.rarity === 6) continue; // Legendary shown in own section
     const r = cfg.rarity;
     if (r >= 1 && r <= 5) groups[r].push(key);
   }
@@ -357,10 +358,14 @@ export function buildRulesHTML() {
     }
     html += '</div>';
   }
-  html += `<div class="rules-rarity-label" style="color:#ff00aa;">☢ SPECIAL (LV6+)</div>`;
+
+  // Legendary tier
+  html += `<div class="rules-rarity-label rarity-legendary-label">${RARITY_STARS[6]} ${RARITY_NAMES[6].toUpperCase()}</div>`;
   html += `<div class="rules-powerup-grid">`;
-  html += `<div class="rules-pw rarity-crazy"><span class="pw-icon">🍄</span><strong>CRAZY</strong> — Masses of treats for 5s, then game over!</div>`;
-  html += `<div class="rules-pw rarity-rainbow"><span class="pw-icon">🌈</span><strong style="background:linear-gradient(90deg,#ff4444,#ff8800,#ffee00,#44ee44,#44aaff,#aa44ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">RAINBOW</strong> — ULTRA! Activates Frenzy, Ice, Time Stop, Shield, Buddy, Decoy &amp; Star at once!</div>`;
+  html += `<div class="rules-pw rarity-legendary"><span class="pw-icon">🍄</span><strong style="color:#ff00aa;">CRAZY</strong> — Masses of treats for 5s, then game over! (Lv9+)</div>`;
+  html += `<div class="rules-pw rarity-legendary"><span class="pw-icon">🌈</span><strong style="background:linear-gradient(90deg,#ff4444,#ff8800,#ffee00,#44ee44,#44aaff,#aa44ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">RAINBOW</strong> — ULTRA! Activates Frenzy, Ice, Time Stop, Shield, Buddy, Decoy &amp; Star at once!</div>`;
+  html += `<div class="rules-pw rarity-legendary"><span class="pw-icon">✍️</span><strong style="color:#aa66ff;">PROMPT</strong> — Confuses the shark! Freezes it then sends it wandering for 5s.</div>`;
+  html += `<div class="rules-pw rarity-legendary"><span class="pw-icon">🤖</span><strong style="background:linear-gradient(90deg,#cc88ff,#ffcc44);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">THE CLAUDE</strong> — ULTIMATE! Auto-collects all treats &amp; freezes the shark. +500 bonus!</div>`;
   html += `</div>`;
   container.innerHTML = html;
 }
@@ -378,13 +383,14 @@ const PW_LABELS = {
   buddy: '🐠 Buddy', hook: '🪝 Hook', ghost: '👻 Ghost',
   bomb: '💣 Bomb', decoy: '👁️ Decoy', swap: '🔄 Swap',
   star: '🌟 Star', double: '💎 Double', magnet: '🧲 Magnet', wave: '🌊 Wave',
-  rainbow: '🌈 Rainbow',
+  rainbow: '🌈 Rainbow', crazy: '🍄 Crazy', prompt: '✍️ Prompt', claude: '🤖 The Claude',
 };
 
 const DEFAULT_RARITIES = {
   frenzy: 1, ice: 2, shield: 2, poison: 2, goop: 3,
   hourglass: 3, buddy: 3, hook: 3, ghost: 4, bomb: 4,
-  decoy: 4, swap: 4, star: 5, double: 5, magnet: 5, wave: 5, rainbow: 5,
+  decoy: 4, swap: 4, star: 5, double: 5, magnet: 5, wave: 5,
+  rainbow: 6, crazy: 6, prompt: 3, claude: 6,
 };
 
 function buildVarEditor() {
@@ -398,7 +404,7 @@ function buildVarEditor() {
     const tierName = RARITY_NAMES[currentRarity] || '?';
     const tierColour = RARITY_TAG_COLOURS[currentRarity] || '#888';
     html += `<div class="admin-var-label">${label}</div>`;
-    html += `<input type="number" class="admin-var-input" data-pw="${key}" min="1" max="5" value="${currentRarity}">`;
+    html += `<input type="number" class="admin-var-input" data-pw="${key}" min="1" max="6" value="${currentRarity}">`;
     html += `<div class="admin-var-tag" data-pw-tag="${key}" style="color:${tierColour};">${tierName}</div>`;
   }
   grid.innerHTML = html;
@@ -483,7 +489,7 @@ export function setupAdminEvents() {
     const config = {};
     grid.querySelectorAll('.admin-var-input').forEach(inp => {
       const key = inp.dataset.pw;
-      const val = Math.max(1, Math.min(5, parseInt(inp.value) || 1));
+      const val = Math.max(1, Math.min(6, parseInt(inp.value) || 1));
       config[key] = val;
     });
     try {

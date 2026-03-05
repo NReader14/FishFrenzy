@@ -123,6 +123,14 @@ export function drawFish() {
     ctx.fillStyle = 'rgba(102,204,68,0.2)'; ctx.fill();
     ctx.restore();
   }
+
+  if (S.promptActive) {
+    const p = 0.35 + Math.sin(Date.now() * 0.009) * 0.18;
+    ctx.save(); ctx.translate(S.fish.x, S.fish.y);
+    ctx.beginPath(); ctx.ellipse(0, 0, 26, 19, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(255,170,50,${p})`; ctx.lineWidth = 2; ctx.stroke();
+    ctx.restore();
+  }
 }
 
 // ─── BUDDY ───
@@ -234,6 +242,25 @@ export function drawShark() {
   }
 
   ctx.restore();
+
+  // "..." speech bubble when prompted
+  if (S.promptActive) {
+    const bx = S.shark.x, by = S.shark.y - 36;
+    const alpha = 0.7 + Math.sin(Date.now() * 0.006) * 0.18;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(bx - 14, by - 9, 28, 16);
+    ctx.beginPath();
+    ctx.moveTo(bx - 3, by + 7); ctx.lineTo(bx + 5, by + 7); ctx.lineTo(bx + 1, by + 15);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#444';
+    ctx.fillRect(bx - 8, by - 2, 4, 4);
+    ctx.fillRect(bx - 2, by - 2, 4, 4);
+    ctx.fillRect(bx + 4, by - 2, 4, 4);
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
 }
 
 // ─── TREATS ───
@@ -322,6 +349,81 @@ export function drawWarning() {
     ctx.fillRect(0, 0, W, H);
     ctx.globalAlpha = 1;
   }
+}
+
+export function drawClaudeOverlay() {
+  if (!S.claudeActive || !S.claudeAnim) return;
+  const elapsed = Date.now() - S.claudeAnim.startTime;
+  const t = Date.now() * 0.001;
+
+  // Fade-in dark vignette
+  ctx.globalAlpha = Math.min(0.74, elapsed / 400 * 0.74);
+  ctx.fillStyle = '#020008';
+  ctx.fillRect(0, 0, W, H);
+
+  // One-time aurora sweep left → right
+  const sweepX = (elapsed / 700) * (W + 240) - 120;
+  if (sweepX < W + 120) {
+    const grad = ctx.createLinearGradient(sweepX - 130, 0, sweepX + 130, 0);
+    grad.addColorStop(0, 'rgba(110,40,220,0)');
+    grad.addColorStop(0.4, 'rgba(120,50,220,0.30)');
+    grad.addColorStop(0.5, 'rgba(255,160,40,0.36)');
+    grad.addColorStop(0.6, 'rgba(120,50,220,0.30)');
+    grad.addColorStop(1, 'rgba(110,40,220,0)');
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // Animated border
+  const pulse = 0.7 + Math.sin(t * 5) * 0.2;
+  ctx.globalAlpha = pulse;
+  ctx.strokeStyle = `hsl(${270 + Math.sin(t * 2) * 30},80%,72%)`;
+  ctx.lineWidth = 7;
+  ctx.strokeRect(3.5, 3.5, W - 7, H - 7);
+  ctx.globalAlpha = 0.45;
+  ctx.strokeStyle = `hsl(${38 + Math.sin(t * 3) * 12},90%,65%)`;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(11, 11, W - 22, H - 22);
+
+  // Corner accents
+  ctx.globalAlpha = 0.9;
+  ctx.fillStyle = '#cc88ff';
+  const cs = 14;
+  [[3, 3], [W - 3 - cs, 3], [3, H - 3 - cs], [W - 3 - cs, H - 3 - cs]].forEach(([cx, cy]) => {
+    ctx.fillRect(cx, cy, cs, 3);
+    ctx.fillRect(cx, cy, 3, cs);
+  });
+
+  // Typewriter text
+  if (S.claudeAnim.text) {
+    const cursor = Math.sin(t * 10) > 0 ? '|' : ' ';
+    ctx.globalAlpha = 1;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    // Shadow
+    ctx.fillStyle = '#220044';
+    ctx.font = '14px "Press Start 2P", monospace';
+    ctx.fillText(S.claudeAnim.text + cursor, W / 2 + 2, H / 2 + 2);
+    // Gradient text
+    const tg = ctx.createLinearGradient(0, H / 2 - 9, 0, H / 2 + 9);
+    tg.addColorStop(0, '#ee99ff');
+    tg.addColorStop(1, '#ffcc55');
+    ctx.fillStyle = tg;
+    ctx.fillText(S.claudeAnim.text + cursor, W / 2, H / 2);
+    // Sub-caption once text is done
+    if (S.claudeAnim.text === S.claudeAnim.textTarget) {
+      const subAlpha = Math.min(1, (elapsed - S.claudeAnim.textTarget.length * 55 - 200) / 300);
+      if (subAlpha > 0) {
+        ctx.globalAlpha = subAlpha * 0.8;
+        ctx.fillStyle = '#aa77dd';
+        ctx.font = '7px "Press Start 2P", monospace';
+        ctx.fillText('COLLECTING ALL TREATS...', W / 2, H / 2 + 28);
+      }
+    }
+  }
+
+  ctx.globalAlpha = 1;
 }
 
 export function drawRainbowOverlay() {

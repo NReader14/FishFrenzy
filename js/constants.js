@@ -13,16 +13,20 @@ export const CRAZY_DURATION     = 5000;
 export const GOOP_DURATION      = 4000;
 export const DECOY_DURATION     = 4000;
 export const STAR_DURATION      = 3000;
+export const PROMPT_FREEZE_DURATION  = 1000;
+export const PROMPT_WANDER_DURATION  = 5000;
 
 // Rarity system
 export const RARITY = {
-  1: { name: 'Common',   spawnMul: 1.2,  life: 5000 },
-  2: { name: 'Uncommon', spawnMul: 0.75, life: 4500 },
-  3: { name: 'Rare',     spawnMul: 0.4,  life: 3500 },
-  4: { name: 'Epic',     spawnMul: 0.18, life: 2500 },
-  5: { name: 'Mythical', spawnMul: 0.08, life: 2000 },
+  1: { name: 'Common',    spawnMul: 1.2,   life: 5000 },
+  2: { name: 'Uncommon',  spawnMul: 0.75,  life: 4500 },
+  3: { name: 'Rare',      spawnMul: 0.4,   life: 3500 },
+  4: { name: 'Epic',      spawnMul: 0.18,  life: 2500 },
+  5: { name: 'Mythical',  spawnMul: 0.08,  life: 2000 },
+  6: { name: 'Legendary', spawnMul: 0.025, life: 1800 },
 };
-export const CRAZY_ITEM_LIFETIME = 900;
+export const CRAZY_ITEM_LIFETIME  = 900;
+export const CLAUDE_ITEM_LIFETIME = 1200;
 export const MAX_FIELD_ITEMS     = 3;
 
 // Fish movement

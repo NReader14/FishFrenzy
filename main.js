@@ -22,14 +22,15 @@ import {
 } from './js/animations.js';
 import {
   pwConfig, loadRarities, trySpawnPowerups, updatePWItems,
-  clearAllPowerupTimeouts, clearTO, useShield, deactivateDecoy,
+  clearAllPowerupTimeouts, clearTO, useShield, deactivateDecoy, deactivatePrompt,
   overlapsExisting, setEndGame, setSpawnTreat
 } from './js/powerups.js';
 import {
   drawWater, drawFish, drawBuddy, drawDecoy, drawShark,
   drawTreats, drawPWItems, drawWarning, drawFrenzyOverlay, drawIceOverlay,
   drawHourglassOverlay, drawCrazyOverlay, drawFishGlow, drawMagnetLines,
-  drawScanlines, drawClosestTreatArrow, drawPowerupTimerBars, drawRainbowOverlay
+  drawScanlines, drawClosestTreatArrow, drawPowerupTimerBars, drawRainbowOverlay,
+  drawClaudeOverlay
 } from './js/drawing.js';
 import { collectTreat } from './js/scoring.js';
 import {
@@ -184,6 +185,8 @@ function startLevel() {
   S.crazyActive = S.timerFrozen = false;
   S.decoyActive = S.starActive = S.hookActive = S.goopActive = false;
   S.rainbowActive = false;
+  S.promptActive = false; S.promptWandering = false; S.promptWanderTimer = 0;
+  S.claudeActive = false; S.claudeAnim = null;
   S.comboCount = 0; S.comboTimer = 0;
   S.accelBonus = 0; S.lastMoveDir = { x: 0, y: 0 }; S.keys = {};
   S.lastSpawnedPW = null;
@@ -200,7 +203,8 @@ function startLevel() {
   for (const s of Object.values(st)) {
     s.classList.remove('s-on', 's-frenzy', 's-ice', 's-shield', 's-magnet',
       's-ghost', 's-time', 's-buddy', 's-bomb', 's-combo', 's-crazy',
-      's-decoy', 's-star', 's-poison', 's-hook', 's-swap', 's-double', 's-wave', 's-goop', 's-rainbow');
+      's-decoy', 's-star', 's-poison', 's-hook', 's-swap', 's-double', 's-wave', 's-goop', 's-rainbow',
+      's-prompt', 's-claude');
     s.style.color = '';
   }
   st.combo.textContent = '⚡x1';
@@ -233,12 +237,15 @@ function endGame(won, msg) {
   S.buddyActive = S.bombActive = S.crazyActive = S.timerFrozen = false;
   S.decoyActive = S.starActive = S.hookActive = S.goopActive = false;
   S.rainbowActive = false;
+  S.promptActive = false; S.promptWandering = false;
+  S.claudeActive = false; S.claudeAnim = null;
   S.decoyFish = null;
 
   for (const s of Object.values(st)) {
     s.classList.remove('s-on', 's-frenzy', 's-ice', 's-shield', 's-magnet',
       's-ghost', 's-time', 's-buddy', 's-bomb', 's-combo', 's-crazy',
-      's-decoy', 's-star', 's-poison', 's-hook', 's-swap', 's-double', 's-wave', 's-goop', 's-rainbow');
+      's-decoy', 's-star', 's-poison', 's-hook', 's-swap', 's-double', 's-wave', 's-goop', 's-rainbow',
+      's-prompt', 's-claude');
     s.style.color = '';
   }
 
@@ -328,6 +335,34 @@ function updateShark() {
 
   if (S.sharkDelay > 0) { S.sharkDelay--; S.shark.tailPhase += 0.06; return; }
 
+  // Prompt: freeze phase — just wag tail, no movement or targeting
+  if (S.promptActive && !S.promptWandering) {
+    S.shark.tailPhase += 0.06;
+    return;
+  }
+
+  // Prompt: wander phase — random movement, no targeting
+  if (S.promptActive && S.promptWandering) {
+    const now = Date.now();
+    if (now - S.promptWanderTimer > 800) {
+      S.promptWanderAngle = Math.random() * Math.PI * 2;
+      S.promptWanderTimer = now;
+    }
+    S.shark.x += Math.cos(S.promptWanderAngle) * S.shark.speed;
+    S.shark.y += Math.sin(S.promptWanderAngle) * S.shark.speed;
+    // Bounce off walls
+    if (S.shark.x <= 20 || S.shark.x >= W - 20) S.promptWanderAngle = Math.PI - S.promptWanderAngle;
+    if (S.shark.y <= 20 || S.shark.y >= H - 20) S.promptWanderAngle = -S.promptWanderAngle;
+    S.shark.x = Math.max(20, Math.min(W - 20, S.shark.x));
+    S.shark.y = Math.max(20, Math.min(H - 20, S.shark.y));
+    let diff = S.promptWanderAngle - S.shark.angle;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    S.shark.angle += diff * 0.15;
+    S.shark.tailPhase += 0.12;
+    return;
+  }
+
   const target = (S.decoyActive && S.decoyFish) ? S.decoyFish : S.fish;
 
   S.shark.chaseTimer += 0.02;
@@ -410,7 +445,7 @@ function updateTreats() {
   S.treats = S.treats.filter(t => !t.collected);
   treatsLeftEl.textContent = S.treats.length;
 
-  if (S.treats.length === 0) endGame(true, '');
+  if (S.treats.length === 0 && !S.claudeActive) endGame(true, '');
 
   const now = Date.now();
   if (now - S.comboTimer > COMBO_WINDOW && S.comboCount > 0) {
@@ -462,6 +497,7 @@ function loop(timestamp) {
   drawWarning();
   drawFrenzyOverlay();
   drawRainbowOverlay();
+  drawClaudeOverlay();
   drawIceOverlay();
   drawHourglassOverlay();
   drawCrazyOverlay();

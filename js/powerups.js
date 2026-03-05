@@ -3,12 +3,15 @@
 // ═══════════════════════════════════════════════════════════════
 
 import S from './state.js';
-import { st, timerBar, timerEl, treatsLeftEl } from './dom.js';
+import { st, timerBar, timerEl, treatsLeftEl, scoreEl } from './dom.js';
+import { collectTreat } from './scoring.js';
 import { spawnParticles } from './particles.js';
 import {
   FRENZY_DURATION, ICE_DURATION, GHOST_DURATION, HOURGLASS_DURATION,
   BUDDY_DURATION, BOMB_DURATION, CRAZY_DURATION, GOOP_DURATION,
-  CRAZY_ITEM_LIFETIME, MAX_FIELD_ITEMS, RARITY, PW_SPAWN_CHANCE,
+  CRAZY_ITEM_LIFETIME, CLAUDE_ITEM_LIFETIME,
+  PROMPT_FREEZE_DURATION, PROMPT_WANDER_DURATION,
+  MAX_FIELD_ITEMS, RARITY, PW_SPAWN_CHANCE,
   FISH_BASE_SPEED, FRENZY_SPEED_BOOST,
   W, H, rand, dist
 } from './constants.js';
@@ -363,6 +366,85 @@ function activateGoop() {
 }
 
 
+// ─── PROMPT ───
+function activatePrompt() {
+  S.promptActive = true;
+  S.promptWandering = false;
+  S.shark.savedPromptSpeed = S.shark.speed;
+  S.shark.speed = 0;
+  stOn('prompt', 's-prompt');
+  spawnParticles(S.shark.x, S.shark.y, '#aa66ff', 16);
+  S.scorePopups.push({ x: S.shark.x, y: S.shark.y - 28, pts: '✍️ PROMPTED!', life: 1.8, decay: 0.018 });
+
+  // After freeze: start wandering
+  S.promptTO2 = clearTO(S.promptTO2);
+  S.promptTO2 = setTimeout(() => {
+    if (!S.promptActive || !S.gameRunning) return;
+    S.promptWandering = true;
+    S.shark.speed = S.shark.savedPromptSpeed || (0.75 + S.level * 0.2);
+    S.promptWanderAngle = Math.random() * Math.PI * 2;
+    S.promptWanderTimer = Date.now();
+  }, PROMPT_FREEZE_DURATION);
+
+  S.promptTO = clearTO(S.promptTO);
+  S.promptTO = setTimeout(deactivatePrompt, PROMPT_FREEZE_DURATION + PROMPT_WANDER_DURATION);
+}
+
+export function deactivatePrompt() {
+  if (!S.promptActive) return;
+  S.promptActive = false;
+  S.promptWandering = false;
+  S.shark.speed = S.shark.savedPromptSpeed || (0.75 + S.level * 0.2);
+  stOff('prompt', 's-prompt');
+  spawnParticles(S.shark.x, S.shark.y, '#aa66ff', 8);
+  S.promptTO = null;
+  S.promptTO2 = clearTO(S.promptTO2);
+}
+
+// ─── THE CLAUDE ───
+function activateClaude() {
+  S.claudeActive = true;
+  S.claudeAnim = { startTime: Date.now(), text: '', textTarget: "I'LL HELP YOU WITH THAT." };
+  S.shark.savedClaudeSpeed = S.shark.speed;
+  S.shark.speed = 0;
+  stOn('claude', 's-claude');
+
+  // Typewriter effect
+  const target = S.claudeAnim.textTarget;
+  for (let i = 0; i <= target.length; i++) {
+    setTimeout(() => { if (S.claudeAnim) S.claudeAnim.text = target.slice(0, i); }, i * 55);
+  }
+
+  // Collect treats sequentially starting at 900ms
+  const uncollected = S.treats.filter(t => !t.collected);
+  const BASE_DELAY = 900;
+  uncollected.forEach((t, i) => {
+    setTimeout(() => {
+      if (!S.gameRunning || t.collected) return;
+      collectTreat(t);
+    }, BASE_DELAY + i * 130);
+  });
+
+  // End animation after all treats collected + extra flourish time
+  const totalDuration = BASE_DELAY + uncollected.length * 130 + 1200;
+  S.claudeTO = clearTO(S.claudeTO);
+  S.claudeTO = setTimeout(() => {
+    if (!S.gameRunning) return;
+    // Bonus score
+    S.score += 500;
+    scoreEl.textContent = S.score;
+    S.scorePopups.push({ x: W / 2, y: H / 2, pts: '+500 CLAUDE BONUS!', life: 2.5, decay: 0.01 });
+    spawnParticles(W / 2, H / 2, '#aa66ff', 30);
+    spawnParticles(W / 2, H / 2, '#ffcc44', 20);
+
+    S.shark.speed = S.shark.savedClaudeSpeed || (0.75 + S.level * 0.2);
+    S.claudeActive = false;
+    S.claudeAnim = null;
+    stOff('claude', 's-claude');
+    S.claudeTO = null;
+  }, totalDuration);
+}
+
 // ═══════════════════════════════════════════════════════════════
 // POWER-UP CONFIG TABLE
 // ═══════════════════════════════════════════════════════════════
@@ -384,8 +466,10 @@ export const pwConfig = {
   double:    { emoji: '💎', glow: '#44ddff', fn: activateDouble,    rarity: 5, ok: () => S.treats.length > 0 },
   magnet:    { emoji: '🧲', glow: '#dd44ff', fn: activateMagnet,    rarity: 5, ok: () => !S.magnetActive },
   wave:      { emoji: '🌊', glow: '#4488ff', fn: activateWave,      rarity: 5, ok: () => S.treats.length > 0 },
-  crazy:     { emoji: '🍄', glow: '#ff00aa', fn: activateCrazy,     rarity: 0, ok: () => S.level >= 9 && !S.crazyActive, life: CRAZY_ITEM_LIFETIME },
-  rainbow:   { emoji: '🌈', glow: '#ff88ff', fn: activateRainbow,  rarity: 5, ok: () => !S.rainbowActive, life: 1500 }
+  crazy:     { emoji: '🍄', glow: '#ff00aa', fn: activateCrazy,     rarity: 6, ok: () => S.level >= 9 && !S.crazyActive, life: CRAZY_ITEM_LIFETIME },
+  rainbow:   { emoji: '🌈', glow: '#ff88ff', fn: activateRainbow,  rarity: 6, ok: () => !S.rainbowActive, life: 1500 },
+  prompt:    { emoji: '✍️', glow: '#aa66ff', fn: activatePrompt,   rarity: 3, ok: () => !S.promptActive },
+  claude:    { emoji: '🤖', glow: '#cc88ff', fn: activateClaude,   rarity: 6, ok: () => !S.claudeActive && S.treats.length > 0, life: CLAUDE_ITEM_LIFETIME }
 };
 
 
@@ -401,7 +485,7 @@ export async function loadRarities() {
   if (rarities) {
     firebaseRarities = rarities;
     for (const [key, rarity] of Object.entries(rarities)) {
-      if (pwConfig[key] && rarity >= 1 && rarity <= 5) {
+      if (pwConfig[key] && rarity >= 1 && rarity <= 6) {
         pwConfig[key].rarity = rarity;
       }
     }
@@ -421,10 +505,7 @@ function getFieldBudget() {
 function getFieldCost() {
   let cost = 0;
   for (const k in S.pwItems) {
-    if (S.pwItems[k]) {
-      const r = pwConfig[k]?.rarity || 0;
-      if (r > 0) cost += r; else if (r === 0) cost += 5;
-    }
+    if (S.pwItems[k]) cost += pwConfig[k]?.rarity || 1;
   }
   return cost;
 }
@@ -468,10 +549,10 @@ export function trySpawnPowerups() {
     if (S.pwItems[k] || !c.ok()) continue;
     if (k === S.lastSpawnedPW) continue;
 
-    const r = c.rarity === 0 ? 5 : c.rarity;
+    const r = c.rarity;
     if (currentCost + r > budget) continue;
 
-    const rarityMul = c.rarity === 0 ? 0.15 : RARITY[c.rarity].spawnMul;
+    const rarityMul = RARITY[r]?.spawnMul ?? 0.025;
     if (Math.random() < PW_SPAWN_CHANCE * rarityMul) {
       S.pwItems[k] = spawnPW(k);
       S.lastSpawnedPW = k;
@@ -510,5 +591,6 @@ export function updatePWItems() {
 
 export function clearAllPowerupTimeouts() {
   [S.frenzyTO, S.iceTO, S.ghostTO, S.hourglassTO, S.buddyTO,
-   S.bombTO, S.crazyTO, S.decoyTO, S.starTO, S.rainbowTO].forEach(clearTO);
+   S.bombTO, S.crazyTO, S.decoyTO, S.starTO, S.rainbowTO,
+   S.promptTO, S.promptTO2, S.claudeTO].forEach(clearTO);
 }

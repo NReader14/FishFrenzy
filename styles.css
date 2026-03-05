@@ -244,6 +244,18 @@ body::after {
   -webkit-animation: rainbow-cycle .6s linear infinite !important;
   animation: rainbow-cycle .6s linear infinite !important;
 }
+.s-prompt { color: #aa66ff !important; animation: prompt-pulse .5s ease-in-out infinite; }
+.s-claude { animation: claude-glow .45s ease-in-out infinite; }
+
+@keyframes prompt-pulse {
+  0%, 100% { text-shadow: 0 0 8px rgba(170,102,255,.5); color: #aa66ff; }
+  50%       { text-shadow: 0 0 18px rgba(170,102,255,.95); color: #cc99ff; }
+}
+
+@keyframes claude-glow {
+  0%, 100% { color: #cc88ff !important; text-shadow: 0 0 10px #cc88ff; }
+  50%       { color: #ffcc44 !important; text-shadow: 0 0 18px #ffcc44; }
+}
 
 @keyframes rainbow-cycle {
   0%   { color: #ff4444; text-shadow: 0 0 8px #ff4444; }
@@ -1027,6 +1039,28 @@ canvas {
   background-clip: text;
 }
 .rarity-crazy strong { color: #ff00aa; }
+.rarity-legendary strong {
+  background: linear-gradient(90deg, #cc88ff, #ffcc44, #cc88ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.rarity-legendary-label {
+  background: linear-gradient(90deg, #cc88ff, #ffcc44, #cc88ff);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: legendaryShift 2.5s linear infinite;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  margin: 10px 0 4px;
+  letter-spacing: 1px;
+}
+@keyframes legendaryShift {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
 
 /* ─── NAME CONFIRMATION ─── */
 .name-confirm-display {
@@ -1294,8 +1328,8 @@ canvas {
     /* Width derived from available height so aspect ratio (3:2) fits exactly.
        Fallback for browsers that don't support dvh or CSS min(): cap to 100vw. */
     max-width: 100vw;
-    max-width: calc((100vh - 110px) * 1.5);   /* vh fallback */
-    max-width: calc((100dvh - 110px) * 1.5);  /* dvh for browsers that support it */
+    max-width: calc((100vh - 85px) * 1.5);   /* vh fallback */
+    max-width: calc((100dvh - 85px) * 1.5);  /* dvh for browsers that support it */
     max-height: 100vh;
     max-height: 100dvh;
     overflow: hidden;
