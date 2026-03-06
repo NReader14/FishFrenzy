@@ -428,12 +428,21 @@ function buildVarEditor() {
 function buildGameVarEditor() {
   const grid = document.getElementById('admin-gamevar-editor');
   if (!grid) return;
-  let html = '<div class="admin-var-label" style="color:#44ddff;">VARIABLE</div><div class="admin-var-label" style="color:#44ddff;">VALUE</div>';
+  let html = `<div class="admin-var-label" style="color:#44ddff;">VARIABLE</div><div class="admin-var-label" style="color:#44ddff;">SLIDER</div><div class="admin-var-label" style="color:#44ddff;">VAL</div>`;
   for (const [key, meta] of Object.entries(GAME_VAR_META)) {
+    const val = gameVars[key];
     html += `<div class="admin-var-label">${meta.label}</div>`;
-    html += `<input type="number" class="admin-var-input" data-gv="${key}" min="${meta.min}" max="${meta.max}" step="${meta.step}" value="${gameVars[key]}">`;
+    html += `<input type="range" class="admin-var-input admin-gv-slider" data-gv="${key}" min="${meta.min}" max="${meta.max}" step="${meta.step}" value="${val}" style="width:100%;accent-color:#44ddff;cursor:pointer;">`;
+    html += `<div class="admin-var-tag" data-gv-val="${key}" style="color:#ccddee;font-size:7px;text-align:right;">${val}</div>`;
   }
   grid.innerHTML = html;
+
+  grid.querySelectorAll('.admin-gv-slider').forEach(slider => {
+    slider.addEventListener('input', () => {
+      const display = grid.querySelector(`[data-gv-val="${slider.dataset.gv}"]`);
+      if (display) display.textContent = slider.value;
+    });
+  });
 }
 
 function showPanelMsg(msg, isError) {

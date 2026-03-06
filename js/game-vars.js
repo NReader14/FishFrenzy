@@ -7,7 +7,7 @@ export const gameVars = {
   fishFriction:       0.88,  // How quickly fish decelerates (0=none, 1=instant stop)
   fishAccelRate:      0.003, // Speed gained per frame held
   fishMaxSpeedBonus:  0.8,   // Max extra speed from acceleration
-  sharkSpeedBase:     0.75,  // Shark speed offset above fish speed
+  sharkSpeedBase:     -1.75, // Shark speed offset above fish speed (fishSpeed + offset + level*perLevel)
   sharkSpeedPerLevel: 0.2,   // Shark speed added per level
   treatBase:          5,     // Treats at level 1
   treatPerLevel:      2,     // Extra treats added per level
