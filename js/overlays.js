@@ -18,6 +18,7 @@ import {
 } from '../firebase-config.js';
 import { pwConfig, clearTO } from './powerups.js';
 import { setupItemTestEvents } from './admin.js';
+import { gameVars, GAME_VAR_META, GAME_VAR_DEFAULTS } from './game-vars.js';
 
 // Forward references (set by main.js)
 let _initGame = null;
@@ -424,6 +425,17 @@ function buildVarEditor() {
   });
 }
 
+function buildGameVarEditor() {
+  const grid = document.getElementById('admin-gamevar-editor');
+  if (!grid) return;
+  let html = '<div class="admin-var-label" style="color:#44ddff;">VARIABLE</div><div class="admin-var-label" style="color:#44ddff;">VALUE</div>';
+  for (const [key, meta] of Object.entries(GAME_VAR_META)) {
+    html += `<div class="admin-var-label">${meta.label}</div>`;
+    html += `<input type="number" class="admin-var-input" data-gv="${key}" min="${meta.min}" max="${meta.max}" step="${meta.step}" value="${gameVars[key]}">`;
+  }
+  grid.innerHTML = html;
+}
+
 function showPanelMsg(msg, isError) {
   const el = document.getElementById('admin-panel-msg');
   el.textContent = msg;
@@ -447,6 +459,7 @@ export function openAdminPanel(currentMaint) {
   }
 
   buildVarEditor();
+  buildGameVarEditor();
   document.getElementById('admin-panel-msg').classList.add('hidden');
 }
 
@@ -515,6 +528,34 @@ export function setupAdminEvents() {
     }
     buildVarEditor();
     showPanelMsg('RESET TO DEFAULTS (NOT SAVED YET)', false);
+  });
+
+  // Save game vars
+  document.getElementById('admin-save-gamevars-btn')?.addEventListener('click', async () => {
+    if (!S.adminCredentials) { showPanelMsg('NOT LOGGED IN', true); return; }
+    const grid = document.getElementById('admin-gamevar-editor');
+    const config = {};
+    grid.querySelectorAll('.admin-var-input').forEach(inp => {
+      const key = inp.dataset.gv;
+      const meta = GAME_VAR_META[key];
+      if (!meta) return;
+      const val = Math.max(meta.min, Math.min(meta.max, parseFloat(inp.value) || meta.min));
+      config[key] = val;
+    });
+    try {
+      await saveGameConfig({ gameVars: config }, S.adminCredentials.email, S.adminCredentials.password);
+      for (const [key, val] of Object.entries(config)) gameVars[key] = val;
+      showPanelMsg('GAME VARS SAVED & APPLIED', false);
+    } catch (err) {
+      showPanelMsg('SAVE FAILED: ' + (err.message || 'UNKNOWN'), true);
+    }
+  });
+
+  // Reset game var defaults
+  document.getElementById('admin-reset-gamevars-btn')?.addEventListener('click', () => {
+    for (const key of Object.keys(GAME_VAR_DEFAULTS)) gameVars[key] = GAME_VAR_DEFAULTS[key];
+    buildGameVarEditor();
+    showPanelMsg('GAME VARS RESET (NOT SAVED YET)', false);
   });
 
   // Close admin panel

@@ -12,10 +12,11 @@ import {
   CRAZY_ITEM_LIFETIME, CLAUDE_ITEM_LIFETIME,
   PROMPT_FREEZE_DURATION, PROMPT_WANDER_DURATION, BODY_SWAP_DURATION,
   MAX_FIELD_ITEMS, RARITY, PW_SPAWN_CHANCE,
-  FISH_BASE_SPEED, FRENZY_SPEED_BOOST,
+  FRENZY_SPEED_BOOST,
   W, H, rand, dist
 } from './constants.js';
 import { fetchGameConfig } from '../firebase-config.js';
+import { gameVars } from './game-vars.js';
 
 // ─── HELPERS ───
 export function clearTO(t) { if (t) clearTimeout(t); return null; }
@@ -34,7 +35,7 @@ export function setSpawnTreat(fn) { _spawnTreat = fn; }
 function activateFrenzy() {
   S.frenzyActive = true;
   S.frenzyTimer = Date.now();
-  S.fish.speed = FISH_BASE_SPEED + FRENZY_SPEED_BOOST;
+  S.fish.speed = gameVars.fishSpeed + FRENZY_SPEED_BOOST;
   stOn('frenzy', 's-frenzy');
   S.frenzyTO = clearTO(S.frenzyTO);
   S.frenzyTO = setTimeout(deactivateFrenzy, FRENZY_DURATION);
@@ -42,7 +43,7 @@ function activateFrenzy() {
 
 function deactivateFrenzy() {
   S.frenzyActive = false;
-  S.fish.speed = FISH_BASE_SPEED;
+  S.fish.speed = gameVars.fishSpeed;
   stOff('frenzy', 's-frenzy');
   S.frenzyTO = null;
 }
@@ -352,14 +353,14 @@ function activateRainbow() {
 function activateGoop() {
   S.goopActive = true;
   S.goopStartTime = Date.now();
-  S.fish.speed = FISH_BASE_SPEED * 0.5;
+  S.fish.speed = gameVars.fishSpeed * 0.5;
   stOn('goop', 's-goop');
   spawnParticles(S.fish.x, S.fish.y, '#66cc44', 16);
   S.scorePopups.push({ x: S.fish.x, y: S.fish.y - 20, pts: 'GOOPED!', life: 1.5, decay: 0.02 });
   S.goopTO = clearTO(S.goopTO);
   S.goopTO = setTimeout(() => {
     S.goopActive = false;
-    S.fish.speed = S.frenzyActive ? FISH_BASE_SPEED + FRENZY_SPEED_BOOST : FISH_BASE_SPEED;
+    S.fish.speed = S.frenzyActive ? gameVars.fishSpeed + FRENZY_SPEED_BOOST : gameVars.fishSpeed;
     stOff('goop', 's-goop');
     S.goopTO = null;
   }, GOOP_DURATION);
@@ -549,6 +550,13 @@ export async function loadRarities() {
     }
     console.log("[Config] Rarities loaded from Firebase:", rarities);
   }
+  const vars = config?.gameVars;
+  if (vars) {
+    for (const [key, val] of Object.entries(vars)) {
+      if (key in gameVars && typeof val === 'number') gameVars[key] = val;
+    }
+    console.log("[Config] Game vars loaded from Firebase:", vars);
+  }
 }
 
 
@@ -589,7 +597,7 @@ function spawnPW(type) {
     x = rand(50, W - 50);
     y = rand(50, H - 50);
     attempts++;
-  } while ((dist({ x, y }, S.fish) < 80 || overlapsExisting(x, y, 40)) && attempts < 30);
+  } while ((dist({ x, y }, S.fish) < gameVars.pwSpawnRadius || overlapsExisting(x, y, 40)) && attempts < 30);
   return { x, y, r: 16, bobPhase: rand(0, Math.PI * 2), spawnTime: Date.now(), lifetime: lt, type };
 }
 

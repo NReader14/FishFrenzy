@@ -4,10 +4,11 @@
 
 import S from './js/state.js';
 import {
-  W, H, FISH_BASE_SPEED, FISH_ACCEL_RATE, FISH_MAX_SPEED_BONUS,
+  W, H,
   FRENZY_SPEED_BOOST, SHARK_START_DELAY, COMBO_WINDOW,
   rand, dist
 } from './js/constants.js';
+import { gameVars } from './js/game-vars.js';
 import {
   ctx, overlay, winOverlay, scoreboardOverlay,
   rulesOverlay, adminOverlay, scoreEl, timerEl, timerBar,
@@ -145,7 +146,7 @@ function spawnTreat() {
 }
 
 function startLevel() {
-  S.maxTime = Math.max(18, 35 - S.level);
+  S.maxTime = Math.max(gameVars.levelTimeMin, gameVars.levelTimeBase - S.level);
   S.timeLeft = S.maxTime;
   timerEl.textContent = S.timeLeft;
   timerBar.style.width = '100%';
@@ -156,10 +157,10 @@ function startLevel() {
   S.fish = {
     x: W / 2, y: H / 2, w: 36, h: 22,
     vx: 0, vy: 0, dir: 1, angle: 0, tailPhase: 0,
-    speed: 2.5, friction: 0.88
+    speed: gameVars.fishSpeed, friction: gameVars.fishFriction
   };
 
-  const sharkSpeed = 0.75 + S.level * 0.2;
+  const sharkSpeed = (gameVars.fishSpeed + gameVars.sharkSpeedBase) + S.level * gameVars.sharkSpeedPerLevel;
   S.shark = {
     x: rand(60, W - 60), y: rand(60, H - 60),
     speed: sharkSpeed, savedSpeed: sharkSpeed, savedSpeed2: sharkSpeed,
@@ -172,7 +173,7 @@ function startLevel() {
   }
 
   S.treats = [];
-  const treatCount = 5 + S.level * 2;
+  const treatCount = gameVars.treatBase + S.level * gameVars.treatPerLevel;
   for (let i = 0; i < treatCount; i++) spawnTreat();
   treatsLeftEl.textContent = S.treats.length;
 
@@ -209,7 +210,7 @@ function startLevel() {
     s.style.color = '';
   }
   st.combo.textContent = '⚡x1';
-  S.fish.speed = FISH_BASE_SPEED;
+  S.fish.speed = gameVars.fishSpeed;
 
   S.gameRunning = true;
 
@@ -320,7 +321,7 @@ function updateFish(dt = 1) {
 
   if (moveX !== 0 || moveY !== 0) {
     if (moveX === S.lastMoveDir.x && moveY === S.lastMoveDir.y) {
-      S.accelBonus = Math.min(S.accelBonus + FISH_ACCEL_RATE * dt, FISH_MAX_SPEED_BONUS);
+      S.accelBonus = Math.min(S.accelBonus + gameVars.fishAccelRate * dt, gameVars.fishMaxSpeedBonus);
     } else {
       S.accelBonus *= Math.pow(0.5, dt);
     }
