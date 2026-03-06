@@ -403,15 +403,44 @@ export function deactivatePrompt() {
 
 // ─── BODY SWAP ───
 function activateBodySwap() {
+  // Clear active shark effects
+  if (S.iceActive) {
+    S.iceActive = false;
+    S.iceTO = clearTO(S.iceTO);
+    stOff('ice', 's-ice');
+  }
+  if (S.hourglassActive) {
+    S.hourglassActive = false;
+    S.timerFrozen = false;
+    S.hourglassTO = clearTO(S.hourglassTO);
+    timerBar.classList.remove('frozen');
+    stOff('time', 's-time');
+  }
+  if (S.promptActive) {
+    S.promptActive = false;
+    S.promptWandering = false;
+    S.promptTO = clearTO(S.promptTO);
+    S.promptTO2 = clearTO(S.promptTO2);
+    stOff('prompt', 's-prompt');
+  }
+  if (S.claudeActive) {
+    S.claudeActive = false;
+    S.claudeAnim = null;
+    stOff('claude', 's-claude');
+  }
+
   S.bodySwapActive = true;
   S.bodySwapStartTime = Date.now();
   // Zero out fish velocity so AI starts fresh
   S.fish.vx = 0; S.fish.vy = 0;
+  // Boost shark speed for agility
+  S.shark.savedBodySwapSpeed = S.shark.speed;
+  S.shark.speed = S.fish.speed + 1;
   stOn('bodyswap', 's-bodyswap');
   spawnParticles(S.fish.x, S.fish.y, '#ff4488', 20);
   spawnParticles(S.shark.x, S.shark.y, '#44ff88', 16);
   S.scorePopups.push({ x: W / 2, y: H / 2 - 20, pts: '🎭 BODY SWAP!', life: 2, decay: 0.015 });
-  S.scorePopups.push({ x: W / 2, y: H / 2 + 14, pts: 'YOU ARE THE SHARK!', life: 2.5, decay: 0.012 });
+  S.scorePopups.push({ x: W / 2, y: H / 2 + 14, pts: 'YOU ARE THE SHARK! 2X POINTS!', life: 2.5, decay: 0.012 });
 
   S.bodySwapTO = clearTO(S.bodySwapTO);
   S.bodySwapTO = setTimeout(deactivateBodySwap, BODY_SWAP_DURATION);
@@ -421,6 +450,7 @@ export function deactivateBodySwap() {
   if (!S.bodySwapActive) return;
   S.bodySwapActive = false;
   S.fish.vx = 0; S.fish.vy = 0;
+  S.shark.speed = S.shark.savedBodySwapSpeed || (0.75 + S.level * 0.2);
   stOff('bodyswap', 's-bodyswap');
   spawnParticles(S.fish.x, S.fish.y, '#ff4488', 10);
   spawnParticles(S.shark.x, S.shark.y, '#44ff88', 10);
@@ -565,6 +595,18 @@ function spawnPW(type) {
 
 export function trySpawnPowerups() {
   if (S.gamePaused) return;
+
+  // Item test: force a single item type to always be on the field
+  if (S.forcedItem && pwConfig[S.forcedItem]) {
+    for (const k in S.pwItems) {
+      if (k !== S.forcedItem) S.pwItems[k] = null;
+    }
+    if (!S.pwItems[S.forcedItem]) {
+      S.pwItems[S.forcedItem] = spawnPW(S.forcedItem);
+    }
+    return;
+  }
+
   let fieldCount = 0;
   for (const k in S.pwItems) { if (S.pwItems[k]) fieldCount++; }
   if (fieldCount >= MAX_FIELD_ITEMS) return;

@@ -387,7 +387,7 @@ function updateShark() {
       let diff = ta - S.shark.angle;
       while (diff > Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
-      S.shark.angle += diff * 0.15;
+      S.shark.angle += diff * 0.35;
     }
     S.shark.x = Math.max(20, Math.min(W - 20, S.shark.x));
     S.shark.y = Math.max(20, Math.min(H - 20, S.shark.y));

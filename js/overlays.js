@@ -17,6 +17,7 @@ import {
   saveGameConfig
 } from '../firebase-config.js';
 import { pwConfig, clearTO } from './powerups.js';
+import { setupItemTestEvents } from './admin.js';
 
 // Forward references (set by main.js)
 let _initGame = null;
@@ -451,6 +452,8 @@ export function openAdminPanel(currentMaint) {
 
 // ─── ADMIN EVENT HANDLERS ───
 export function setupAdminEvents() {
+  setupItemTestEvents();
+
   // Maintenance toggle
   document.getElementById('maint-toggle-btn')?.addEventListener('click', async () => {
     if (!S.adminCredentials) { showPanelMsg('NOT LOGGED IN', true); return; }

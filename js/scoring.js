@@ -36,7 +36,7 @@ export function collectTreat(t) {
 
   // Calculate points
   const basePts = S.frenzyActive ? 20 : 10;
-  const pts = basePts * cm;
+  const pts = basePts * cm * (S.bodySwapActive ? 2 : 1);
   S.score += pts;
   scoreEl.textContent = S.score;
 
