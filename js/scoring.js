@@ -36,7 +36,18 @@ export function collectTreat(t) {
 
   // Calculate points
   const basePts = S.frenzyActive ? 20 : 10;
-  const pts = basePts * cm * (S.bodySwapActive ? 2 : 1);
+  const starMul = S.starActive ? 2 : 1;
+  const pts = basePts * cm * (S.bodySwapActive ? 2 : 1) * starMul;
+
+  if (S.hellActive) {
+    // Hell: collecting treats drains score
+    S.score = Math.max(0, S.score - pts);
+    scoreEl.textContent = S.score;
+    S.scorePopups.push({ x: t.x, y: t.y - 14, pts: '-' + pts + ' \u2620', life: 1, decay: 0.025 });
+    spawnParticles(t.x, t.y, '#ff0000', 8);
+    return;
+  }
+
   S.score += pts;
   scoreEl.textContent = S.score;
 

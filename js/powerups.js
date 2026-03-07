@@ -10,7 +10,8 @@ import {
   FRENZY_DURATION, ICE_DURATION, GHOST_DURATION, HOURGLASS_DURATION,
   BUDDY_DURATION, BOMB_DURATION, CRAZY_DURATION, GOOP_DURATION,
   CRAZY_ITEM_LIFETIME, CLAUDE_ITEM_LIFETIME,
-  PROMPT_FREEZE_DURATION, PROMPT_WANDER_DURATION, BODY_SWAP_DURATION,
+  PROMPT_FREEZE_DURATION, PROMPT_WANDER_DURATION, BODY_SWAP_DURATION, RAINBOW_DURATION,
+  HELL_DURATION,
   MAX_FIELD_ITEMS, RARITY, PW_SPAWN_CHANCE,
   FRENZY_SPEED_BOOST,
   W, H, rand, dist
@@ -52,6 +53,16 @@ function deactivateFrenzy() {
 function activateIce() {
   S.iceActive = true;
   S.iceStartTime = Date.now();
+  // If hourglass already has the shark stopped, grant bonus time instead of wasting the slow
+  if (S.hourglassActive) {
+    S.timeLeft = Math.min(S.maxTime, S.timeLeft + 4);
+    timerEl.textContent = S.timeLeft;
+    S.scorePopups.push({ x: W / 2, y: H / 2, pts: 'ICE COMBO! +4 SEC!', life: 1.5, decay: 0.02 });
+    stOn('ice', 's-ice');
+    S.iceTO = clearTO(S.iceTO);
+    S.iceTO = setTimeout(deactivateIce, ICE_DURATION);
+    return;
+  }
   S.shark.savedSpeed = S.shark.speed;
   S.shark.speed *= 0.25;
   stOn('ice', 's-ice');
@@ -89,13 +100,14 @@ export function useShield() {
 function activateMagnet() {
   S.magnetActive = true;
   stOn('magnet', 's-magnet');
-  S.scorePopups.push({ x: S.fish.x, y: S.fish.y - 20, pts: 'MAGNET!', life: 0.05, decay: 0.03 });
-  setTimeout(() => { S.magnetActive = false; stOff('magnet', 's-magnet'); }, 500);
+  S.scorePopups.push({ x: S.fish.x, y: S.fish.y - 20, pts: 'MAGNET!', life: 1, decay: 0.025 });
+  setTimeout(() => { S.magnetActive = false; stOff('magnet', 's-magnet'); }, 1500);
 }
 
 // ─── GHOST ───
 function activateGhost() {
   S.ghostActive = true;
+  S.ghostStartTime = Date.now();
   S.shark.hidden = true;
   stOn('ghost', 's-ghost');
   S.scorePopups.push({ x: S.shark.x, y: S.shark.y - 20, pts: 'POOF!', life: 1, decay: 0.03 });
@@ -139,7 +151,13 @@ function deactivateHourglass() {
 // ─── BUDDY ───
 function activateBuddy() {
   S.buddyActive = true;
-  S.buddy = { x: W - S.fish.x, y: H - S.fish.y, dir: -S.fish.dir, tailPhase: rand(0, Math.PI * 2) };
+  S.buddyStartTime = Date.now();
+  // Spawn near the nearest uncollected treat, or at a random spot
+  const targets = S.treats.filter(t => !t.collected);
+  const spawnNear = targets.length ? targets[Math.floor(Math.random() * targets.length)] : null;
+  const sx = spawnNear ? Math.max(20, Math.min(W - 20, spawnNear.x + rand(-40, 40))) : rand(60, W - 60);
+  const sy = spawnNear ? Math.max(20, Math.min(H - 20, spawnNear.y + rand(-40, 40))) : rand(60, H - 60);
+  S.buddy = { x: sx, y: sy, dir: 1, tailPhase: rand(0, Math.PI * 2) };
   stOn('buddy', 's-buddy');
   S.scorePopups.push({ x: S.fish.x, y: S.fish.y - 20, pts: 'BUDDY!', life: 1, decay: 0.03 });
   S.buddyTO = clearTO(S.buddyTO);
@@ -157,6 +175,8 @@ function deactivateBuddy() {
 // ─── BOMB ───
 function activateBomb() {
   S.bombActive = true;
+  S.bombStartTime = Date.now();
+  S.bombAnim = { x: S.fish.x, y: S.fish.y, startTime: Date.now(), duration: 500 };
   stOn('bomb', 's-bomb');
   spawnParticles(S.fish.x, S.fish.y, '#ff4444', 20);
   spawnParticles(S.fish.x, S.fish.y, '#ffaa00', 14);
@@ -185,11 +205,12 @@ function activateBomb() {
 // ─── CRAZY ───
 function activateCrazy() {
   S.crazyActive = true;
+  S.crazyStartTime = Date.now();
   stOn('crazy', 's-crazy');
   S.scorePopups.push({ x: S.fish.x, y: S.fish.y - 30, pts: 'CHAOS! 5 SECONDS!', life: 2, decay: 0.015 });
   spawnParticles(S.fish.x, S.fish.y, '#ff00aa', 40);
 
-  const toSpawn = (5 + S.level * 2) * 20;
+  const toSpawn = Math.min(80, (5 + S.level * 2) * 4);
   for (let i = 0; i < toSpawn; i++) _spawnTreat();
   treatsLeftEl.textContent = S.treats.length;
 
@@ -202,6 +223,7 @@ function activateCrazy() {
 // ─── DECOY ───
 function activateDecoy() {
   S.decoyActive = true;
+  S.decoyStartTime = Date.now();
   const ax = Math.atan2(S.shark.y - S.fish.y, S.shark.x - S.fish.x);
   S.decoyFish = {
     x: S.fish.x - Math.cos(ax) * 100,
@@ -239,6 +261,7 @@ function activateSwap() {
 // ─── STAR ───
 function activateStar() {
   S.starActive = true;
+  S.starStartTime = Date.now();
   stOn('star', 's-star');
   S.scorePopups.push({ x: S.fish.x, y: S.fish.y - 20, pts: 'STAR!', life: 1, decay: 0.03 });
   spawnParticles(S.fish.x, S.fish.y, '#ffee44', 20);
@@ -269,18 +292,21 @@ function activateDouble() {
 
 // ─── WAVE ───
 function activateWave() {
+  const target = S.bodySwapActive ? S.shark : S.fish;
   for (const t of S.treats) {
     if (t.collected) continue;
-    const dLeft = t.x, dRight = W - t.x, dTop = t.y, dBottom = H - t.y;
-    const minDist = Math.min(dLeft, dRight, dTop, dBottom);
-    if (minDist === dLeft) t.x = 20;
-    else if (minDist === dRight) t.x = W - 20;
-    else if (minDist === dTop) t.y = 20;
-    else t.y = H - 20;
+    const dx = target.x - t.x, dy = target.y - t.y;
+    const d = Math.hypot(dx, dy);
+    if (d > 0) {
+      t.x += (dx / d) * Math.min(d * 0.7, 160);
+      t.y += (dy / d) * Math.min(d * 0.7, 160);
+    }
+    t.x = Math.max(20, Math.min(W - 20, t.x));
+    t.y = Math.max(20, Math.min(H - 20, t.y));
     spawnParticles(t.x, t.y, '#4488ff', 3);
   }
   S.scorePopups.push({ x: W / 2, y: H / 2, pts: 'WAVE!', life: 1, decay: 0.03 });
-  spawnParticles(S.fish.x, S.fish.y, '#4488ff', 16);
+  spawnParticles(target.x, target.y, '#4488ff', 20);
 }
 
 // ─── POISON ───
@@ -316,6 +342,7 @@ function activateHook() {
 // ─── RAINBOW ───
 function activateRainbow() {
   S.rainbowActive = true;
+  S.rainbowStartTime = Date.now();
   stOn('rainbow', 's-rainbow');
   S.scorePopups.push({ x: S.fish.x, y: S.fish.y - 36, pts: '🌈 ULTRA RAINBOW! 🌈', life: 3, decay: 0.01 });
 
@@ -346,7 +373,7 @@ function activateRainbow() {
     S.rainbowActive = false;
     stOff('rainbow', 's-rainbow');
     S.rainbowTO = null;
-  }, 2500);
+  }, RAINBOW_DURATION);
 }
 
 // ─── GOOP ───
@@ -370,6 +397,7 @@ function activateGoop() {
 // ─── PROMPT ───
 function activatePrompt() {
   S.promptActive = true;
+  S.promptStartTime = Date.now();
   S.promptWandering = false;
   S.shark.savedPromptSpeed = S.shark.speed;
   S.shark.speed = 0;
@@ -432,6 +460,8 @@ function activateBodySwap() {
 
   S.bodySwapActive = true;
   S.bodySwapStartTime = Date.now();
+  // Trigger swap soul animation
+  S.bodySwapAnim = { startTime: Date.now(), duration: 1100, fishX: S.fish.x, fishY: S.fish.y, sharkX: S.shark.x, sharkY: S.shark.y };
   // Zero out fish velocity so AI starts fresh
   S.fish.vx = 0; S.fish.vy = 0;
   // Boost shark speed for agility
@@ -440,8 +470,6 @@ function activateBodySwap() {
   stOn('bodyswap', 's-bodyswap');
   spawnParticles(S.fish.x, S.fish.y, '#ff4488', 20);
   spawnParticles(S.shark.x, S.shark.y, '#44ff88', 16);
-  S.scorePopups.push({ x: W / 2, y: H / 2 - 20, pts: '🎭 BODY SWAP!', life: 2, decay: 0.015 });
-  S.scorePopups.push({ x: W / 2, y: H / 2 + 14, pts: 'YOU ARE THE SHARK! 2X POINTS!', life: 2.5, decay: 0.012 });
 
   S.bodySwapTO = clearTO(S.bodySwapTO);
   S.bodySwapTO = setTimeout(deactivateBodySwap, BODY_SWAP_DURATION);
@@ -450,6 +478,7 @@ function activateBodySwap() {
 export function deactivateBodySwap() {
   if (!S.bodySwapActive) return;
   S.bodySwapActive = false;
+  S.bodySwapAnim = null;
   S.fish.vx = 0; S.fish.vy = 0;
   S.shark.speed = S.shark.savedBodySwapSpeed || (0.75 + S.level * 0.2);
   stOff('bodyswap', 's-bodyswap');
@@ -462,7 +491,7 @@ export function deactivateBodySwap() {
 // ─── THE CLAUDE ───
 function activateClaude() {
   S.claudeActive = true;
-  S.claudeAnim = { startTime: Date.now(), text: '', textTarget: "I'LL HELP YOU WITH THAT." };
+  S.claudeAnim = { startTime: Date.now(), text: '', textTarget: "I'LL HELP YOU WITH THAT.", totalDuration: 0 };
   S.shark.savedClaudeSpeed = S.shark.speed;
   S.shark.speed = 0;
   stOn('claude', 's-claude');
@@ -485,6 +514,7 @@ function activateClaude() {
 
   // End animation after all treats collected + extra flourish time
   const totalDuration = BASE_DELAY + uncollected.length * 130 + 1200;
+  if (S.claudeAnim) S.claudeAnim.totalDuration = totalDuration;
   S.claudeTO = clearTO(S.claudeTO);
   S.claudeTO = setTimeout(() => {
     if (!S.gameRunning) return;
@@ -501,6 +531,32 @@ function activateClaude() {
     stOff('claude', 's-claude');
     S.claudeTO = null;
   }, totalDuration);
+}
+
+// ─── HELL ───
+function activateHell() {
+  S.hellAnim = { startTime: Date.now() };
+  // Freeze game during 2s intro
+  S.gamePaused = true;
+  S.timerFrozen = true;
+  stOn('hell', 's-hell');
+  spawnParticles(S.fish.x, S.fish.y, '#ff0000', 20);
+
+  // After 2s intro, unfreeze and begin the 5s active (score-drain) phase
+  S.hellTO = clearTO(S.hellTO);
+  S.hellTO = setTimeout(() => {
+    S.gamePaused = false;
+    S.timerFrozen = false;
+    S.hellActive = true;
+    S.hellStartTime = Date.now();
+    S.hellTO = setTimeout(deactivateHell, HELL_DURATION);
+  }, 2000);
+}
+function deactivateHell() {
+  S.hellActive = false;
+  stOff('hell', 's-hell');
+  S.hellTO = null;
+  // hellAnim continues for outro/end phases — cleared by drawHellAnim after 9.5s total
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -528,7 +584,8 @@ export const pwConfig = {
   crazy:     { emoji: '🍄', glow: '#ff00aa', fn: activateCrazy,     rarity: 6, ok: () => S.level >= 9 && !S.crazyActive, life: CRAZY_ITEM_LIFETIME },
   rainbow:   { emoji: '🌈', glow: '#ff88ff', fn: activateRainbow,  rarity: 6, ok: () => !S.rainbowActive, life: 1500 },
   prompt:    { emoji: '✍️', glow: '#aa66ff', fn: activatePrompt,   rarity: 3, ok: () => !S.promptActive },
-  claude:    { emoji: '🤖', glow: '#cc88ff', fn: activateClaude,   rarity: 6, ok: () => !S.claudeActive && S.treats.length > 0, life: CLAUDE_ITEM_LIFETIME }
+  claude:    { emoji: '🤖', glow: '#cc88ff', fn: activateClaude,   rarity: 6, ok: () => !S.claudeActive && S.treats.length > 0, life: CLAUDE_ITEM_LIFETIME },
+  hell:      { emoji: '👹', glow: '#ff0000', fn: activateHell,     rarity: 6, ok: () => !S.hellActive && !S.hellAnim, life: 5000 }
 };
 
 
@@ -659,16 +716,12 @@ export function updatePWItems() {
       continue;
     }
 
-    if (S.buddyActive && S.buddy && dist(item, S.buddy) < 26) {
-      spawnParticles(item.x, item.y, pwConfig[k].glow, 12);
-      pwConfig[k].fn();
-      S.pwItems[k] = null;
-    }
+    // Buddy only collects treats, not powerups — no pickup here
   }
 }
 
 export function clearAllPowerupTimeouts() {
   [S.frenzyTO, S.iceTO, S.ghostTO, S.hourglassTO, S.buddyTO,
    S.bombTO, S.crazyTO, S.decoyTO, S.starTO, S.rainbowTO,
-   S.promptTO, S.promptTO2, S.claudeTO, S.bodySwapTO].forEach(clearTO);
+   S.promptTO, S.promptTO2, S.claudeTO, S.bodySwapTO, S.hellTO].forEach(clearTO);
 }

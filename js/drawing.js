@@ -5,7 +5,10 @@
 import S from './state.js';
 import { ctx } from './dom.js';
 import { W, H, rand, dist,
-  FRENZY_DURATION, ICE_DURATION, HOURGLASS_DURATION, GOOP_DURATION
+  FRENZY_DURATION, ICE_DURATION, HOURGLASS_DURATION, GOOP_DURATION,
+  GHOST_DURATION, BUDDY_DURATION, BOMB_DURATION, CRAZY_DURATION,
+  DECOY_DURATION, STAR_DURATION, RAINBOW_DURATION,
+  PROMPT_WANDER_DURATION, BODY_SWAP_DURATION, HELL_DURATION
 } from './constants.js';
 import { pwConfig } from './powerups.js';
 
@@ -166,9 +169,73 @@ export function drawDecoy() {
   }
 }
 
+// ─── GHOST SHARK (for HELL active phase) ───
+function drawGhostSharkAt(x, y, angle, tailPhase, alpha) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  ctx.globalAlpha = alpha;
+
+  const tw = Math.round(Math.sin(tailPhase) * 4);
+
+  ctx.fillStyle = '#774444';
+  ctx.fillRect(-30, -6 + tw, 8, 3);
+  ctx.fillRect(-34, -8 + tw, 5, 3);
+  ctx.fillRect(-30, 3 + tw, 8, 3);
+  ctx.fillRect(-34, 5 + tw, 5, 3);
+  ctx.fillStyle = '#662222';
+  ctx.fillRect(-24, -3 + tw, 6, 6);
+  ctx.fillStyle = '#884444';
+  ctx.fillRect(-18, -5, 36, 10);
+  ctx.fillRect(-14, -6, 28, 2);
+  ctx.fillRect(-14, 5, 28, 2);
+  ctx.fillStyle = '#aa7777';
+  ctx.fillRect(-14, 2, 28, 4);
+  ctx.fillStyle = '#884444';
+  ctx.fillRect(16, -4, 6, 8);
+  ctx.fillRect(20, -3, 5, 6);
+  ctx.fillRect(24, -2, 4, 4);
+  ctx.fillRect(27, -1, 3, 2);
+  ctx.fillStyle = '#774444';
+  ctx.fillRect(-2, -12, 3, 7);
+  ctx.fillRect(-1, -16, 3, 5);
+  ctx.fillRect(0, -19, 2, 4);
+  ctx.fillRect(2, 6, 8, 3);
+  ctx.fillRect(4, 9, 5, 2);
+  ctx.fillStyle = '#ff6666';
+  ctx.fillRect(12, -4, 5, 5);
+  ctx.fillStyle = '#220000';
+  ctx.fillRect(14, -4, 2, 5);
+  ctx.fillStyle = '#ffaaaa';
+  ctx.fillRect(13, -3, 1, 1);
+  ctx.fillStyle = '#662222';
+  ctx.fillRect(5, -3, 1, 6);
+  ctx.fillRect(7, -3, 1, 6);
+  ctx.fillRect(9, -3, 1, 6);
+  ctx.fillStyle = '#ffaaaa';
+  ctx.fillRect(18, 3, 2, 2);
+  ctx.fillRect(21, 3, 2, 2);
+  ctx.fillRect(24, 2, 2, 2);
+  ctx.fillRect(18, -5, 2, 2);
+  ctx.fillRect(21, -5, 2, 2);
+  ctx.fillRect(24, -4, 2, 2);
+
+  ctx.beginPath();
+  ctx.ellipse(4, 0, 32, 20, 0, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(255,0,0,${0.2 + Math.sin(Date.now() * 0.005) * 0.08})`;
+  ctx.fill();
+
+  ctx.restore();
+}
+
 // ─── SHARK ───
 export function drawShark() {
   if (S.shark.hidden) return;
+  // Hide shark during HELL intro (circles phase)
+  if (S.hellAnim) {
+    const hellElapsed = (Date.now() - S.hellAnim.startTime) / 1000;
+    if (hellElapsed < 2) return;
+  }
 
   ctx.save();
   ctx.translate(S.shark.x, S.shark.y);
@@ -257,6 +324,74 @@ export function drawShark() {
     ctx.strokeStyle = `rgba(68,255,136,${p})`; ctx.lineWidth = 3; ctx.stroke();
     ctx.beginPath(); ctx.ellipse(0, 0, 48, 32, S.shark.angle, 0, Math.PI * 2);
     ctx.strokeStyle = `rgba(68,255,136,${p * 0.35})`; ctx.lineWidth = 2; ctx.stroke();
+    ctx.restore();
+  }
+
+  // Shark quip speech bubble
+  if (S.shark.quip && S.shark.quip.timer > 0 && !S.shark.hidden) {
+    const fade = Math.min(1, S.shark.quip.timer / 20);
+    const text = S.shark.quip.text.toUpperCase();
+    ctx.save();
+    ctx.font = 'bold 8px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Word-wrap into lines
+    const MAX_BW = 190, pad = 10, LINE_H = 14;
+    const words = text.split(' ');
+    const lines = [];
+    let cur = '';
+    for (const word of words) {
+      const test = cur ? cur + ' ' + word : word;
+      if (ctx.measureText(test).width > MAX_BW - pad * 2 && cur) {
+        lines.push(cur); cur = word;
+      } else { cur = test; }
+    }
+    if (cur) lines.push(cur);
+
+    const maxLW = Math.max(...lines.map(l => ctx.measureText(l).width));
+    const bw = Math.max(60, maxLW + pad * 2);
+    const bh = lines.length * LINE_H + pad;
+    const bx = S.shark.x;
+    // Position bubble above shark, clamped to canvas
+    const rawBy = S.shark.y - 40 - bh;
+    const by = Math.max(bh / 2 + 4, rawBy);
+
+    ctx.globalAlpha = fade;
+    // Drop shadow
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetY = 3;
+    // Bubble fill
+    ctx.fillStyle = '#fff9e6';
+    ctx.beginPath();
+    ctx.roundRect(bx - bw / 2, by - bh / 2, bw, bh, 6);
+    ctx.fill();
+    // Bubble outline
+    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    ctx.strokeStyle = '#cc4400';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // Tail (only if bubble is above shark)
+    if (rawBy >= bh / 2 + 4) {
+      ctx.fillStyle = '#fff9e6';
+      ctx.strokeStyle = '#cc4400';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(bx - 5, by + bh / 2 - 1);
+      ctx.lineTo(bx + 5, by + bh / 2 - 1);
+      ctx.lineTo(bx + 2, by + bh / 2 + 10);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+    // Text lines
+    ctx.fillStyle = '#331100';
+    ctx.shadowBlur = 0;
+    lines.forEach((l, i) => {
+      ctx.fillText(l, bx, by - bh / 2 + pad / 2 + LINE_H * i + LINE_H / 2);
+    });
+    ctx.globalAlpha = 1;
     ctx.restore();
   }
 
@@ -610,6 +745,50 @@ export function drawPowerupTimerBars() {
     const rem = Math.max(0, 1 - (Date.now() - S.frenzyTimer) / FRENZY_DURATION);
     bars.push({ colour: '#ff8800', label: '🔥', rem });
   }
+  if (S.ghostActive) {
+    const rem = Math.max(0, 1 - (Date.now() - S.ghostStartTime) / GHOST_DURATION);
+    bars.push({ colour: '#aaaaff', label: '👻', rem });
+  }
+  if (S.buddyActive) {
+    const rem = Math.max(0, 1 - (Date.now() - S.buddyStartTime) / BUDDY_DURATION);
+    bars.push({ colour: '#44ddaa', label: '🐠', rem });
+  }
+  if (S.bombActive) {
+    const rem = Math.max(0, 1 - (Date.now() - S.bombStartTime) / BOMB_DURATION);
+    bars.push({ colour: '#ff4444', label: '💣', rem });
+  }
+  if (S.crazyActive) {
+    const rem = Math.max(0, 1 - (Date.now() - S.crazyStartTime) / CRAZY_DURATION);
+    bars.push({ colour: '#ff00aa', label: '🍄', rem });
+  }
+  if (S.decoyActive) {
+    const rem = Math.max(0, 1 - (Date.now() - S.decoyStartTime) / DECOY_DURATION);
+    bars.push({ colour: '#ffaa44', label: '👁️', rem });
+  }
+  if (S.starActive) {
+    const rem = Math.max(0, 1 - (Date.now() - S.starStartTime) / STAR_DURATION);
+    bars.push({ colour: '#ffee44', label: '⭐', rem });
+  }
+  if (S.rainbowActive) {
+    const rem = Math.max(0, 1 - (Date.now() - S.rainbowStartTime) / RAINBOW_DURATION);
+    bars.push({ colour: '#ff88ff', label: '🌈', rem });
+  }
+  if (S.promptActive) {
+    const rem = Math.max(0, 1 - (Date.now() - S.promptStartTime) / PROMPT_WANDER_DURATION);
+    bars.push({ colour: '#aa66ff', label: '✍️', rem });
+  }
+  if (S.bodySwapActive) {
+    const rem = Math.max(0, 1 - (Date.now() - S.bodySwapStartTime) / BODY_SWAP_DURATION);
+    bars.push({ colour: '#ff4488', label: '🎭', rem });
+  }
+  if (S.claudeActive && S.claudeAnim && S.claudeAnim.totalDuration > 0) {
+    const rem = Math.max(0, 1 - (Date.now() - S.claudeAnim.startTime) / S.claudeAnim.totalDuration);
+    bars.push({ colour: '#cc88ff', label: '🤖', rem });
+  }
+  if (S.hellActive) {
+    const rem = Math.max(0, 1 - (Date.now() - S.hellStartTime) / HELL_DURATION);
+    bars.push({ colour: '#ff0000', label: '👹', rem });
+  }
   if (bars.length === 0) return;
 
   bars.forEach((b, i) => {
@@ -630,4 +809,338 @@ export function drawPowerupTimerBars() {
     ctx.fillText(b.label, 42, by);
     ctx.globalAlpha = 1;
   });
+}
+
+// ─── BOMB SHOCKWAVE ANIMATION ───
+export function drawBombAnim() {
+  if (!S.bombAnim) return;
+  const anim = S.bombAnim;
+  const t = Math.min(1, (Date.now() - anim.startTime) / anim.duration);
+  if (t >= 1) { S.bombAnim = null; return; }
+
+  const ease = 1 - Math.pow(1 - t, 3);
+  const maxR = Math.max(W, H);
+
+  ctx.save();
+
+  // Screen flash
+  ctx.globalAlpha = (1 - t) * 0.45;
+  ctx.fillStyle = '#ff6600';
+  ctx.fillRect(0, 0, W, H);
+
+  // Expanding shockwave rings
+  for (let ring = 0; ring < 3; ring++) {
+    const rt = Math.max(0, ease - ring * 0.12);
+    const r = rt * maxR * 0.8;
+    const alpha = (1 - rt) * 0.6;
+    if (r <= 0 || alpha <= 0) continue;
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = ring === 0 ? '#ffaa00' : ring === 1 ? '#ff4400' : '#ff0000';
+    ctx.lineWidth = 4 - ring;
+    ctx.shadowColor = '#ff4400';
+    ctx.shadowBlur = 20;
+    ctx.beginPath();
+    ctx.arc(anim.x, anim.y, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+// ─── BODY SWAP SOUL ANIMATION ───
+export function drawBodySwapAnim() {
+  if (!S.bodySwapAnim) return;
+  const anim = S.bodySwapAnim;
+  const t = Math.min(1, (Date.now() - anim.startTime) / anim.duration);
+  if (t >= 1) { S.bodySwapAnim = null; return; }
+
+  // Ease in-out
+  const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+  const arcHeight = 110;
+
+  // Fish soul (orange): fish → shark, arcs upward
+  const fsx = anim.fishX + (anim.sharkX - anim.fishX) * ease;
+  const fsy = anim.fishY + (anim.sharkY - anim.fishY) * ease - Math.sin(t * Math.PI) * arcHeight;
+
+  // Shark soul (blue): shark → fish, arcs downward
+  const ssx = anim.sharkX + (anim.fishX - anim.sharkX) * ease;
+  const ssy = anim.sharkY + (anim.fishY - anim.sharkY) * ease + Math.sin(t * Math.PI) * arcHeight;
+
+  ctx.save();
+
+  // Draw trailing ghost copies (past positions)
+  for (let i = 1; i <= 6; i++) {
+    const pt = Math.max(0, t - i * 0.04);
+    const pe = pt < 0.5 ? 2 * pt * pt : -1 + (4 - 2 * pt) * pt;
+    const pfx = anim.fishX + (anim.sharkX - anim.fishX) * pe;
+    const pfy = anim.fishY + (anim.sharkY - anim.fishY) * pe - Math.sin(pt * Math.PI) * arcHeight;
+    const psx = anim.sharkX + (anim.fishX - anim.sharkX) * pe;
+    const psy = anim.sharkY + (anim.fishY - anim.sharkY) * pe + Math.sin(pt * Math.PI) * arcHeight;
+    const a = (0.35 - i * 0.05);
+    ctx.globalAlpha = Math.max(0, a);
+    ctx.fillStyle = '#ff8833';
+    ctx.beginPath(); ctx.arc(pfx, pfy, 10 - i, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#44aaff';
+    ctx.beginPath(); ctx.arc(psx, psy, 10 - i, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // Fish soul orb (orange glow)
+  ctx.globalAlpha = 1;
+  const wobble = Math.sin(Date.now() * 0.015) * 3;
+  const drawSoul = (x, y, innerCol, outerCol) => {
+    const r = 16 + wobble;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r * 2);
+    g.addColorStop(0, '#ffffff');
+    g.addColorStop(0.25, innerCol);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.shadowColor = outerCol;
+    ctx.shadowBlur = 28;
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, r * 2, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+  };
+
+  drawSoul(fsx, fsy, '#ff8833', '#ffaa44');
+  drawSoul(ssx, ssy, '#44aaff', '#88ccff');
+
+  // White flash + big text at crossing point (t ≈ 0.5)
+  if (t > 0.36 && t < 0.64) {
+    const flashT = 1 - Math.abs(t - 0.5) / 0.14;
+    ctx.globalAlpha = flashT * 0.55;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.globalAlpha = flashT;
+    ctx.font = 'bold 26px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = '#ff4488';
+    ctx.shadowBlur = 30;
+    ctx.fillStyle = '#ff4488';
+    ctx.fillText('🎭 BODY SWAP!', W / 2, H / 2 - 14);
+    ctx.font = 'bold 11px "Press Start 2P", monospace';
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = '#ff4488';
+    ctx.fillText('YOU ARE THE SHARK', W / 2, H / 2 + 18);
+    ctx.shadowBlur = 0;
+  }
+
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+// ─── HELL ANIMATION ───
+export function drawHellAnim() {
+  if (!S.hellAnim) return;
+  const elapsed = (Date.now() - S.hellAnim.startTime) / 1000;
+  if (elapsed > 14.5) { S.hellAnim = null; return; }
+
+  const now = Date.now() * 0.001;
+  const cx = W / 2, cy = H / 2;
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // ── PHASE 1: INTRO (0–2s) — circles spin, game frozen, slow red waves ──
+  if (elapsed < 2) {
+    const p = elapsed / 2; // 0→1
+
+    // Slow red/dark-red wash building up
+    ctx.globalAlpha = p * 0.35;
+    ctx.fillStyle = '#440000';
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = Math.sin(p * Math.PI) * 0.2;
+    ctx.fillStyle = '#ff0000';
+    ctx.fillRect(0, 0, W, H);
+
+    // Expanding burst rings from center
+    for (let i = 0; i < 4; i++) {
+      const rp = ((p * 2.5 + i * 0.35) % 1);
+      ctx.globalAlpha = Math.max(0, (1 - rp) * 0.75);
+      ctx.strokeStyle = i % 2 === 0 ? '#ff0000' : '#770000';
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = '#ff0000';
+      ctx.shadowBlur = 14;
+      ctx.beginPath();
+      ctx.arc(cx, cy, rp * 220, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    // 4 spinning circles around center
+    const spinAngle = now * 3.5;
+    const orbitR = 70 + p * 40;
+    for (let i = 0; i < 4; i++) {
+      const a = spinAngle + i * (Math.PI / 2);
+      const ox = cx + Math.cos(a) * orbitR;
+      const oy = cy + Math.sin(a) * orbitR;
+      const circR = 18 + Math.sin(now * 5 + i) * 4;
+
+      ctx.globalAlpha = 0.9;
+      ctx.shadowColor = '#ff2200';
+      ctx.shadowBlur = 22;
+      ctx.strokeStyle = i % 2 === 0 ? '#ff2200' : '#ff6600';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(ox, oy, circR, 0, Math.PI * 2);
+      ctx.stroke();
+      const innerGrad = ctx.createRadialGradient(ox, oy, 0, ox, oy, circR);
+      innerGrad.addColorStop(0, 'rgba(255,60,0,0.5)');
+      innerGrad.addColorStop(1, 'rgba(255,0,0,0)');
+      ctx.fillStyle = innerGrad;
+      ctx.beginPath();
+      ctx.arc(ox, oy, circR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // "HELL AWAITS" text fades in at end of intro
+    if (p > 0.6) {
+      const tp = (p - 0.6) / 0.4;
+      ctx.globalAlpha = tp * 0.9;
+      ctx.font = 'bold 18px "Press Start 2P", monospace';
+      ctx.shadowColor = '#ff0000';
+      ctx.shadowBlur = 30;
+      ctx.fillStyle = '#ff2200';
+      ctx.fillText('\u2666 HELL AWAITS \u2666', cx, cy);
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  // ── PHASE 2: ACTIVE (2–12s) — 4 ghost sharks chase player, red vignette ──
+  if (elapsed >= 2 && elapsed < 12) {
+    // Steady dark red vignette (no fast pulsing)
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = '#ff0000';
+    ctx.fillRect(0, 0, W, H);
+
+    const vig = ctx.createRadialGradient(cx, cy, 60, cx, cy, Math.max(W, H) * 0.75);
+    vig.addColorStop(0, 'rgba(0,0,0,0)');
+    vig.addColorStop(1, 'rgba(80,0,0,0.55)');
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, W, H);
+
+    // Initialize ghost sharks on first active frame
+    if (!S.hellAnim.ghosts) {
+      S.hellAnim.ghosts = [
+        { x: W * 0.1,  y: H * 0.15, angle: 0,          tailPhase: 0 },
+        { x: W * 0.9,  y: H * 0.15, angle: Math.PI,     tailPhase: 1.5 },
+        { x: W * 0.1,  y: H * 0.85, angle: 0,           tailPhase: 3 },
+        { x: W * 0.9,  y: H * 0.85, angle: Math.PI,     tailPhase: 4.5 },
+      ];
+    }
+
+    // Update and draw each ghost shark — they chase the fish
+    const ghostSpeed = 1.2 + S.level * 0.08;
+    for (let i = 0; i < S.hellAnim.ghosts.length; i++) {
+      const g = S.hellAnim.ghosts[i];
+      const tx = S.fish ? S.fish.x : cx;
+      const ty = S.fish ? S.fish.y : cy;
+      const dx = tx - g.x;
+      const dy = ty - g.y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d > 2) {
+        g.x += (dx / d) * ghostSpeed;
+        g.y += (dy / d) * ghostSpeed;
+        g.angle = Math.atan2(dy, dx);
+      }
+      g.tailPhase += 0.1;
+      const ghostAlpha = 0.35 + Math.sin(now * 1.5 + i * 1.5) * 0.08;
+      drawGhostSharkAt(g.x, g.y, g.angle, g.tailPhase, ghostAlpha);
+    }
+
+    // "HELL" title — slow gentle pulse
+    const pulse = 0.75 + Math.sin(now * 3) * 0.15;
+    ctx.globalAlpha = pulse;
+    ctx.font = 'bold 28px "Press Start 2P", monospace';
+    ctx.shadowColor = '#ff0000';
+    ctx.shadowBlur = 30;
+    ctx.fillStyle = '#ff2200';
+    ctx.fillText('\u2666 HELL \u2666', cx, cy - 12);
+    ctx.shadowBlur = 0;
+
+    ctx.globalAlpha = 0.7;
+    ctx.font = '7px "Press Start 2P", monospace';
+    ctx.fillStyle = '#ff8844';
+    ctx.fillText('TREATS DRAIN YOUR SOUL', cx, cy + 22);
+
+    // Countdown
+    const remaining = Math.max(0, Math.ceil(12 - elapsed));
+    ctx.globalAlpha = 0.6;
+    ctx.font = '8px "Press Start 2P", monospace';
+    ctx.fillStyle = '#ff4400';
+    ctx.fillText(remaining + 's OF HELL REMAINS', cx, H - 22);
+  }
+
+  // ── PHASE 3: FIRE OUTRO (12–13.5s) — fire rises, circles spin and fade ──
+  if (elapsed >= 12 && elapsed < 13.5) {
+    const fireP = (elapsed - 12) / 1.5;
+
+    // Fading red overlay
+    ctx.globalAlpha = (1 - fireP) * 0.18;
+    ctx.fillStyle = '#ff0000';
+    ctx.fillRect(0, 0, W, H);
+
+    // Fire columns rising from bottom
+    const fireHeight = fireP * H * 0.92;
+    ctx.globalAlpha = 0.9;
+    for (let x = 0; x < W; x += 6) {
+      const flicker1 = Math.sin(x * 0.09 + now * 13) * 28;
+      const flicker2 = Math.sin(x * 0.17 + now * 9) * 18;
+      const colH = Math.max(0, fireHeight + flicker1 + flicker2);
+      const fireTop = H - colH;
+      const hue = 8 + Math.sin(x * 0.08 + now * 2) * 10;
+      const grad = ctx.createLinearGradient(x, H, x, fireTop);
+      grad.addColorStop(0, `hsl(${hue}, 100%, 50%)`);
+      grad.addColorStop(0.5, `hsl(${hue + 18}, 100%, 65%)`);
+      grad.addColorStop(1, 'rgba(255,200,0,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, fireTop, 7, colH);
+    }
+
+    // Circles spinning out and fading
+    const spinAngle2 = now * 5;
+    const orbitR2 = 100 + fireP * 60;
+    for (let i = 0; i < 4; i++) {
+      const a = spinAngle2 + i * (Math.PI / 2);
+      const ox = cx + Math.cos(a) * orbitR2;
+      const oy = cy + Math.sin(a) * orbitR2;
+      ctx.globalAlpha = Math.max(0, 0.85 - fireP * 0.9);
+      ctx.shadowColor = '#ff4400';
+      ctx.shadowBlur = 20;
+      ctx.strokeStyle = i % 2 === 0 ? '#ff2200' : '#ff6600';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(ox, oy, 22, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  // ── PHASE 4: END TEXT (13.5–14.5s) ──
+  if (elapsed >= 13.5 && elapsed < 14.5) {
+    const ep = (elapsed - 13.5);
+    const alpha = ep < 0.5 ? ep / 0.5 : (1 - ep) / 0.5;
+
+    ctx.globalAlpha = alpha * 0.85;
+    ctx.font = 'bold 20px "Press Start 2P", monospace';
+    ctx.shadowColor = '#ff0000';
+    ctx.shadowBlur = 40;
+    ctx.fillStyle = '#ff4400';
+    ctx.fillText('HELL AND BACK.', cx, cy - 16);
+
+    ctx.globalAlpha = alpha * 0.7;
+    ctx.font = '9px "Press Start 2P", monospace';
+    ctx.fillStyle = '#ffaa44';
+    ctx.shadowColor = '#ff8800';
+    ctx.shadowBlur = 20;
+    ctx.fillText("you're done.", cx, cy + 18);
+    ctx.shadowBlur = 0;
+  }
+
+  ctx.globalAlpha = 1;
+  ctx.restore();
 }

@@ -36,6 +36,8 @@ export function initSettings() {
 
   const overlay    = document.getElementById('overlay');
   const settingsOv = document.getElementById('settings-overlay');
+  const adminBtn   = document.getElementById('admin-panel-btn');
+  const adminOv    = document.getElementById('admin-overlay');
 
   document.getElementById('settings-btn')?.addEventListener('click', () => {
     overlay.classList.add('hidden');
@@ -46,11 +48,31 @@ export function initSettings() {
   document.getElementById('settings-back-btn')?.addEventListener('click', () => {
     settingsOv.classList.add('hidden');
     overlay.classList.remove('hidden');
+    adminBtn?.classList.add('hidden');
+    _adminBuf = '';
   });
 
   document.getElementById('toggle-mystery-btn')?.addEventListener('click', () => {
     S.settings.mysteryBlocks = !S.settings.mysteryBlocks;
     save();
     refreshUI();
+  });
+
+  // Admin button (inside settings) — opens admin panel
+  adminBtn?.addEventListener('click', () => {
+    settingsOv.classList.add('hidden');
+    adminOv?.classList.remove('hidden');
+    document.getElementById('admin-email')?.focus();
+    document.getElementById('admin-error')?.classList.add('hidden');
+    if (document.getElementById('admin-email')) document.getElementById('admin-email').value = '';
+    if (document.getElementById('admin-password')) document.getElementById('admin-password').value = '';
+  });
+
+  // Type "admin" anywhere to reveal the hidden admin button
+  let _adminBuf = '';
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    _adminBuf = (_adminBuf + e.key).slice(-5);
+    if (_adminBuf === 'admin') adminBtn?.classList.remove('hidden');
   });
 }

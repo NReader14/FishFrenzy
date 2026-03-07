@@ -1,0 +1,71 @@
+/* ═══════════════════════════════════════════════════════
+   BUTTONS — Primary, secondary, danger
+   ═══════════════════════════════════════════════════════ */
+
+.btn-primary {
+  padding: 14px 36px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  border: 3px solid #44ddff;
+  border-radius: 2px;
+  cursor: pointer;
+  color: #44ddff;
+  background: transparent;
+  box-shadow: 0 0 16px rgba(68,221,255,.15), inset 0 0 16px rgba(68,221,255,.05);
+  transition: all .15s;
+  letter-spacing: 1px;
+  touch-action: manipulation;
+}
+
+.btn-primary:hover {
+  background: rgba(68,221,255,.1);
+  box-shadow: 0 0 30px rgba(68,221,255,.3), inset 0 0 20px rgba(68,221,255,.08);
+  color: #bbeeff;
+  border-color: #88eeff;
+}
+
+.btn-secondary {
+  padding: 10px 24px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  border: 2px solid #334;
+  border-radius: 2px;
+  cursor: pointer;
+  color: #5588aa;
+  background: transparent;
+  transition: all .15s;
+  letter-spacing: 1px;
+  touch-action: manipulation;
+}
+
+.btn-secondary:hover {
+  background: #1a2a3a;
+  color: #bbddff;
+  border-color: #55aacc;
+}
+
+.btn-danger {
+  padding: 10px 14px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  border: 2px solid #522;
+  border-radius: 2px;
+  cursor: pointer;
+  color: #c55;
+  background: transparent;
+  transition: all .15s;
+  touch-action: manipulation;
+}
+
+.btn-danger:hover {
+  background: #2a1010;
+  color: #ff8888;
+  border-color: #a44;
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-danger:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

@@ -432,8 +432,8 @@ function buildGameVarEditor() {
   for (const [key, meta] of Object.entries(GAME_VAR_META)) {
     const val = gameVars[key];
     html += `<div class="admin-var-label">${meta.label}</div>`;
-    html += `<input type="range" class="admin-var-input admin-gv-slider" data-gv="${key}" min="${meta.min}" max="${meta.max}" step="${meta.step}" value="${val}" style="width:100%;accent-color:#44ddff;cursor:pointer;">`;
-    html += `<div class="admin-var-tag" data-gv-val="${key}" style="color:#ccddee;font-size:7px;text-align:right;">${val}</div>`;
+    html += `<input type="range" class="admin-gv-slider" data-gv="${key}" min="${meta.min}" max="${meta.max}" step="${meta.step}" value="${val}">`;
+    html += `<div class="admin-gv-val" data-gv-val="${key}">${val}</div>`;
   }
   grid.innerHTML = html;
 
@@ -544,7 +544,7 @@ export function setupAdminEvents() {
     if (!S.adminCredentials) { showPanelMsg('NOT LOGGED IN', true); return; }
     const grid = document.getElementById('admin-gamevar-editor');
     const config = {};
-    grid.querySelectorAll('.admin-var-input').forEach(inp => {
+    grid.querySelectorAll('.admin-gv-slider').forEach(inp => {
       const key = inp.dataset.gv;
       const meta = GAME_VAR_META[key];
       if (!meta) return;

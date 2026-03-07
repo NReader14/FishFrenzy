@@ -33,7 +33,7 @@ const S = {
     ghost: null, hourglass: null, buddy: null, bomb: null, crazy: null,
     decoy: null, swap: null, star: null, double: null,
     wave: null, poison: null, hook: null, goop: null, rainbow: null,
-    prompt: null, claude: null, bodyswap: null
+    prompt: null, claude: null, bodyswap: null, hell: null
   },
 
   // Active power-up states
@@ -41,19 +41,20 @@ const S = {
   iceActive: false, iceTO: null, iceStartTime: 0,
   shieldActive: false,
   magnetActive: false,
-  ghostActive: false, ghostTO: null,
+  ghostActive: false, ghostTO: null, ghostStartTime: 0,
   hourglassActive: false, hourglassTO: null, timerFrozen: false, hourglassStartTime: 0,
-  buddyActive: false, buddyTO: null,
-  bombActive: false, bombTO: null,
-  crazyActive: false, crazyTO: null,
-  decoyActive: false, decoyTO: null, decoyFish: null,
-  starActive: false, starTO: null,
+  buddyActive: false, buddyTO: null, buddyStartTime: 0,
+  bombActive: false, bombTO: null, bombStartTime: 0,
+  crazyActive: false, crazyTO: null, crazyStartTime: 0,
+  decoyActive: false, decoyTO: null, decoyFish: null, decoyStartTime: 0,
+  starActive: false, starTO: null, starStartTime: 0,
   hookActive: false,
   goopActive: false, goopTO: null, goopStartTime: 0,
-  rainbowActive: false, rainbowTO: null,
-  promptActive: false, promptWandering: false, promptWanderAngle: 0, promptWanderTimer: 0, promptTO: null, promptTO2: null,
+  rainbowActive: false, rainbowTO: null, rainbowStartTime: 0,
+  promptActive: false, promptWandering: false, promptWanderAngle: 0, promptWanderTimer: 0, promptTO: null, promptTO2: null, promptStartTime: 0,
   claudeActive: false, claudeAnim: null, claudeTO: null,
-  bodySwapActive: false, bodySwapTO: null, bodySwapStartTime: 0,
+  bodySwapActive: false, bodySwapTO: null, bodySwapStartTime: 0, bodySwapAnim: null,
+  hellActive: false, hellTO: null, hellStartTime: 0, hellAnim: null,
 
   // Combo system
   comboCount: 0,
@@ -76,6 +77,7 @@ const S = {
   hookLine: null,
   swapAnim: null,
   chompAnim: null,
+  bombAnim: null,
 
   // Global high score (from Firebase)
   globalHighScore: 0,

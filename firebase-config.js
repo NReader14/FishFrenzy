@@ -251,7 +251,7 @@ export async function saveGameConfig(config, email, password) {
       ...config,
       updatedBy: adminCred.user.uid,
       timestamp: serverTimestamp()
-    });
+    }, { merge: true });
 
     return true;
   } catch (err) {

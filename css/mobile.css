@@ -1,0 +1,170 @@
+/* ═══════════════════════════════════════════════════════
+   MOBILE — Joystick and responsive layout
+   ═══════════════════════════════════════════════════════ */
+
+/* ─── MOBILE JOYSTICK ─── */
+#joystick-base {
+  display: none;
+  position: fixed;
+  transform: translate(-50%, -50%);
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  touch-action: none;
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+
+#joystick-thumb {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+
+/* ─── TOUCH DEVICES ─── */
+.controls-hint-touch { display: none; }
+
+@media (pointer: coarse) {
+  .controls-hint       { display: none; }
+  .controls-hint-touch { display: block; }
+  .btn-primary         { padding: 16px 36px; }
+  .btn-secondary       { padding: 12px 24px; }
+  .slot-arrow          { height: 36px; }
+}
+
+
+/* ─── TABLET / LARGE PHONE (501–1024px) ─── */
+@media (max-width: 1024px) {
+  #game-wrapper {
+    width: 100vw;
+    max-width: 100vw;
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+  }
+}
+
+
+/* ─── PHONE PORTRAIT (≤ 500px wide) ─── */
+@media (max-width: 500px) {
+  body {
+    align-items: flex-start;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  #game-wrapper {
+    width: 100vw;
+    max-width: 100vw;
+  }
+
+  #ai-banner { padding: 4px 8px; font-size: 4px; }
+
+  #hud { padding: 6px 8px; gap: 3px; }
+  .hud-item { font-size: 6px; gap: 3px; }
+  .hud-item span { font-size: 8px; }
+  #timer-bar-bg { width: 70px; height: 10px; }
+  .timer-group { gap: 3px; }
+
+  #status-bar { gap: 5px; padding: 3px 6px; min-height: 22px; flex-wrap: nowrap; overflow: hidden; }
+  .status-item { font-size: 5px; gap: 2px; }
+
+  #overlay h1 { font-size: 20px; }
+  #overlay .subtitle { font-size: 6px; margin-bottom: 18px; }
+  .insert-coin { font-size: 10px; margin-top: 16px; }
+
+  .rules-container { max-width: 95vw; max-height: 50dvh; padding: 0 10px 10px; }
+  .rules-title { font-size: 11px; }
+  .rules-heading { font-size: 8px; }
+  .rules-text { font-size: 7px; }
+
+  .scoreboard-title { font-size: 12px; }
+  .scoreboard-table { width: 100%; }
+  .scoreboard-table th { font-size: 7px; padding: 5px 6px; }
+  .scoreboard-table td { font-size: 8px; padding: 6px; }
+  .scoreboard-table tbody tr:nth-child(1) td { font-size: 8px; }
+
+  .name-entry-title { font-size: 14px; }
+  .name-slots { gap: 12px; }
+  .slot-char { font-size: 22px; width: 38px; height: 40px; }
+  .slot-arrow { width: 38px; }
+  .name-confirm-display { font-size: 16px; letter-spacing: 5px; }
+
+  .admin-input { width: min(280px, 85vw); }
+
+  .result { font-size: 12px; margin-bottom: 4px; }
+  .score-text { font-size: 7px; margin-bottom: 10px; }
+  .scoreboard-table { margin-bottom: 10px; }
+  .scoreboard-table td { font-size: 7px; padding: 4px 5px; }
+  .scoreboard-table th { padding: 4px 5px; }
+  .scoreboard-table tbody tr:nth-child(1) td { font-size: 7px; }
+
+  #full-leaderboard-overlay { padding: 12px 2px; }
+  .full-lb-scroll { max-width: 100%; }
+  .full-lb-scroll .scoreboard-table td { padding: 4px 3px; font-size: 6px; }
+  .full-lb-scroll .scoreboard-table th { padding: 4px 3px; font-size: 6px; }
+  .full-lb-scroll .scoreboard-table tbody tr:nth-child(1) td { font-size: 6px; }
+
+  .game-overlay { padding: 12px 6px; justify-content: flex-start; }
+  #scoreboard-overlay { padding: 12px 6px; }
+  #full-leaderboard-overlay { padding: 10px 2px; }
+  .scoreboard-actions { flex-wrap: wrap; gap: 8px; justify-content: center; }
+
+  .settings-section { width: 90vw; }
+
+  #joystick-base  { width: 110px; height: 110px; }
+  #joystick-thumb { width: 48px;  height: 48px; }
+}
+
+
+/* ─── PHONE LANDSCAPE (short viewport) ─── */
+@media (orientation: landscape) and (max-height: 600px) {
+  #game-wrapper {
+    max-width: 100vw;
+    max-width: calc((100vh - 85px) * 1.5);
+    max-width: calc((100dvh - 85px) * 1.5);
+    max-height: 100vh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
+  #hud { padding: 4px 8px; }
+  .hud-item { font-size: 6px; }
+  .hud-item span { font-size: 8px; }
+  #timer-bar-bg { width: 90px; height: 10px; }
+  .timer-group { gap: 4px; }
+
+  #ai-banner { padding: 3px 8px; font-size: 4px; }
+  #status-bar {
+    padding: 2px 8px;
+    min-height: 18px;
+    gap: 6px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+  .status-item { font-size: 5px; gap: 2px; }
+
+  .game-overlay { padding: 8px 6px; }
+
+  .name-entry-title { font-size: 12px; margin-bottom: 4px; }
+  .name-entry-score { font-size: 7px; margin-bottom: 10px; }
+  .name-entry-prompt { font-size: 8px; margin-bottom: 10px; }
+  .name-slots { gap: 10px; margin-bottom: 6px; }
+  .slot-char { font-size: 20px; width: 36px; height: 36px; }
+  .slot-arrow { height: 26px; width: 36px; }
+  .name-entry-hint { font-size: 6px; margin-top: 6px; margin-bottom: 10px; }
+
+  #joystick-base  { width: 80px;  height: 80px; }
+  #joystick-thumb { width: 34px;  height: 34px; }
+}

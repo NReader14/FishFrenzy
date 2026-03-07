@@ -16,6 +16,8 @@ export const STAR_DURATION      = 3000;
 export const PROMPT_FREEZE_DURATION  = 1000;
 export const PROMPT_WANDER_DURATION  = 5000;
 export const BODY_SWAP_DURATION      = 8000;
+export const RAINBOW_DURATION        = 2500;
+export const HELL_DURATION           = 10000;
 
 // Rarity system
 export const RARITY = {

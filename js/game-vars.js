@@ -14,6 +14,8 @@ export const gameVars = {
   levelTimeBase:      35,    // Starting countdown (seconds)
   levelTimeMin:       18,    // Minimum countdown floor
   pwSpawnRadius:      80,    // Min distance from fish for powerup spawns
+  sharkQuipInterval:  5,    // Avg seconds between shark quips
+  sharkQuipDuration:  3.5,  // Min seconds each quip stays on screen
 };
 
 export const GAME_VAR_META = {
@@ -28,6 +30,8 @@ export const GAME_VAR_META = {
   levelTimeBase:      { label: 'Level Time Base (s)',  min: 10,   max: 120,  step: 1    },
   levelTimeMin:       { label: 'Level Time Min (s)',   min: 5,    max: 60,   step: 1    },
   pwSpawnRadius:      { label: 'Powerup Spawn Radius', min: 0,    max: 300,  step: 10   },
+  sharkQuipInterval:  { label: 'Shark Quip Interval (s)', min: 1, max: 30,   step: 0.5  },
+  sharkQuipDuration:  { label: 'Shark Quip Duration (s)', min: 1, max: 20,   step: 0.5  },
 };
 
 export const GAME_VAR_DEFAULTS = { ...gameVars };

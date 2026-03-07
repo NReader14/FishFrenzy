@@ -18,7 +18,7 @@ import {
 } from './js/dom.js';
 import { spawnParticles, updateParticles, drawParticles, drawScorePopups } from './js/particles.js';
 import {
-  playCRTWipe, playCRTGameOver, drawChomp,
+  playCRTWipe, playCRTGameOver, drawChomp, playTimeUpDeath,
   updateSwapAnim, drawSwapEffect, updateHookAnim, drawHookLine
 } from './js/animations.js';
 import {
@@ -31,7 +31,7 @@ import {
   drawTreats, drawPWItems, drawWarning, drawFrenzyOverlay, drawIceOverlay,
   drawHourglassOverlay, drawCrazyOverlay, drawFishGlow, drawMagnetLines,
   drawScanlines, drawClosestTreatArrow, drawPowerupTimerBars, drawRainbowOverlay,
-  drawClaudeOverlay
+  drawClaudeOverlay, drawBodySwapAnim, drawBombAnim, drawHellAnim
 } from './js/drawing.js';
 import { collectTreat } from './js/scoring.js';
 import {
@@ -97,16 +97,51 @@ setInitGame(initGame);
     return;
   }
   if (!localStorage.getItem('fishFrenzyWelcomed')) {
-    const wo = document.getElementById('welcome-overlay');
-    if (wo) {
-      wo.classList.remove('hidden');
-      document.getElementById('welcome-close-btn')?.addEventListener('click', () => {
-        wo.classList.add('hidden');
-        localStorage.setItem('fishFrenzyWelcomed', '1');
-      });
-    }
+    showWelcomeOverlay();
   }
 })();
+
+function showWelcomeOverlay() {
+  const wo        = document.getElementById('welcome-overlay');
+  const ackCb     = document.getElementById('rules-ack-checkbox');
+  const ackLbl    = document.getElementById('rules-ack-label');
+  const closeBtn  = document.getElementById('welcome-close-btn');
+  const rulesBtn2 = document.getElementById('welcome-rules-btn');
+  if (!wo || !ackCb || !closeBtn) return;
+
+  if (rulesBtn2) {
+    rulesBtn2.removeEventListener('click', rulesBtn2._handler);
+    rulesBtn2._handler = () => {
+      wo.classList.add('hidden');
+      buildRulesHTML();
+      rulesOverlay.classList.remove('hidden');
+    };
+    rulesBtn2.addEventListener('click', rulesBtn2._handler);
+  }
+
+  // Reset state each time it's shown
+  ackCb.checked = false;
+  closeBtn.disabled = true;
+  ackLbl?.classList.remove('ack-done');
+  wo.classList.remove('hidden');
+
+  const onChange = () => {
+    closeBtn.disabled = !ackCb.checked;
+    ackLbl?.classList.toggle('ack-done', ackCb.checked);
+  };
+  ackCb.removeEventListener('change', ackCb._ackHandler);
+  ackCb._ackHandler = onChange;
+  ackCb.addEventListener('change', onChange);
+
+  const onClose = () => {
+    wo.classList.add('hidden');
+    localStorage.setItem('fishFrenzyWelcomed', '1');
+    closeBtn.removeEventListener('click', onClose);
+  };
+  closeBtn.removeEventListener('click', closeBtn._closeHandler);
+  closeBtn._closeHandler = onClose;
+  closeBtn.addEventListener('click', onClose);
+}
 
 // Load rarities from Firebase
 loadRarities();
@@ -164,8 +199,9 @@ function startLevel() {
   S.shark = {
     x: rand(60, W - 60), y: rand(60, H - 60),
     speed: sharkSpeed, savedSpeed: sharkSpeed, savedSpeed2: sharkSpeed,
-    angle: 0, tailPhase: 0, chaseTimer: 0, hidden: false
+    angle: 0, tailPhase: 0, chaseTimer: 0, hidden: false, quip: null
   };
+  _sharkQuipTimer = Math.round(gameVars.sharkQuipInterval * 60 * (0.5 + Math.random()));
   S.sharkDelay = SHARK_START_DELAY;
 
   while (dist(S.shark, S.fish) < 150) {
@@ -189,6 +225,7 @@ function startLevel() {
   S.promptActive = false; S.promptWandering = false; S.promptWanderTimer = 0;
   S.claudeActive = false; S.claudeAnim = null;
   S.bodySwapActive = false; S.bodySwapTO = clearTO(S.bodySwapTO);
+  S.hellActive = false; S.hellTO = clearTO(S.hellTO); S.hellAnim = null;
   S.comboCount = 0; S.comboTimer = 0;
   S.accelBonus = 0; S.lastMoveDir = { x: 0, y: 0 }; S.keys = {};
   S.lastSpawnedPW = null;
@@ -206,7 +243,7 @@ function startLevel() {
     s.classList.remove('s-on', 's-frenzy', 's-ice', 's-shield', 's-magnet',
       's-ghost', 's-time', 's-buddy', 's-bomb', 's-combo', 's-crazy',
       's-decoy', 's-star', 's-poison', 's-hook', 's-swap', 's-double', 's-wave', 's-goop', 's-rainbow',
-      's-prompt', 's-claude', 's-bodyswap');
+      's-prompt', 's-claude', 's-bodyswap', 's-hell');
     s.style.color = '';
   }
   st.combo.textContent = '⚡x1';
@@ -242,19 +279,25 @@ function endGame(won, msg) {
   S.promptActive = false; S.promptWandering = false;
   S.claudeActive = false; S.claudeAnim = null;
   S.bodySwapActive = false;
+  S.hellActive = false; S.hellAnim = null;
   S.decoyFish = null;
 
   for (const s of Object.values(st)) {
     s.classList.remove('s-on', 's-frenzy', 's-ice', 's-shield', 's-magnet',
       's-ghost', 's-time', 's-buddy', 's-bomb', 's-combo', 's-crazy',
       's-decoy', 's-star', 's-poison', 's-hook', 's-swap', 's-double', 's-wave', 's-goop', 's-rainbow',
-      's-prompt', 's-claude', 's-bodyswap');
+      's-prompt', 's-claude', 's-bodyswap', 's-hell');
     s.style.color = '';
   }
 
   if (!won) {
-    S.chompAnim = { timer: 0, x: S.fish.x, y: S.fish.y };
-    playCRTGameOver(() => showNameEntry(S.score, S.level, msg));
+    if (msg === "Time's up!") {
+      const fx = S.fish.x, fy = S.fish.y;
+      playTimeUpDeath(fx, fy, () => playCRTGameOver(() => showNameEntry(S.score, S.level, msg)));
+    } else {
+      S.chompAnim = { timer: 0, x: S.fish.x, y: S.fish.y };
+      playCRTGameOver(() => showNameEntry(S.score, S.level, msg));
+    }
   } else {
     winOverlay.classList.remove('hidden');
     winOverlay.innerHTML = `
@@ -367,8 +410,69 @@ function updateFish(dt = 1) {
   }
 }
 
+const SHARK_QUIPS = [
+  // classic
+  'tee hee i am shark',
+  'grrr',
+  'dun dun dun',
+  'nom nom nom',
+  'boo!',
+  'i was here first',
+  'this is my ocean',
+  'have you met my 300 teeth?',
+
+  // threatening
+  "i'm gonna get you",
+  "hi luke, i'm gonan get you",
+  'you were never safe. not once.',
+  'just keep swimming... so i can follow you',
+  'i am in your walls',
+
+  // internet brain
+  'chat watch this',
+  "new shark who this",
+  '>:)',
+  'no thoughts, head empty, only chomp',
+  'POV: you are the fish',
+  'ratio + you are in the ocean',
+  'caught in 4k (the ocean)',
+  'i am not a fish i am a vibe',
+  'bro thought he could swim lmao',
+  'touch grass? i cannot. i am shark.',
+
+  // deceptively polite
+  'hello :)',
+  'lovely weather we\'re having',
+  'don\'t mind me',
+  'just passing through',
+  'i am normal',
+  "the ocean is just a soup and we are all ingredients",
+  "i was put on this earth to do one thing and brother i am doing it",
+
+  //long 
+  'hey wait come back, i just want to talk, i have not eaten in 3 days, these two things are unrelated',
+  'hello i am new here, i heard there was a pool party, i brought snacks, the snacks are you',
+  "so um, hypothetically, if someone were to, not me, eat you, would that be, would you be cool with that",
+  "hey so i was thinking, and tell me if this is weird, what if i just, a little bit, chomped you",
+"sorry sorry sorry, i promise i'm not usually like this, it's just, you look really, this is so embarrassing, you look really edible",
+];
+let _sharkQuipTimer = 0;
+
 function updateShark() {
   if (S.shark.hidden || S.hourglassActive || S.gamePaused) return;
+
+  // Tick quip display timer
+  if (S.shark.quip && S.shark.quip.timer > 0) S.shark.quip.timer--;
+
+  // Randomly trigger a new quip (avg ~every 5 seconds at 60fps)
+  if (!S.bodySwapActive) {
+    _sharkQuipTimer--;
+    if (_sharkQuipTimer <= 0) {
+      _sharkQuipTimer = Math.round(gameVars.sharkQuipInterval * 60 * (0.4 + Math.random() * 1.2));
+      const text = SHARK_QUIPS[Math.floor(Math.random() * SHARK_QUIPS.length)];
+      S.shark.quip = { text, timer: Math.max(Math.round(gameVars.sharkQuipDuration * 60), text.length * 7) };
+    }
+  }
 
   if (S.sharkDelay > 0) { S.sharkDelay--; S.shark.tailPhase += 0.06; return; }
 
@@ -424,6 +528,27 @@ function updateShark() {
     return;
   }
 
+  // Ghost: shark wanders randomly instead of chasing
+  if (S.ghostActive) {
+    const now = Date.now();
+    if (!S.shark.ghostWanderAngle || now - S.shark.ghostWanderTimer > 900) {
+      S.shark.ghostWanderAngle = Math.random() * Math.PI * 2;
+      S.shark.ghostWanderTimer = now;
+    }
+    S.shark.x += Math.cos(S.shark.ghostWanderAngle) * S.shark.speed * 0.7;
+    S.shark.y += Math.sin(S.shark.ghostWanderAngle) * S.shark.speed * 0.7;
+    if (S.shark.x <= 20 || S.shark.x >= W - 20) S.shark.ghostWanderAngle = Math.PI - S.shark.ghostWanderAngle;
+    if (S.shark.y <= 20 || S.shark.y >= H - 20) S.shark.ghostWanderAngle = -S.shark.ghostWanderAngle;
+    S.shark.x = Math.max(20, Math.min(W - 20, S.shark.x));
+    S.shark.y = Math.max(20, Math.min(H - 20, S.shark.y));
+    let gda = S.shark.ghostWanderAngle - S.shark.angle;
+    while (gda > Math.PI) gda -= Math.PI * 2;
+    while (gda < -Math.PI) gda += Math.PI * 2;
+    S.shark.angle += gda * 0.12;
+    S.shark.tailPhase += 0.12;
+    return;
+  }
+
   const target = (S.decoyActive && S.decoyFish) ? S.decoyFish : S.fish;
 
   S.shark.chaseTimer += 0.02;
@@ -473,18 +598,31 @@ function updateShark() {
 function updateBuddy() {
   if (!S.buddyActive || !S.buddy || S.gamePaused) return;
 
-  const targetX = W - S.fish.x;
-  const targetY = H - S.fish.y;
-  S.buddy.x += (targetX - S.buddy.x) * 0.1;
-  S.buddy.y += (targetY - S.buddy.y) * 0.1;
+  // Find nearest uncollected treat
+  let nearest = null, nearestD = Infinity;
+  for (const t of S.treats) {
+    if (t.collected) continue;
+    const d = dist(t, S.buddy);
+    if (d < nearestD) { nearestD = d; nearest = t; }
+  }
+
+  if (nearest) {
+    // Slowly drift toward the nearest treat
+    const dx = nearest.x - S.buddy.x;
+    const dy = nearest.y - S.buddy.y;
+    const d = Math.hypot(dx, dy);
+    const speed = 1.2;
+    if (d > speed) {
+      S.buddy.x += (dx / d) * speed;
+      S.buddy.y += (dy / d) * speed;
+    }
+    if (nearestD < 22) collectTreat(nearest);
+  }
+
   S.buddy.x = Math.max(20, Math.min(W - 20, S.buddy.x));
   S.buddy.y = Math.max(20, Math.min(H - 20, S.buddy.y));
-  S.buddy.dir = S.buddy.x > W / 2 ? -1 : 1;
-  S.buddy.tailPhase += 0.2;
-
-  for (const t of S.treats) {
-    if (!t.collected && dist(t, S.buddy) < 24) collectTreat(t);
-  }
+  S.buddy.dir = nearest && nearest.x < S.buddy.x ? -1 : 1;
+  S.buddy.tailPhase += 0.15;
 }
 
 function updateTreats() {
@@ -533,7 +671,7 @@ function loop(timestamp) {
 
   updateSwapAnim();
   updateHookAnim();
-  if (!S.gamePaused || S.swapAnim) {
+  if ((!S.gamePaused && !S.bodySwapAnim) || S.swapAnim) {
     updateFish(dt);
     updateShark();
     updateBuddy();
@@ -557,6 +695,9 @@ function loop(timestamp) {
   drawShark();
   drawChomp();
   drawSwapEffect();
+  drawBombAnim();
+  drawBodySwapAnim();
+  drawHellAnim();
   drawWarning();
   drawFrenzyOverlay();
   drawRainbowOverlay();
@@ -583,6 +724,10 @@ initSettings();
 // ═══════════════════════════════════════════════════════════════
 // UI EVENT HANDLERS
 // ═══════════════════════════════════════════════════════════════
+
+document.getElementById('welcome-reopen-btn')?.addEventListener('click', () => {
+  showWelcomeOverlay();
+});
 
 startBtn.addEventListener('click', () => {
   overlay.classList.add('hidden');
@@ -614,15 +759,6 @@ document.getElementById('view-all-scores-btn')?.addEventListener('click', () => 
   showFullLeaderboard();
 });
 
-// Admin panel button (on scoreboard page)
-document.getElementById('admin-panel-btn')?.addEventListener('click', () => {
-  scoreboardOverlay.classList.add('hidden');
-  adminOverlay.classList.remove('hidden');
-  hideAdminError();
-  adminEmailInput.value = '';
-  adminPasswordInput.value = '';
-  adminEmailInput.focus();
-});
 
 // Admin login
 adminLoginBtn.addEventListener('click', async () => {
