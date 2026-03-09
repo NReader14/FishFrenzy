@@ -169,7 +169,7 @@ export function drawDecoy() {
   }
 }
 
-// ─── GHOST SHARK (for HELL active phase) ───
+// ─── GHOST SHARK (for HELL active phase) — identical to real shark, semi-transparent ───
 function drawGhostSharkAt(x, y, angle, tailPhase, alpha) {
   ctx.save();
   ctx.translate(x, y);
@@ -178,52 +178,48 @@ function drawGhostSharkAt(x, y, angle, tailPhase, alpha) {
 
   const tw = Math.round(Math.sin(tailPhase) * 4);
 
-  ctx.fillStyle = '#774444';
+  // Exact same pixel art as the real shark
+  ctx.fillStyle = '#556677';
   ctx.fillRect(-30, -6 + tw, 8, 3);
   ctx.fillRect(-34, -8 + tw, 5, 3);
   ctx.fillRect(-30, 3 + tw, 8, 3);
   ctx.fillRect(-34, 5 + tw, 5, 3);
-  ctx.fillStyle = '#662222';
+  ctx.fillStyle = '#555566';
   ctx.fillRect(-24, -3 + tw, 6, 6);
-  ctx.fillStyle = '#884444';
+  ctx.fillStyle = '#667788';
   ctx.fillRect(-18, -5, 36, 10);
   ctx.fillRect(-14, -6, 28, 2);
   ctx.fillRect(-14, 5, 28, 2);
-  ctx.fillStyle = '#aa7777';
+  ctx.fillStyle = '#99aabb';
   ctx.fillRect(-14, 2, 28, 4);
-  ctx.fillStyle = '#884444';
+  ctx.fillStyle = '#667788';
   ctx.fillRect(16, -4, 6, 8);
   ctx.fillRect(20, -3, 5, 6);
   ctx.fillRect(24, -2, 4, 4);
   ctx.fillRect(27, -1, 3, 2);
-  ctx.fillStyle = '#774444';
+  ctx.fillStyle = '#556677';
   ctx.fillRect(-2, -12, 3, 7);
   ctx.fillRect(-1, -16, 3, 5);
   ctx.fillRect(0, -19, 2, 4);
   ctx.fillRect(2, 6, 8, 3);
   ctx.fillRect(4, 9, 5, 2);
-  ctx.fillStyle = '#ff6666';
+  ctx.fillStyle = '#ffee44';
   ctx.fillRect(12, -4, 5, 5);
-  ctx.fillStyle = '#220000';
+  ctx.fillStyle = '#111';
   ctx.fillRect(14, -4, 2, 5);
-  ctx.fillStyle = '#ffaaaa';
+  ctx.fillStyle = '#fff';
   ctx.fillRect(13, -3, 1, 1);
-  ctx.fillStyle = '#662222';
+  ctx.fillStyle = '#555566';
   ctx.fillRect(5, -3, 1, 6);
   ctx.fillRect(7, -3, 1, 6);
   ctx.fillRect(9, -3, 1, 6);
-  ctx.fillStyle = '#ffaaaa';
+  ctx.fillStyle = '#ddeeff';
   ctx.fillRect(18, 3, 2, 2);
   ctx.fillRect(21, 3, 2, 2);
   ctx.fillRect(24, 2, 2, 2);
   ctx.fillRect(18, -5, 2, 2);
   ctx.fillRect(21, -5, 2, 2);
   ctx.fillRect(24, -4, 2, 2);
-
-  ctx.beginPath();
-  ctx.ellipse(4, 0, 32, 20, 0, 0, Math.PI * 2);
-  ctx.fillStyle = `rgba(255,0,0,${0.2 + Math.sin(Date.now() * 0.005) * 0.08})`;
-  ctx.fill();
 
   ctx.restore();
 }
@@ -281,12 +277,20 @@ export function drawShark() {
   ctx.fillRect(2, 6, 8, 3);
   ctx.fillRect(4, 9, 5, 2);
 
-  ctx.fillStyle = frozen ? '#aabbcc' : '#ffee44';
+  const smart = S.settings.smartShark;
+  ctx.fillStyle = frozen ? '#aabbcc' : smart ? '#00ff88' : '#ffee44';
   ctx.fillRect(12, -4, 5, 5);
   ctx.fillStyle = '#111';
   ctx.fillRect(14, -4, 2, 5);
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = smart ? '#aaffcc' : '#fff';
   ctx.fillRect(13, -3, 1, 1);
+
+  // Smart shark: green scan-line blink across eye
+  if (smart) {
+    const scan = Math.floor(Date.now() / 300) % 5;
+    ctx.fillStyle = '#00ff88';
+    ctx.fillRect(12, -4 + scan, 5, 1);
+  }
 
   ctx.fillStyle = darkCol;
   ctx.fillRect(5, -3, 1, 6);
@@ -1048,7 +1052,7 @@ export function drawHellAnim() {
         g.angle = Math.atan2(dy, dx);
       }
       g.tailPhase += 0.1;
-      const ghostAlpha = 0.35 + Math.sin(now * 1.5 + i * 1.5) * 0.08;
+      const ghostAlpha = 0.55 + Math.sin(now * 1.5 + i * 1.5) * 0.08;
       drawGhostSharkAt(g.x, g.y, g.angle, g.tailPhase, ghostAlpha);
     }
 

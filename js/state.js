@@ -86,9 +86,13 @@ const S = {
   // Admin credentials (temporary)
   adminCredentials: null,
 
+  // Smart shark position history (ring buffer, filled each frame)
+  smartSharkHistory: [],
+
   // User settings (persisted to localStorage)
   settings: {
     mysteryBlocks: false,
+    smartShark: false,
   },
 };
 

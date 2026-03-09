@@ -11,6 +11,7 @@ function load() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (saved) {
       if (typeof saved.mysteryBlocks === 'boolean') S.settings.mysteryBlocks = saved.mysteryBlocks;
+      if (typeof saved.smartShark    === 'boolean') S.settings.smartShark    = saved.smartShark;
     }
   } catch (_) {}
 }
@@ -29,6 +30,7 @@ function updateToggle(id, active) {
 
 function refreshUI() {
   updateToggle('toggle-mystery-btn', S.settings.mysteryBlocks);
+  updateToggle('toggle-smart-shark-btn', S.settings.smartShark);
 }
 
 export function initSettings() {
@@ -54,6 +56,13 @@ export function initSettings() {
 
   document.getElementById('toggle-mystery-btn')?.addEventListener('click', () => {
     S.settings.mysteryBlocks = !S.settings.mysteryBlocks;
+    save();
+    refreshUI();
+  });
+
+  document.getElementById('toggle-smart-shark-btn')?.addEventListener('click', () => {
+    S.settings.smartShark = !S.settings.smartShark;
+    S.smartSharkHistory = []; // reset history on toggle
     save();
     refreshUI();
   });

@@ -226,6 +226,7 @@ function startLevel() {
   S.claudeActive = false; S.claudeAnim = null;
   S.bodySwapActive = false; S.bodySwapTO = clearTO(S.bodySwapTO);
   S.hellActive = false; S.hellTO = clearTO(S.hellTO); S.hellAnim = null;
+  S.smartSharkHistory = [];
   S.comboCount = 0; S.comboTimer = 0;
   S.accelBonus = 0; S.lastMoveDir = { x: 0, y: 0 }; S.keys = {};
   S.lastSpawnedPW = null;
@@ -551,8 +552,29 @@ function updateShark() {
 
   const target = (S.decoyActive && S.decoyFish) ? S.decoyFish : S.fish;
 
+  // Smart shark: kinematic prediction of fish position
+  let targetX = target.x, targetY = target.y;
+  if (S.settings.smartShark && !S.decoyActive && S.smartSharkHistory.length >= 4) {
+    const hist = S.smartSharkHistory;
+    const n = hist.length;
+    // Velocity window shrinks with level so the shark reacts to direction changes faster
+    const velWindow = Math.max(2, Math.round(12 - S.level * 0.8));
+    const older = hist[Math.max(0, n - 1 - velWindow)];
+    const cur   = hist[n - 1];
+    const vx = (cur.x - older.x) / velWindow;
+    const vy = (cur.y - older.y) / velWindow;
+    // Lookahead: level 1 = 6 frames (~0.1s), level 10 = 60 frames (~1s)
+    const lookahead = S.level * 6;
+    // Prediction noise: high at level 1, near-zero at level 10
+    const noiseScale = Math.max(0, (10 - S.level) * 3);
+    const nx = (Math.random() - 0.5) * noiseScale;
+    const ny = (Math.random() - 0.5) * noiseScale;
+    targetX = Math.max(10, Math.min(W - 10, target.x + vx * lookahead + nx));
+    targetY = Math.max(10, Math.min(H - 10, target.y + vy * lookahead + ny));
+  }
+
   S.shark.chaseTimer += 0.02;
-  const a = Math.atan2(target.y - S.shark.y, target.x - S.shark.x);
+  const a = Math.atan2(targetY - S.shark.y, targetX - S.shark.x);
   const wobble = Math.sin(S.shark.chaseTimer * 3) * 0.4;
   const dx = Math.cos(a + wobble) * S.shark.speed;
   const dy = Math.sin(a + wobble) * S.shark.speed;
@@ -672,6 +694,11 @@ function loop(timestamp) {
   updateSwapAnim();
   updateHookAnim();
   if ((!S.gamePaused && !S.bodySwapAnim) || S.swapAnim) {
+    // Track fish position history for smart shark prediction
+    if (S.settings.smartShark && S.fish && S.gameRunning) {
+      S.smartSharkHistory.push({ x: S.fish.x, y: S.fish.y });
+      if (S.smartSharkHistory.length > 90) S.smartSharkHistory.shift();
+    }
     updateFish(dt);
     updateShark();
     updateBuddy();
