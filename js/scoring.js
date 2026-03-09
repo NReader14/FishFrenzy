@@ -37,7 +37,8 @@ export function collectTreat(t) {
   // Calculate points
   const basePts = S.frenzyActive ? 20 : 10;
   const starMul = S.starActive ? 2 : 1;
-  const pts = basePts * cm * (S.bodySwapActive ? 2 : 1) * starMul;
+  const smartMul = S.settings.smartShark ? 1.25 : 1;
+  const pts = Math.round(basePts * cm * (S.bodySwapActive ? 2 : 1) * starMul * smartMul);
 
   if (S.hellActive) {
     // Hell: collecting treats drains score
