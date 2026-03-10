@@ -58,6 +58,8 @@ function buildSkinPicker() {
     const cvs = document.createElement('canvas');
     cvs.width  = 64;
     cvs.height = 56;
+    cvs.style.width  = '64px';   // override canvas { width:100% } in base.css
+    cvs.style.height = '56px';
     const ctx2 = cvs.getContext('2d');
     drawSkinPreview(ctx2, skin, 64, 56);
     btn.appendChild(cvs);
