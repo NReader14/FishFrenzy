@@ -555,25 +555,108 @@ function updateShark() {
 
   const target = (S.decoyActive && S.decoyFish) ? S.decoyFish : S.fish;
 
-  // Smart shark: kinematic prediction of fish position
+  // ── Smart shark: multi-tier prediction ─────────────────────────
+  // Tier 0 (lv 1-5):  linear prediction, high noise
+  // Tier 1 (lv 6-10): geometric intercept + acceleration correction
+  // Tier 2 (lv 11-15): intercept + treat-path blocking
+  // Tier 3 (lv 16+):  full intercept + aggressive treat blocking, near-zero noise
+  // Each tier ramps up smoothly within its 5-level window.
   let targetX = target.x, targetY = target.y;
-  if (S.settings.smartShark && !S.decoyActive && S.smartSharkHistory.length >= 4) {
+  if (S.settings.smartShark && !S.decoyActive && S.smartSharkHistory.length >= 8) {
     const hist = S.smartSharkHistory;
-    const n = hist.length;
-    // Velocity window shrinks with level so the shark reacts to direction changes faster
-    const velWindow = Math.max(2, Math.round(12 - S.level * 0.8));
-    const older = hist[Math.max(0, n - 1 - velWindow)];
-    const cur   = hist[n - 1];
-    const vx = (cur.x - older.x) / velWindow;
-    const vy = (cur.y - older.y) / velWindow;
-    // Lookahead: level 1 = 6 frames (~0.1s), level 10 = 60 frames (~1s)
-    const lookahead = S.level * 6;
-    // Prediction noise: high at level 1, near-zero at level 10
-    const noiseScale = Math.max(0, (10 - S.level) * 3);
-    const nx = (Math.random() - 0.5) * noiseScale;
-    const ny = (Math.random() - 0.5) * noiseScale;
-    targetX = Math.max(10, Math.min(W - 10, target.x + vx * lookahead + nx));
-    targetY = Math.max(10, Math.min(H - 10, target.y + vy * lookahead + ny));
+    const n    = hist.length;
+    const lv   = S.level;
+    const tier = Math.min(3, Math.floor((lv - 1) / 5));        // 0–3
+    const tp   = Math.min(1, ((lv - 1) % 5) / 4);             // 0→1 within tier
+
+    // 1. Velocity — smaller window at higher tiers for faster reaction
+    const velWin = Math.max(3, Math.round(10 - tier * 2 - tp * 1.5));
+    const cur    = hist[n - 1];
+    const older  = hist[Math.max(0, n - 1 - velWin)];
+    const vx = (cur.x - older.x) / velWin;
+    const vy = (cur.y - older.y) / velWin;
+
+    // 2. Acceleration (tier 1+): second derivative for quadratic correction
+    let ax = 0, ay = 0;
+    if (tier >= 1 && n >= velWin * 2 + 2) {
+      const mid    = hist[Math.max(0, n - 1 - velWin)];
+      const oldest = hist[Math.max(0, n - 1 - velWin * 2)];
+      const vxOld  = (mid.x - oldest.x) / velWin;
+      const vyOld  = (mid.y - oldest.y) / velWin;
+      ax = (vx - vxOld) / velWin * 0.5;
+      ay = (vy - vyOld) / velWin * 0.5;
+    }
+
+    // 3. Noise — shrinks with tier and within-tier progress
+    const noiseBase  = [28, 12, 4, 0][tier];
+    const noiseScale = noiseBase * (1 - tp * 0.55);
+    const nx = (Math.random() - 0.5) * 2 * noiseScale;
+    const ny = (Math.random() - 0.5) * 2 * noiseScale;
+
+    if (tier === 0) {
+      // Tier 0: simple linear look-ahead, short window
+      const lookahead = 10 + tp * 12;
+      targetX = target.x + vx * lookahead + nx;
+      targetY = target.y + vy * lookahead + ny;
+    } else {
+      // Tier 1+: solve for geometric intercept time
+      // Find t where dist(fish(t), shark) = speed * t
+      // fish(t) ≈ target + v*t  (linear; accel added as post-correction)
+      const spd = S.shark.speed;
+      const dx  = target.x - S.shark.x;
+      const dy  = target.y - S.shark.y;
+      const a   = vx * vx + vy * vy - spd * spd;
+      const b   = 2 * (dx * vx + dy * vy);
+      const c   = dx * dx + dy * dy;
+      const maxLook = [0, 45, 70, 100][tier] + tp * 15;
+
+      let t = 0;
+      if (Math.abs(a) < 0.01) {
+        t = b !== 0 ? Math.max(0, -c / b) : 0;
+      } else {
+        const disc = b * b - 4 * a * c;
+        if (disc >= 0) {
+          const t1 = (-b - Math.sqrt(disc)) / (2 * a);
+          const t2 = (-b + Math.sqrt(disc)) / (2 * a);
+          const tPos = [t1, t2].filter(v => v > 0);
+          t = tPos.length ? Math.min(...tPos) : 0;
+        }
+      }
+      t = Math.min(Math.max(0, t), maxLook);
+
+      // Apply linear + quadratic correction from acceleration
+      targetX = target.x + vx * t + 0.5 * ax * t * t + nx;
+      targetY = target.y + vy * t + 0.5 * ay * t * t + ny;
+    }
+
+    // 4. Treat-path blocking (tier 2+)
+    // Detect which treat the fish is heading toward and cut off the path.
+    if (tier >= 2 && S.treats?.length) {
+      const treatBlend = (0.28 + tp * 0.08) + (tier === 3 ? 0.22 : 0);
+      let bestTreat = null, bestScore = -Infinity;
+      const speed = Math.hypot(vx, vy) || 0.01;
+      for (const tr of S.treats) {
+        if (tr.collected) continue;
+        const tx = tr.x - target.x, ty = tr.y - target.y;
+        const d  = Math.hypot(tx, ty);
+        if (d > 280) continue;
+        const dot = (tx * vx + ty * vy) / (speed * d); // cos of angle, -1→1
+        if (dot > 0.25) {
+          const score = dot / d;
+          if (score > bestScore) { bestScore = score; bestTreat = tr; }
+        }
+      }
+      if (bestTreat) {
+        // Aim for a point 35% of the way from fish to the treat
+        const cutX = target.x + (bestTreat.x - target.x) * 0.35;
+        const cutY = target.y + (bestTreat.y - target.y) * 0.35;
+        targetX = targetX * (1 - treatBlend) + cutX * treatBlend;
+        targetY = targetY * (1 - treatBlend) + cutY * treatBlend;
+      }
+    }
+
+    targetX = Math.max(10, Math.min(W - 10, targetX));
+    targetY = Math.max(10, Math.min(H - 10, targetY));
   }
 
   S.shark.chaseTimer += 0.02;
@@ -700,7 +783,7 @@ function loop(timestamp) {
     // Track fish position history for smart shark prediction
     if (S.settings.smartShark && S.fish && S.gameRunning) {
       S.smartSharkHistory.push({ x: S.fish.x, y: S.fish.y });
-      if (S.smartSharkHistory.length > 90) S.smartSharkHistory.shift();
+      if (S.smartSharkHistory.length > 120) S.smartSharkHistory.shift();
     }
     updateFish(dt);
     updateShark();
