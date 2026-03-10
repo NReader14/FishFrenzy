@@ -387,14 +387,14 @@ const PW_LABELS = {
   bomb: '💣 Bomb', decoy: '👁️ Decoy', swap: '🔄 Swap',
   star: '🌟 Star', double: '💎 Double', magnet: '🧲 Magnet', wave: '🌊 Wave',
   rainbow: '🌈 Rainbow', crazy: '🍄 Crazy', prompt: '✍️ Prompt', claude: '🤖 The Claude',
-  bodyswap: '🎭 Body Swap',
+  bodyswap: '🎭 Body Swap', hell: '👹 Hell', card: '🃏 Card',
 };
 
 const DEFAULT_RARITIES = {
   frenzy: 1, ice: 2, shield: 2, poison: 2, goop: 3,
   hourglass: 3, buddy: 3, hook: 3, ghost: 4, bomb: 4,
   decoy: 4, swap: 4, star: 5, double: 5, magnet: 5, wave: 5,
-  rainbow: 6, crazy: 6, prompt: 3, claude: 6, bodyswap: 5,
+  rainbow: 6, crazy: 6, prompt: 3, claude: 6, bodyswap: 5, hell: 6, card: 4,
 };
 
 function buildVarEditor() {

@@ -585,8 +585,52 @@ export const pwConfig = {
   rainbow:   { emoji: '🌈', glow: '#ff88ff', fn: activateRainbow,  rarity: 6, ok: () => !S.rainbowActive, life: 1500 },
   prompt:    { emoji: '✍️', glow: '#aa66ff', fn: activatePrompt,   rarity: 3, ok: () => !S.promptActive },
   claude:    { emoji: '🤖', glow: '#cc88ff', fn: activateClaude,   rarity: 6, ok: () => !S.claudeActive && S.treats.length > 0, life: CLAUDE_ITEM_LIFETIME },
-  hell:      { emoji: '👹', glow: '#ff0000', fn: activateHell,     rarity: 6, ok: () => !S.hellActive && !S.hellAnim, life: 5000 }
+  hell:      { emoji: '👹', glow: '#ff0000', fn: activateHell,     rarity: 6, ok: () => !S.hellActive && !S.hellAnim, life: 5000 },
+  card:      { emoji: '🃏', glow: '#bb88ff', fn: activateCard,     rarity: 4, ok: () => !S.cardAnim, life: 4000 }
 };
+
+// ─── CARD MINI-GAME ───
+const CARD_POOL = [
+  // Good
+  { label: '+30 PTS',     emoji: '💰', good: true,  fn: () => { S.score += 30;  scoreEl.textContent = S.score; } },
+  { label: '+75 PTS',     emoji: '💎', good: true,  fn: () => { S.score += 75;  scoreEl.textContent = S.score; } },
+  { label: '+150 PTS',    emoji: '🏆', good: true,  fn: () => { S.score += 150; scoreEl.textContent = S.score; } },
+  { label: '+7 SECONDS',  emoji: '⏰', good: true,  fn: () => { S.timeLeft += 7;  timerEl.textContent = S.timeLeft; } },
+  { label: '+12 SECONDS', emoji: '⌚', good: true,  fn: () => { S.timeLeft += 12; timerEl.textContent = S.timeLeft; } },
+  { label: 'FRENZY',      emoji: '🔥', good: true,  fn: () => activateFrenzy() },
+  { label: 'SHIELD',      emoji: '🛡', good: true,  fn: () => activateShield() },
+  { label: 'STAR POWER',  emoji: '🌟', good: true,  fn: () => activateStar() },
+  { label: 'MAGNET',      emoji: '🧲', good: true,  fn: () => activateMagnet() },
+  { label: 'ICE SHARK',   emoji: '❄', good: true,  fn: () => activateIce() },
+  { label: 'TIME FREEZE', emoji: '⏳', good: true,  fn: () => activateHourglass() },
+  { label: 'BUDDY FISH',  emoji: '🐠', good: true,  fn: () => activateBuddy() },
+  // Bad
+  { label: '-25 PTS',     emoji: '💸', good: false, fn: () => { S.score = Math.max(0, S.score - 25); scoreEl.textContent = S.score; } },
+  { label: '-7 SECONDS',  emoji: '⌛', good: false, fn: () => { S.timeLeft = Math.max(1, S.timeLeft - 7); timerEl.textContent = S.timeLeft; } },
+  { label: 'GOOPED',      emoji: '🧪', good: false, fn: () => activateGoop() },
+  { label: 'POISONED',    emoji: '☠', good: false, fn: () => activatePoison() },
+  { label: 'SHARK RAGE',  emoji: '😡', good: false, fn: () => { S.shark.speed += 0.8; setTimeout(() => { if (S.shark) S.shark.speed = Math.max(0.5, S.shark.speed - 0.8); }, 5000); } },
+];
+
+function makeCard() {
+  if (Math.random() < 0.01) return { label: 'GAME OVER',  emoji: '💀', good: false, rare: 'death', fn: () => { S.cardDeathPending = true; } };
+  if (Math.random() < 0.01) return { label: 'CHAOS!!!',   emoji: '🍄', good: true,  rare: 'crazy', fn: () => activateCrazy() };
+  return { ...CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)] };
+}
+
+function activateCard() {
+  S.cardAnim = {
+    cards:       [makeCard(), makeCard(), makeCard(), makeCard(), makeCard()],
+    selected:    2,
+    phase:       'pick',   // 'pick' | 'flip' | 'reveal'
+    flipCard:    -1,
+    flipStart:   0,
+    revealStart: 0,
+    resolved:    false,
+  };
+  S.gamePaused  = true;
+  S.timerFrozen = true;
+}
 
 
 // ═══════════════════════════════════════════════════════════════

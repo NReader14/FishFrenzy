@@ -33,7 +33,7 @@ const S = {
     ghost: null, hourglass: null, buddy: null, bomb: null, crazy: null,
     decoy: null, swap: null, star: null, double: null,
     wave: null, poison: null, hook: null, goop: null, rainbow: null,
-    prompt: null, claude: null, bodyswap: null, hell: null
+    prompt: null, claude: null, bodyswap: null, hell: null, card: null
   },
 
   // Active power-up states
@@ -55,6 +55,7 @@ const S = {
   claudeActive: false, claudeAnim: null, claudeTO: null,
   bodySwapActive: false, bodySwapTO: null, bodySwapStartTime: 0, bodySwapAnim: null,
   hellActive: false, hellTO: null, hellStartTime: 0, hellAnim: null,
+  cardAnim: null, cardDeathPending: false,
 
   // Combo system
   comboCount: 0,

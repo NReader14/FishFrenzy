@@ -31,7 +31,7 @@ import {
   drawTreats, drawPWItems, drawWarning, drawFrenzyOverlay, drawIceOverlay,
   drawHourglassOverlay, drawCrazyOverlay, drawFishGlow, drawMagnetLines,
   drawScanlines, drawClosestTreatArrow, drawPowerupTimerBars, drawRainbowOverlay,
-  drawClaudeOverlay, drawBodySwapAnim, drawBombAnim, drawHellAnim
+  drawClaudeOverlay, drawBodySwapAnim, drawBombAnim, drawHellAnim, drawCardAnim
 } from './js/drawing.js';
 import { collectTreat } from './js/scoring.js';
 import {
@@ -226,6 +226,7 @@ function startLevel() {
   S.claudeActive = false; S.claudeAnim = null;
   S.bodySwapActive = false; S.bodySwapTO = clearTO(S.bodySwapTO);
   S.hellActive = false; S.hellTO = clearTO(S.hellTO); S.hellAnim = null;
+  S.cardAnim = null; S.cardDeathPending = false;
   S.smartSharkHistory = [];
   S.comboCount = 0; S.comboTimer = 0;
   S.accelBonus = 0; S.lastMoveDir = { x: 0, y: 0 }; S.keys = {};
@@ -281,6 +282,7 @@ function endGame(won, msg) {
   S.claudeActive = false; S.claudeAnim = null;
   S.bodySwapActive = false;
   S.hellActive = false; S.hellAnim = null;
+  S.cardAnim = null; S.cardDeathPending = false;
   S.decoyFish = null;
 
   for (const s of Object.values(st)) {
@@ -725,6 +727,18 @@ function loop(timestamp) {
   drawBombAnim();
   drawBodySwapAnim();
   drawHellAnim();
+  drawCardAnim();
+  if (S.cardAnim?.resolved) {
+    const card = S.cardAnim.cards[S.cardAnim.flipCard];
+    S.cardAnim    = null;
+    S.gamePaused  = false;
+    S.timerFrozen = false;
+    card.fn();
+    if (S.cardDeathPending) {
+      S.cardDeathPending = false;
+      endGame(false, 'The cards decided.');
+    }
+  }
   drawWarning();
   drawFrenzyOverlay();
   drawRainbowOverlay();

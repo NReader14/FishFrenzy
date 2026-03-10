@@ -1148,3 +1148,139 @@ export function drawHellAnim() {
   ctx.globalAlpha = 1;
   ctx.restore();
 }
+
+// ─── CARD MINI-GAME ───
+export function drawCardAnim() {
+  if (!S.cardAnim) return;
+  const ca = S.cardAnim;
+  const now = Date.now();
+  const cx = W / 2, cy = H / 2;
+
+  ctx.save();
+
+  // Dark overlay behind cards
+  ctx.globalAlpha = 0.88;
+  ctx.fillStyle = "#08000f";
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalAlpha = 1;
+
+  // Title
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = 'bold 11px "Press Start 2P", monospace';
+  ctx.shadowColor = "#9933ff";
+  ctx.shadowBlur = 20;
+  ctx.fillStyle = "#cc88ff";
+  ctx.fillText("♠ PICK A CARD ♠", cx, cy - 88);
+  ctx.shadowBlur = 0;
+
+  const CW = 56, CH = 82, GAP = 10;
+  const totalW = 5 * CW + 4 * GAP;
+  const startX = cx - totalW / 2;
+  const baseY = cy - CH / 2 + 8;
+
+  for (let i = 0; i < 5; i++) {
+    const card = ca.cards[i];
+    const isSelected = i === ca.selected && ca.phase === "pick";
+    const isChosen   = i === ca.flipCard;
+    const lifted     = isSelected || (isChosen && ca.phase !== "pick");
+    const yOff       = lifted ? -20 : 0;
+    const cardCX     = startX + i * (CW + GAP) + CW / 2;
+    const cardCY     = baseY + CH / 2 + yOff;
+
+    let scaleX = 1, showFace = false;
+    if (ca.phase === "flip" && isChosen) {
+      const t = (now - ca.flipStart) / 200;
+      if (t < 1) {
+        scaleX = Math.max(0, 1 - t);
+      } else {
+        scaleX = Math.min(1, t - 1);
+        showFace = true;
+      }
+      if (t >= 2) { ca.phase = "reveal"; ca.revealStart = now; }
+    } else if (ca.phase === "reveal" && isChosen) {
+      showFace = true;
+    }
+
+    ctx.save();
+    ctx.translate(cardCX, cardCY);
+    ctx.scale(scaleX, 1);
+
+    const hw = CW / 2, hh = CH / 2;
+
+    if (!showFace) {
+      ctx.fillStyle = isSelected ? "#2e1055" : "#180630";
+      ctx.fillRect(-hw, -hh, CW, CH);
+      if (isSelected) { ctx.shadowColor = "#ffcc00"; ctx.shadowBlur = 14; }
+      ctx.strokeStyle = isSelected ? "#ffcc00" : "#7744bb";
+      ctx.lineWidth = isSelected ? 2.5 : 1.5;
+      ctx.strokeRect(-hw + 1, -hh + 1, CW - 2, CH - 2);
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = isSelected ? "#aa8800" : "#3a1a77";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(-hw + 4, -hh + 4, CW - 8, CH - 8);
+      ctx.fillStyle = isSelected ? "#4422aa" : "#2a0d66";
+      for (let dy = -hh + 13; dy < hh - 8; dy += 10) {
+        for (let dx = -hw + 11; dx < hw - 8; dx += 10) {
+          ctx.save(); ctx.translate(dx, dy); ctx.rotate(Math.PI / 4);
+          ctx.fillRect(-3, -3, 6, 6); ctx.restore();
+        }
+      }
+      ctx.fillStyle = isSelected ? "#cc99ff" : "#7744bb";
+      ctx.save(); ctx.rotate(Math.PI / 4); ctx.fillRect(-7, -7, 14, 14); ctx.restore();
+      ctx.fillStyle = isSelected ? "#2e1055" : "#180630";
+      ctx.save(); ctx.rotate(Math.PI / 4); ctx.fillRect(-4, -4, 8, 8); ctx.restore();
+    } else {
+      ctx.fillStyle = "#fff8f0";
+      ctx.fillRect(-hw, -hh, CW, CH);
+      const borderCol = card.rare === "death" ? "#ff2200" : card.rare === "crazy" ? "#ff00ff" : card.good ? "#44ee88" : "#ff5555";
+      if (card.rare) { ctx.shadowColor = borderCol; ctx.shadowBlur = 14; }
+      ctx.strokeStyle = borderCol;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-hw + 1, -hh + 1, CW - 2, CH - 2);
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = card.good ? "#aaeebb" : "#ffbbbb";
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(-hw + 4, -hh + 4, CW - 8, CH - 8);
+      ctx.font = "24px serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillStyle = "#000";
+      ctx.fillText(card.emoji, 0, -10);
+      ctx.font = '5px "Press Start 2P", monospace';
+      ctx.fillStyle = card.rare === "death" ? "#990000" : card.rare === "crazy" ? "#770077" : card.good ? "#225533" : "#882222";
+      const words = card.label.split(" ");
+      const lines = []; let cur = "";
+      for (const w of words) {
+        const test = cur ? cur + " " + w : w;
+        if (ctx.measureText(test).width > CW - 10 && cur) { lines.push(cur); cur = w; }
+        else cur = test;
+      }
+      if (cur) lines.push(cur);
+      lines.forEach((l, li) => ctx.fillText(l, 0, 10 + li * 9));
+    }
+
+    ctx.restore();
+  }
+
+  ctx.globalAlpha = 0.75;
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  if (ca.phase === "pick") {
+    ctx.font = '5px "Press Start 2P", monospace';
+    ctx.fillStyle = "#aa88cc";
+    ctx.fillText("← → TO BROWSE  •  ENTER / CLICK TO PICK", cx, baseY + CH + 22);
+  } else if (ca.phase === "reveal") {
+    const card = ca.cards[ca.flipCard];
+    ctx.globalAlpha = 0.95;
+    ctx.font = 'bold 8px "Press Start 2P", monospace';
+    const resultCol = card.rare === "death" ? "#ff2200" : card.rare === "crazy" ? "#ff44ff" : card.good ? "#44ee88" : "#ff5555";
+    ctx.fillStyle = resultCol;
+    ctx.shadowColor = resultCol; ctx.shadowBlur = 12;
+    const msg = card.rare === "death" ? "YOU CHOSE... POORLY." : card.rare === "crazy" ? "ABSOLUTE CHAOS." : card.good ? "NICE PICK!" : "TOUGH LUCK.";
+    ctx.fillText(msg, cx, baseY + CH + 22);
+    ctx.shadowBlur = 0;
+    if (now - ca.revealStart > 1500) ca.resolved = true;
+  }
+
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}

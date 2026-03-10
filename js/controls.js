@@ -3,10 +3,32 @@
 // ═══════════════════════════════════════════════════════════════
 
 import S from './state.js';
-import { overlay, winOverlay, endScreenOverlay, startBtn } from './dom.js';
+import { canvas, overlay, winOverlay, endScreenOverlay, startBtn } from './dom.js';
+import { W, H } from './constants.js';
+
+// ─── Card helpers ────────────────────────────────────────────────
+
+function cardHitTest(mx, my) {
+  const CW = 56, CH = 82, GAP = 10;
+  const startX = W / 2 - (5 * CW + 4 * GAP) / 2;
+  const baseY  = H / 2 - CH / 2 + 8;
+  for (let i = 0; i < 5; i++) {
+    const cx = startX + i * (CW + GAP);
+    if (mx >= cx && mx <= cx + CW && my >= baseY - 25 && my <= baseY + CH + 5) return i;
+  }
+  return -1;
+}
+
+function confirmCard(idx) {
+  if (!S.cardAnim || S.cardAnim.phase !== 'pick') return;
+  S.cardAnim.flipCard  = idx;
+  S.cardAnim.phase     = 'flip';
+  S.cardAnim.flipStart = Date.now();
+}
 
 export function initControls() {
   initKeyboard();
+  initCardInput();
   initJoystick();
 }
 
@@ -41,6 +63,13 @@ function initKeyboard() {
       if (menuBtn && !endScreenOverlay.classList.contains('hidden')) {
         e.preventDefault(); menuBtn.click(); return;
       }
+    }
+
+    // Card mini-game navigation
+    if (S.cardAnim && S.cardAnim.phase === 'pick') {
+      if (k === 'ArrowLeft')              { S.cardAnim.selected = Math.max(0, S.cardAnim.selected - 1); e.preventDefault(); return; }
+      if (k === 'ArrowRight')             { S.cardAnim.selected = Math.min(4, S.cardAnim.selected + 1); e.preventDefault(); return; }
+      if (k === 'Enter' || k === ' ')     { confirmCard(S.cardAnim.selected); e.preventDefault(); return; }
     }
 
     // ESC toggles pause
@@ -87,6 +116,41 @@ function initKeyboard() {
     const po = document.getElementById('pause-overlay');
     if (po) po.classList.add('hidden');
   });
+}
+
+// ─── Card Input (mouse + touch on canvas) ───────────────────────
+
+function initCardInput() {
+  function canvasCoords(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: (clientX - rect.left) * (canvas.width  / rect.width),
+      y: (clientY - rect.top)  * (canvas.height / rect.height),
+    };
+  }
+
+  canvas.addEventListener('mousemove', e => {
+    if (!S.cardAnim || S.cardAnim.phase !== 'pick') return;
+    const { x, y } = canvasCoords(e.clientX, e.clientY);
+    const idx = cardHitTest(x, y);
+    if (idx >= 0) S.cardAnim.selected = idx;
+  });
+
+  canvas.addEventListener('click', e => {
+    if (!S.cardAnim || S.cardAnim.phase !== 'pick') return;
+    const { x, y } = canvasCoords(e.clientX, e.clientY);
+    const idx = cardHitTest(x, y);
+    if (idx >= 0) confirmCard(idx);
+  });
+
+  canvas.addEventListener('touchend', e => {
+    if (!S.cardAnim || S.cardAnim.phase !== 'pick') return;
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    const { x, y } = canvasCoords(t.clientX, t.clientY);
+    const idx = cardHitTest(x, y);
+    if (idx >= 0) confirmCard(idx);
+  }, { passive: false });
 }
 
 // ─── Virtual Joystick ───────────────────────────────────────────
