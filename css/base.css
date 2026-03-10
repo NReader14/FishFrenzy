@@ -12,6 +12,9 @@
 
 .hidden { display: none !important; }
 
+/* Custom cursor active — hide ALL native cursors including pointer on buttons */
+.hide-cursor, .hide-cursor * { cursor: none !important; }
+
 body {
   background: #030305;
   display: -webkit-box;

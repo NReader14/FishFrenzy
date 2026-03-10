@@ -43,7 +43,7 @@ document.addEventListener('mousemove', e => {
 function updateVisibility() {
   const show = !S.gameRunning || !!S.cardAnim;
   el.style.display = show ? 'block' : 'none';
-  document.documentElement.style.cursor = show ? 'none' : '';
+  document.documentElement.classList.toggle('hide-cursor', show);
 }
 
 (function tick() {
