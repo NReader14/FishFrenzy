@@ -94,6 +94,7 @@ const S = {
   settings: {
     mysteryBlocks: false,
     smartShark: false,
+    skin: 0,
   },
 };
 

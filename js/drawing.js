@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import S from './state.js';
+import { SKINS } from './skins.js';
 import { ctx } from './dom.js';
 import { W, H, rand, dist,
   FRENZY_DURATION, ICE_DURATION, HOURGLASS_DURATION, GOOP_DURATION,
@@ -99,11 +100,25 @@ export function drawFish() {
   if (S.bodySwapActive) {
     c1 = '#cc2222'; c2 = '#ee4444'; c3 = '#aa0000';
   } else {
-    c1 = S.frenzyActive ? '#ffaa22' : '#ff8833';
-    c2 = S.frenzyActive ? '#ffcc44' : '#ffaa55';
-    c3 = S.frenzyActive ? '#ee7700' : '#cc5500';
+    const skin = SKINS[S.settings.skin ?? 0] || SKINS[0];
+    c1 = S.frenzyActive ? '#ffaa22' : skin.c1;
+    c2 = S.frenzyActive ? '#ffcc44' : skin.c2;
+    c3 = S.frenzyActive ? '#ee7700' : skin.c3;
   }
   drawPixelFish(S.fish.x, S.fish.y, S.fish.dir, S.fish.angle, S.fish.tailPhase, c1, c2, c3);
+
+  // Draw skin accessories (glasses, crown, etc.) on top of base fish
+  if (!S.bodySwapActive && !S.frenzyActive) {
+    const skin = SKINS[S.settings.skin ?? 0] || SKINS[0];
+    if (skin.extras) {
+      ctx.save();
+      ctx.translate(S.fish.x, S.fish.y);
+      ctx.scale(S.fish.dir, 1);
+      ctx.rotate(S.fish.angle || 0);
+      skin.extras(ctx);
+      ctx.restore();
+    }
+  }
 
   if (S.shieldActive) {
     const p = 0.3 + Math.sin(Date.now() * 0.005) * 0.1;

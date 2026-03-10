@@ -45,6 +45,7 @@ import {
 } from './firebase-config.js';
 import { initControls } from './js/controls.js';
 import { initSettings } from './js/settings.js';
+import { initCursor } from './js/cursor.js';
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -760,6 +761,7 @@ function loop(timestamp) {
 
 initControls();
 initSettings();
+initCursor();
 
 
 // ═══════════════════════════════════════════════════════════════
