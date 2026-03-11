@@ -3,8 +3,10 @@
 // ═══════════════════════════════════════════════════════════════
 
 import S from './state.js';
-import { SKINS, drawSkinPreview } from './skins.js';
+import { SKINS, drawSkinPreview, addCustomSkinToList } from './skins.js';
 import { startMusic, stopMusic, initAudio, setMusicVolume, setSfxVolume } from './audio.js';
+import { openFishDraw, initFishDraw } from './fishdraw.js';
+import { fetchCustomSkins } from '../firebase-config.js';
 
 const STORAGE_KEY = 'fishFrenzySettings';
 
@@ -67,11 +69,11 @@ function refreshSkinPicker() {
 
 function buildSkinPicker() {
   const grid = document.getElementById('skin-grid');
-  if (!grid || grid.children.length) return; // already built
+  if (!grid || grid.querySelector('.skin-btn')) return; // already built
 
   SKINS.forEach((skin, i) => {
     const btn = document.createElement('button');
-    btn.className = 'skin-btn';
+    btn.className = 'skin-btn' + (skin.custom ? ' skin-custom' : '');
 
     const cvs = document.createElement('canvas');
     cvs.width  = 64;
@@ -96,7 +98,22 @@ function buildSkinPicker() {
     grid.appendChild(btn);
   });
 
+  // DESIGN YOUR OWN button
+  const designBtn = document.createElement('button');
+  designBtn.className = 'skin-btn skin-btn-design';
+  designBtn.title = 'Design your own fish skin';
+  designBtn.innerHTML = '<div class="skin-btn-design-icon">✏</div><div class="skin-btn-label">CUSTOM</div>';
+  designBtn.addEventListener('click', () => openFishDraw());
+  grid.appendChild(designBtn);
+
   refreshSkinPicker();
+}
+
+function rebuildSkinPicker() {
+  const grid = document.getElementById('skin-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  buildSkinPicker();
 }
 
 export function saveSettings() { save(); }
@@ -108,6 +125,24 @@ export function initSettings() {
   const settingsOv = document.getElementById('settings-overlay');
   const adminBtn   = document.getElementById('admin-panel-btn');
   const adminOv    = document.getElementById('admin-overlay');
+
+  initFishDraw();
+
+  // Load custom skins from Firebase and add to the picker
+  fetchCustomSkins().then(list => {
+    if (!list.length) return;
+    list.forEach(s => addCustomSkinToList(s));
+    rebuildSkinPicker();
+    refreshSkinPicker();
+  }).catch(() => {});
+
+  // When a skin is saved from the designer, select it and rebuild
+  window.addEventListener('fishSkinSaved', (e) => {
+    S.settings.skin = e.detail.idx;
+    save();
+    rebuildSkinPicker();
+    refreshSkinPicker();
+  });
 
   buildSkinPicker();
 

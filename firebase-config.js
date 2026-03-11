@@ -266,6 +266,40 @@ export async function saveGameConfig(config, email, password) {
   }
 }
 
+// ─── CUSTOM SKINS ───
+
+export async function fetchCustomSkins() {
+  try {
+    const q = query(
+      collection(db, 'customSkins'),
+      orderBy('savedAt', 'desc'),
+      limit(50)
+    );
+    const snapshot = await getDocs(q);
+    const skins = [];
+    snapshot.forEach(d => skins.push({ id: d.id, ...d.data() }));
+    return skins;
+  } catch (err) {
+    console.warn('[Firebase] Could not fetch custom skins:', err.message);
+    return [];
+  }
+}
+
+export async function saveCustomSkin(skinData) {
+  const id = skinData.name.replace(/\s+/g, '_').toLowerCase() + '_' + Date.now();
+  await setDoc(doc(db, 'customSkins', id), {
+    name: skinData.name,
+    c1: skinData.c1,
+    c2: skinData.c2,
+    c3: skinData.c3,
+    hat:    skinData.hat    || 'none',
+    mask:   skinData.mask   || 'none',
+    outfit: skinData.outfit || 'none',
+    savedAt: serverTimestamp(),
+  });
+  return id;
+}
+
 // ─── OFFLINE FALLBACK ───
 
 function getOfflineScores() {

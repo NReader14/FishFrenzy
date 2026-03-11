@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Nathan/.claude/projects/c--Users-Nathan-Downloads-FishFrenzy/**)",
+      "Bash(\"c:/Users/Nathan/Downloads/FishFrenzy/css/overlays.css\")"
+    ]
+  }
+}

@@ -894,3 +894,108 @@
   0%   { background-position: 0% 50%; }
   100% { background-position: 200% 50%; }
 }
+
+
+/* ─── FISH DRAW — Custom skin designer ─── */
+.fishdraw-title {
+  font-size: 13px;
+  color: #44ddff;
+  text-shadow: 0 0 12px rgba(68,221,255,.4);
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+.fishdraw-preview-wrap {
+  background: #0a1628;
+  border: 2px solid #1a3a5a;
+  border-radius: 4px;
+  padding: 8px 16px;
+  margin-bottom: 10px;
+}
+#fishdraw-preview { display: block; image-rendering: pixelated; }
+.fishdraw-section-label {
+  font-size: 7px;
+  color: #5588aa;
+  letter-spacing: 1px;
+  margin: 6px 0 5px;
+}
+.fishdraw-colours { display: flex; gap: 14px; margin-bottom: 4px; }
+.fishdraw-colour-slot {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer;
+}
+.fishdraw-colour-slot span { font-size: 6px; color: #7799bb; }
+.fishdraw-colour-slot input[type="color"] {
+  width: 44px; height: 32px;
+  border: 2px solid #1a3a5a; border-radius: 3px;
+  padding: 1px; background: #0a1628; cursor: pointer;
+}
+.fishdraw-colour-slot input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.fishdraw-colour-slot input[type="color"]::-webkit-color-swatch { border: none; border-radius: 2px; }
+.fishdraw-acc-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+  margin-bottom: 6px;
+  width: 100%;
+  max-width: 370px;
+}
+.fd-acc-btn {
+  display: flex; flex-direction: column; align-items: center;
+  background: #0a1628; border: 2px solid #1a3a5a;
+  border-radius: 3px; padding: 3px; cursor: pointer;
+  width: 100%;
+  transition: border-color .12s, background .12s;
+}
+.fd-acc-btn canvas { image-rendering: pixelated; width: 100%; height: auto; }
+.fd-acc-btn:hover { border-color: #2a5a8a; background: #0d1e3a; }
+.fd-acc-btn.selected { border-color: #44ddff; background: #0d2a3a; box-shadow: 0 0 8px rgba(68,221,255,.25); }
+.fd-acc-label { font-size: 5px; color: #5588aa; margin-top: 2px; }
+.fd-acc-btn.selected .fd-acc-label { color: #44ddff; }
+.fishdraw-names-grid {
+  display: flex; flex-wrap: wrap; gap: 5px; justify-content: center;
+  margin-bottom: 12px; max-width: 380px;
+}
+.fd-name-btn {
+  font-size: 8px; color: #7799bb;
+  background: #0a1628; border: 1px solid #1a3a5a;
+  border-radius: 2px; padding: 5px 7px; cursor: pointer;
+  transition: border-color .12s, color .12s;
+}
+.fd-name-btn:hover { border-color: #2a5a8a; color: #aabbcc; }
+.fd-name-btn.selected { border-color: #44ddff; color: #44ddff; background: #0d2a3a; }
+.fishdraw-btn-row { display: flex; gap: 10px; margin-bottom: 8px; }
+.fishdraw-hint { font-size: 5px; color: #3a5a7a; text-align: center; line-height: 1.8; max-width: 320px; }
+
+/* DESIGN button in skin picker grid */
+.skin-btn-design {
+  border-style: dashed !important;
+  border-color: #2a4a6a !important;
+  justify-content: center;
+  min-width: 64px; min-height: 56px;
+  gap: 4px;
+}
+.skin-btn-design:hover { border-color: #44ddff !important; background: #0d2a3a; }
+.skin-btn-design-icon { font-size: 18px; }
+
+/* Custom skin indicator */
+.skin-btn.skin-custom { border-color: #aa55ff; }
+.skin-btn.skin-custom.selected { border-color: #cc88ff; box-shadow: 0 0 8px rgba(170,85,255,.4); }
+
+/* ─── FISH DRAW — Accessory tabs ─── */
+.fd-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.fd-tab {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: #5588aa;
+  background: #0a1628;
+  border: 2px solid #1a3a5a;
+  border-radius: 3px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: border-color .12s, color .12s, background .12s;
+}
+.fd-tab:hover { border-color: #2a5a8a; color: #aabbcc; }
+.fd-tab.selected { border-color: #44ddff; color: #44ddff; background: #0d2a3a; }
