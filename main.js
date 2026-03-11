@@ -47,7 +47,7 @@ import {
 import { initControls } from './js/controls.js';
 import { initSettings, saveSettings } from './js/settings.js';
 import { initCursor } from './js/cursor.js';
-import { initAudio, startMusic, stopMusic, sfxLevelUp, sfxGameOver, sfxSharkBite, sfxMenuClick } from './js/audio.js';
+import { initAudio, startMusic, stopMusic, sfxLevelUp, sfxGameOver, sfxSharkBite, sfxMenuClick, startCardMusic, stopCardMusic } from './js/audio.js';
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -894,6 +894,8 @@ function loop(timestamp) {
     S.cardAnim    = null;
     S.gamePaused  = false;
     S.timerFrozen = false;
+    stopCardMusic();
+    startMusic();
     card.fn();
     if (S.cardDeathPending) {
       S.cardDeathPending = false;

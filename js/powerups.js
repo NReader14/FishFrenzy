@@ -18,7 +18,7 @@ import {
 } from './constants.js';
 import { fetchGameConfig } from '../firebase-config.js';
 import { gameVars } from './game-vars.js';
-import { sfxPowerup } from './audio.js';
+import { sfxPowerup, setMusicTempo, startCardMusic } from './audio.js';
 import { SKINS } from './skins.js';
 
 // ─── HELPERS ───
@@ -55,6 +55,7 @@ function deactivateFrenzy() {
 function activateIce() {
   S.iceActive = true;
   S.iceStartTime = Date.now();
+  setMusicTempo(1.8);
   // If hourglass already has the shark stopped, grant bonus time instead of wasting the slow
   if (S.hourglassActive) {
     S.timeLeft = Math.min(S.maxTime, S.timeLeft + 4);
@@ -77,6 +78,7 @@ function deactivateIce() {
   S.shark.speed = S.shark.savedSpeed || (0.75 + S.level * 0.2);
   stOff('ice', 's-ice');
   S.iceTO = null;
+  if (!S.goopActive) setMusicTempo(1.0);
 }
 
 // ─── SHIELD ───
@@ -383,6 +385,7 @@ function activateGoop() {
   S.goopActive = true;
   S.goopStartTime = Date.now();
   S.fish.speed = gameVars.fishSpeed * 0.5;
+  setMusicTempo(1.8);
   stOn('goop', 's-goop');
   spawnParticles(S.fish.x, S.fish.y, '#66cc44', 16);
   S.scorePopups.push({ x: S.fish.x, y: S.fish.y - 20, pts: 'GOOPED!', life: 1.5, decay: 0.02 });
@@ -392,6 +395,7 @@ function activateGoop() {
     S.fish.speed = S.frenzyActive ? gameVars.fishSpeed + FRENZY_SPEED_BOOST : gameVars.fishSpeed;
     stOff('goop', 's-goop');
     S.goopTO = null;
+    if (!S.iceActive) setMusicTempo(1.0);
   }, GOOP_DURATION);
 }
 
@@ -638,6 +642,7 @@ function activateCard() {
   };
   S.gamePaused  = true;
   S.timerFrozen = true;
+  startCardMusic();
 }
 
 

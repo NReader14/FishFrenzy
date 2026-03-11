@@ -89,8 +89,8 @@ function hz(name) {
 export function sfxCollect() {
   if (!S.settings?.sfx) return;
   const t = ctx().currentTime;
-  playOsc(880,  'square', t,        0.06, 0.22, _sfxBus);
-  playOsc(1320, 'square', t + 0.04, 0.05, 0.14, _sfxBus);
+  playOsc(660,  'sine', t,        0.07, 0.12, _sfxBus);
+  playOsc(990,  'sine', t + 0.04, 0.06, 0.07, _sfxBus);
 }
 
 export function sfxCombo(level) {
@@ -144,9 +144,11 @@ export function sfxMenuClick() {
 // Sequencer unit = 1 sixteenth note
 
 const BPM       = 160;
-const T16       = (60 / BPM) / 4;   // one 16th-note in seconds
 const LOOKAHEAD = 0.18;              // schedule this far ahead (s)
 const INTERVAL  = 30;               // scheduler runs every N ms
+
+let _tempoMult = 1.0;              // 1.0 = normal, >1 = slower
+function T16() { return ((60 / BPM) / 4) * _tempoMult; }
 
 // Each entry: [freq_or_null, duration_in_16th_notes]
 const MELODY = [
@@ -192,15 +194,93 @@ const BASS = [
 ];
 
 // 16-step drum pattern (loops every bar)
-// 1=kick, 2=snare, 3=hihat, 4=kick+hihat, 5=snare+hihat
-const DRUMS = [4, 0, 3, 0, 5, 0, 3, 0, 4, 0, 3, 0, 5, 0, 3, 0];
+// 1=kick, 2=snare, 3=hihat, 4=kick+hihat, 5=snare+hihat, 6=soft hihat (off-beat 16ths)
+const DRUMS = [4, 6, 3, 6, 5, 6, 3, 6, 4, 6, 3, 6, 5, 6, 3, 6];
+
+// ─── Card battle music (upbeat, fast, A minor) ────────────────
+const CARD_BPM  = 200;
+function CT16() { return (60 / CARD_BPM) / 4; }
+
+const CARD_MELODY = [
+  // Bar 1 — punchy ascending riff
+  [hz('A5'),1],[hz('C6'),1],[hz('E6'),1],[hz('A6'),1],
+  [hz('G6'),1],[hz('E6'),1],[hz('D6'),1],[hz('C6'),1],
+  [hz('E6'),1],[hz('D6'),1],[hz('C6'),1],[hz('A5'),1],
+  [hz('B5'),1],[hz('C6'),1],[hz('D6'),2],
+  // Bar 2
+  [hz('E6'),1],[hz('G6'),1],[hz('A6'),1],[hz('B6'),1],
+  [hz('A6'),2],[hz('G6'),1],[hz('E6'),1],
+  [hz('D6'),1],[hz('C6'),1],[hz('B5'),1],[hz('A5'),1],
+  [hz('G5'),1],[hz('A5'),1],[hz('C6'),2],
+  // Bar 3 — rhythmic stabs
+  [hz('A5'),1],[null,1],[hz('E6'),1],[null,1],
+  [hz('C6'),1],[null,1],[hz('G6'),1],[null,1],
+  [hz('A5'),1],[null,1],[hz('F6'),1],[null,1],
+  [hz('E6'),1],[hz('D6'),1],[hz('C6'),2],
+  // Bar 4 — resolution run
+  [hz('A5'),1],[hz('B5'),1],[hz('C6'),1],[hz('D6'),1],
+  [hz('E6'),1],[hz('F6'),1],[hz('G6'),1],[hz('A6'),1],
+  [hz('A6'),4],[null,4],
+];
+
+const CARD_BASS = [
+  [hz('A2'),4],[hz('A2'),4],[hz('E3'),4],[hz('E3'),4],
+  [hz('F3'),4],[hz('F3'),4],[hz('E3'),4],[hz('E3'),4],
+  [hz('A2'),4],[hz('A2'),4],[hz('G3'),4],[hz('G3'),4],
+  [hz('C3'),4],[hz('E3'),4],[hz('A2'),8],
+];
+
+const CARD_DRUMS = [4,6,5,6, 4,6,5,6, 4,3,5,3, 4,6,5,4];
+
+let _cActive = false, _cTimer = null, _cNextTime = 0;
+let _cmIdx = 0, _cmLeft = 0, _cbIdx = 0, _cbLeft = 0, _cdStep = 0;
+
+function runCardScheduler() {
+  if (!_cActive) return;
+  const c = ctx();
+  while (_cNextTime < c.currentTime + LOOKAHEAD) {
+    if (_cmLeft <= 0) {
+      const [f, d] = CARD_MELODY[_cmIdx % CARD_MELODY.length];
+      _cmIdx++; _cmLeft = d;
+      if (f) { playOsc(f, 'square', _cNextTime, d * CT16() * 0.78, 0.28, _musicBus); }
+    }
+    _cmLeft--;
+    if (_cbLeft <= 0) {
+      const [f, d] = CARD_BASS[_cbIdx % CARD_BASS.length];
+      _cbIdx++; _cbLeft = d;
+      if (f) { playOsc(f, 'triangle', _cNextTime, d * CT16() * 0.75, 0.36, _musicBus); }
+    }
+    _cbLeft--;
+    const dtype = CARD_DRUMS[_cdStep % CARD_DRUMS.length];
+    if (dtype) schedDrum(dtype, _cNextTime);
+    _cdStep++;
+    _cNextTime += CT16();
+  }
+  _cTimer = setTimeout(runCardScheduler, INTERVAL);
+}
+
+export function startCardMusic() {
+  if (!S.settings?.music) return;
+  stopMusic();
+  if (_cActive) return;
+  _cActive = true;
+  _cmIdx = 0; _cmLeft = 0; _cbIdx = 0; _cbLeft = 0; _cdStep = 0;
+  _cNextTime = ctx().currentTime + 0.05;
+  runCardScheduler();
+}
+
+export function stopCardMusic() {
+  _cActive = false;
+  if (_cTimer) { clearTimeout(_cTimer); _cTimer = null; }
+}
 
 // ─── Drum voices ──────────────────────────────────────────────
 
 function schedDrum(type, t) {
-  const kick  = type === 1 || type === 4;
-  const snare = type === 2 || type === 5;
-  const hat   = type === 3 || type === 4 || type === 5;
+  const kick    = type === 1 || type === 4;
+  const snare   = type === 2 || type === 5;
+  const hat     = type === 3 || type === 4 || type === 5;
+  const softHat = type === 6;
 
   if (kick) {
     const c = ctx();
@@ -219,7 +299,10 @@ function schedDrum(type, t) {
     playOsc(180, 'triangle', t, 0.06, 0.22, _musicBus);
   }
   if (hat) {
-    playNoise(t, 0.03, 0.18, 9000, _musicBus);
+    playNoise(t, 0.025, 0.22, 10000, _musicBus);
+  }
+  if (softHat) {
+    playNoise(t, 0.018, 0.09, 10000, _musicBus);
   }
 }
 
@@ -227,14 +310,14 @@ function schedDrum(type, t) {
 
 function schedMelody(f, steps, t) {
   if (!f) return;
-  const dur = steps * T16 * 0.82;
+  const dur = steps * T16() * 0.82;
   playOsc(f,       'square',   t, dur, 0.32, _musicBus);
   playOsc(f * 0.5, 'triangle', t, dur * 0.5, 0.08, _musicBus);
 }
 
 function schedBass(f, steps, t) {
   if (!f) return;
-  playOsc(f, 'triangle', t, steps * T16 * 0.78, 0.42, _musicBus);
+  playOsc(f, 'triangle', t, steps * T16() * 0.78, 0.42, _musicBus);
 }
 
 // ─── Scheduler ───────────────────────────────────────────────
@@ -245,6 +328,17 @@ let _dStep = 0;
 let _nextTime  = 0;
 let _schedTimer = null;
 let _musicActive = false;
+let _fishWhisperTimer = null;
+
+function whisperFish() {
+  if (!_musicActive) return;
+  if (!window.speechSynthesis) return;
+  const u = new SpeechSynthesisUtterance('fish');
+  u.volume = 0.08;
+  u.rate   = 0.7;
+  u.pitch  = 0.4;
+  window.speechSynthesis.speak(u);
+}
 
 function runScheduler() {
   if (!_musicActive) return;
@@ -273,7 +367,7 @@ function runScheduler() {
     if (dtype) schedDrum(dtype, _nextTime);
     _dStep++;
 
-    _nextTime += T16;
+    _nextTime += T16();
   }
   _schedTimer = setTimeout(runScheduler, INTERVAL);
 }
@@ -289,11 +383,17 @@ export function startMusic() {
   _dStep = 0;
   _nextTime = ctx().currentTime + 0.08;
   runScheduler();
+  _fishWhisperTimer = setInterval(whisperFish, 60000);
 }
 
 export function stopMusic() {
   _musicActive = false;
   if (_schedTimer) { clearTimeout(_schedTimer); _schedTimer = null; }
+  if (_fishWhisperTimer) { clearInterval(_fishWhisperTimer); _fishWhisperTimer = null; }
+}
+
+export function setMusicTempo(mult) {
+  _tempoMult = mult;
 }
 
 export function setMusicVolume() {

@@ -604,8 +604,10 @@ export function drawSkinPreview(ctx2, skin, w, h) {
   const { c1, c2, c3 } = skin;
   ctx2.clearRect(0, 0, w, h);
   ctx2.save();
-  ctx2.translate(w / 2 + 4, h / 2 + 8); // +8 shifts fish down so crowns/antennae have headroom
-  ctx2.scale(0.65, 0.65);
+  const isPreview = w >= 200;
+  const sc = isPreview ? 1.6 : 0.65;
+  ctx2.translate(w / 2 + 4, h / 2 + (isPreview ? 18 : 8));
+  ctx2.scale(sc, sc);
 
   // Body
   ctx2.fillStyle = c1;

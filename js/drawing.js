@@ -108,7 +108,7 @@ export function drawFish() {
   drawPixelFish(S.fish.x, S.fish.y, S.fish.dir, S.fish.angle, S.fish.tailPhase, c1, c2, c3);
 
   // Draw skin accessories (glasses, crown, etc.) on top of base fish
-  if (!S.bodySwapActive && !S.frenzyActive) {
+  if (!S.bodySwapActive) {
     const skin = SKINS[S.settings.skin ?? 0] || SKINS[0];
     if (skin.extras) {
       ctx.save();

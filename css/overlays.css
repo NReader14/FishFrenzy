@@ -517,6 +517,12 @@
 
 
 /* ─── SETTINGS ─── */
+#settings-overlay {
+  justify-content: flex-start;
+  padding-top: 28px;
+  padding-bottom: 28px;
+}
+
 .settings-title {
   font-size: 16px;
   color: #44ddff;
@@ -682,6 +688,16 @@
   display: block;
   image-rendering: pixelated;
 }
+
+.custom-skin-scroll {
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.custom-skin-scroll::-webkit-scrollbar { width: 6px; }
+.custom-skin-scroll::-webkit-scrollbar-track { background: #0a1628; border-radius: 3px; }
+.custom-skin-scroll::-webkit-scrollbar-thumb { background: #1a3a5a; border-radius: 3px; }
+.custom-skin-scroll::-webkit-scrollbar-thumb:hover { background: #2a5a8a; }
 
 .skin-btn-label {
   font-family: 'Press Start 2P', monospace;

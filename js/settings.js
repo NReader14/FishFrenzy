@@ -60,42 +60,51 @@ function refreshUI() {
 // ─── Skin Picker ─────────────────────────────────────────────
 
 function refreshSkinPicker() {
-  const grid = document.getElementById('skin-grid');
-  if (!grid) return;
-  grid.querySelectorAll('.skin-btn').forEach((btn, i) => {
-    btn.classList.toggle('selected', i === (S.settings.skin ?? 0));
+  const allBtns = [
+    ...document.querySelectorAll('#skin-grid .skin-btn'),
+    ...document.querySelectorAll('#custom-skin-grid .skin-btn'),
+  ];
+  // rebuild index map: each btn has data-skin-idx set by makeSkinBtn
+  allBtns.forEach(btn => {
+    btn.classList.toggle('selected', Number(btn.dataset.skinIdx) === (S.settings.skin ?? 0));
   });
+}
+
+function makeSkinBtn(skin, i) {
+  const btn = document.createElement('button');
+  btn.className = 'skin-btn' + (skin.custom ? ' skin-custom' : '');
+  btn.dataset.skinIdx = i;
+  const cvs = document.createElement('canvas');
+  cvs.width = 64; cvs.height = 56;
+  cvs.style.width = '64px'; cvs.style.height = '56px';
+  drawSkinPreview(cvs.getContext('2d'), skin, 64, 56);
+  btn.appendChild(cvs);
+  const lbl = document.createElement('div');
+  lbl.className = 'skin-btn-label';
+  lbl.textContent = skin.name;
+  btn.appendChild(lbl);
+  btn.addEventListener('click', () => {
+    S.settings.skin = i;
+    save();
+    refreshSkinPicker();
+  });
+  return btn;
 }
 
 function buildSkinPicker() {
   const grid = document.getElementById('skin-grid');
   if (!grid || grid.querySelector('.skin-btn')) return; // already built
 
+  const customGrid    = document.getElementById('custom-skin-grid');
+  const customSection = document.getElementById('custom-skins-section');
+
   SKINS.forEach((skin, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'skin-btn' + (skin.custom ? ' skin-custom' : '');
-
-    const cvs = document.createElement('canvas');
-    cvs.width  = 64;
-    cvs.height = 56;
-    cvs.style.width  = '64px';
-    cvs.style.height = '56px';
-    const ctx2 = cvs.getContext('2d');
-    drawSkinPreview(ctx2, skin, 64, 56);
-    btn.appendChild(cvs);
-
-    const lbl = document.createElement('div');
-    lbl.className = 'skin-btn-label';
-    lbl.textContent = skin.name;
-    btn.appendChild(lbl);
-
-    btn.addEventListener('click', () => {
-      S.settings.skin = i;
-      save();
-      refreshSkinPicker();
-    });
-
-    grid.appendChild(btn);
+    if (skin.custom) {
+      customGrid.appendChild(makeSkinBtn(skin, i));
+      customSection.classList.remove('hidden');
+    } else {
+      grid.appendChild(makeSkinBtn(skin, i));
+    }
   });
 
   // DESIGN YOUR OWN button
