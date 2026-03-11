@@ -8,7 +8,7 @@ import {
   FRENZY_SPEED_BOOST, SHARK_START_DELAY, COMBO_WINDOW,
   rand, dist
 } from './js/constants.js';
-import { gameVars } from './js/game-vars.js';
+import { gameVars, GAME_VAR_DEFAULTS } from './js/game-vars.js';
 import {
   ctx, overlay, winOverlay, scoreboardOverlay,
   rulesOverlay, adminOverlay, scoreEl, timerEl, timerBar,
@@ -31,7 +31,8 @@ import {
   drawTreats, drawPWItems, drawWarning, drawFrenzyOverlay, drawIceOverlay,
   drawHourglassOverlay, drawCrazyOverlay, drawFishGlow, drawMagnetLines,
   drawScanlines, drawClosestTreatArrow, drawPowerupTimerBars, drawRainbowOverlay,
-  drawClaudeOverlay, drawBodySwapAnim, drawBombAnim, drawHellAnim, drawCardAnim
+  drawClaudeOverlay, drawBodySwapAnim, drawBombAnim, drawHellAnim, drawCardAnim,
+  drawLevelBanner, drawTutorialHints
 } from './js/drawing.js';
 import { collectTreat } from './js/scoring.js';
 import {
@@ -44,8 +45,9 @@ import {
   verifyAdminCredentials
 } from './firebase-config.js';
 import { initControls } from './js/controls.js';
-import { initSettings } from './js/settings.js';
+import { initSettings, saveSettings } from './js/settings.js';
 import { initCursor } from './js/cursor.js';
+import { initAudio, startMusic, stopMusic, sfxLevelUp, sfxGameOver, sfxSharkBite, sfxMenuClick } from './js/audio.js';
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -57,6 +59,52 @@ import { initCursor } from './js/cursor.js';
 setEndGame(endGame);
 setSpawnTreat(spawnTreat);
 setInitGame(initGame);
+
+// ─── TUTORIAL ───
+function advanceTutorial() {
+  S.tutorialStep++;
+  S.tutorialStepTime = Date.now();
+  if (S.tutorialStep === 2) S.sharkDelay = 120; // 2s warning before shark starts
+  if (S.tutorialStep >= 4) S.tutorialActive = false;
+}
+
+function updateTutorial() {
+  if (!S.tutorialActive) return;
+  const elapsed = (Date.now() - S.tutorialStepTime) / 1000;
+  switch (S.tutorialStep) {
+    case 0: { // wait for first movement
+      const moving = S.keys['arrowleft'] || S.keys['arrowright'] ||
+                     S.keys['arrowup']   || S.keys['arrowdown'] ||
+                     S.keys['a'] || S.keys['d'] || S.keys['w'] || S.keys['s'];
+      if (moving) advanceTutorial();
+      break;
+    }
+    case 1: if (elapsed >= 3) advanceTutorial(); break;
+    case 2: if (elapsed >= 3) advanceTutorial(); break;
+    case 3: if (elapsed >= 3) advanceTutorial(); break;
+  }
+}
+
+// ─── DIFFICULTY PRESETS ───
+const DIFFICULTY_PRESETS = {
+  easy:   { sharkSpeedBase: -2.4, sharkSpeedPerLevel: 0.12, levelTimeBase: 45, levelTimeMin: 25 },
+  normal: {},
+  hard:   { sharkSpeedBase: -0.9, sharkSpeedPerLevel: 0.28, levelTimeBase: 28, levelTimeMin: 14 },
+};
+
+function refreshDifficultyUI() {
+  ['easy', 'normal', 'hard'].forEach(d => {
+    document.getElementById(`diff-${d}`)?.classList.toggle('diff-active', d === S.settings.difficulty);
+  });
+}
+
+['easy', 'normal', 'hard'].forEach(d => {
+  document.getElementById(`diff-${d}`)?.addEventListener('click', () => {
+    S.settings.difficulty = d;
+    saveSettings();
+    refreshDifficultyUI();
+  });
+});
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -100,6 +148,15 @@ setInitGame(initGame);
   if (!localStorage.getItem('fishFrenzyWelcomed')) {
     showWelcomeOverlay();
   }
+
+  // Show global high score in top bar
+  try {
+    const scores = await fetchHighScores();
+    const best = scores.length > 0 ? scores[0].score : null;
+    const el = document.getElementById('global-hi-score');
+    if (el) el.textContent = best !== null ? best.toLocaleString() : '---';
+    S.globalHighScore = best ?? 0;
+  } catch (_) {}
 })();
 
 function showWelcomeOverlay() {
@@ -157,6 +214,10 @@ async function initGame() {
   S.score = 0;
   S.pbNotified = false;
 
+  // Apply difficulty
+  Object.assign(gameVars, GAME_VAR_DEFAULTS);
+  Object.assign(gameVars, DIFFICULTY_PRESETS[S.settings.difficulty] || {});
+
   try {
     const scores = await fetchHighScores();
     S.globalHighScore = (scores.length > 0) ? scores[0].score : 0;
@@ -165,6 +226,7 @@ async function initGame() {
   }
 
   startLevel();
+  startMusic();
 }
 
 function spawnTreat() {
@@ -253,6 +315,18 @@ function startLevel() {
   S.fish.speed = gameVars.fishSpeed;
 
   S.gameRunning = true;
+  if (S.level > 1) sfxLevelUp();
+  S.levelBanner = { text: `LEVEL ${S.level}`, sub: S.level > 1 ? 'LEVEL UP!' : null, startTime: Date.now() };
+
+  if (S.settings.tutorial && S.level === 1) {
+    S.tutorialActive = true;
+    S.tutorialStep = 0;
+    S.tutorialStepTime = Date.now();
+    S.tutorialMoved = false;
+    S.sharkDelay = 99999; // freeze shark until tutorial step 2
+  } else {
+    S.tutorialActive = false;
+  }
 
   if (S.timerInterval) clearInterval(S.timerInterval);
   S.timerInterval = setInterval(() => {
@@ -270,6 +344,7 @@ function startLevel() {
 }
 
 function endGame(won, msg) {
+  if (!won) { stopMusic(); sfxGameOver(); }
   S.gameRunning = false;
   clearInterval(S.timerInterval);
   cancelAnimationFrame(S.gameLoop);
@@ -354,6 +429,7 @@ function updateFish(dt = 1) {
       } else if (S.shieldActive) {
         useShield();
       } else {
+        sfxSharkBite();
         endGame(false, 'The fish got you!');
       }
     }
@@ -785,6 +861,7 @@ function loop(timestamp) {
       S.smartSharkHistory.push({ x: S.fish.x, y: S.fish.y });
       if (S.smartSharkHistory.length > 120) S.smartSharkHistory.shift();
     }
+    updateTutorial();
     updateFish(dt);
     updateShark();
     updateBuddy();
@@ -832,6 +909,8 @@ function loop(timestamp) {
   drawCrazyOverlay();
   drawPowerupTimerBars();
   drawScorePopups();
+  drawTutorialHints();
+  drawLevelBanner();
   drawScanlines();
 
   S.gameLoop = requestAnimationFrame(loop);
@@ -845,6 +924,7 @@ function loop(timestamp) {
 initControls();
 initSettings();
 initCursor();
+refreshDifficultyUI(); // run after initSettings so saved difficulty is loaded
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -856,6 +936,8 @@ document.getElementById('welcome-reopen-btn')?.addEventListener('click', () => {
 });
 
 startBtn.addEventListener('click', () => {
+  initAudio();
+  sfxMenuClick();
   overlay.classList.add('hidden');
   playCRTWipe(() => initGame());
 });

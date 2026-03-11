@@ -95,7 +95,19 @@ const S = {
     mysteryBlocks: false,
     smartShark: false,
     skin: 0,
+    difficulty: 'normal',
+    tutorial: false,
+    music: true,
+    sfx: true,
+    musicVolume: 70,
+    sfxVolume: 80,
   },
+
+  // Tutorial
+  tutorialActive: false,
+  tutorialStep: 0,
+  tutorialStepTime: 0,
+  tutorialMoved: false,
 };
 
 export default S;

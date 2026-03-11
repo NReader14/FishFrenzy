@@ -134,6 +134,22 @@ body::after {
   text-transform: uppercase;
 }
 
+#global-hi-bar {
+  position: relative;
+  z-index: 60;
+  text-align: center;
+  padding: 5px 10px;
+  background: #0a0a1a;
+  border-bottom: 1px solid #1a1a3a;
+  color: #888aaa;
+  font-size: 6px;
+  letter-spacing: 1px;
+}
+
+#global-hi-bar span {
+  color: #ffdd44;
+}
+
 
 /* ─── HUD (Top bar) ─── */
 #hud {

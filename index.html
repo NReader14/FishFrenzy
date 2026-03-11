@@ -30,6 +30,9 @@
   <!-- AI DISCLAIMER BANNER -->
   <div id="ai-banner">MADE BY CLAUDE AND ISN'T REFLECTION OF THE OWNER'S SKILL</div>
 
+  <!-- GLOBAL HIGH SCORE BAR -->
+  <div id="global-hi-bar">🏆 BEST: <span id="global-hi-score">---</span></div>
+
   <!-- HUD — Score, timer, level, treats remaining -->
   <div id="hud">
     <div class="hud-item">SCORE <span id="score">0</span></div>
@@ -43,25 +46,25 @@
 
   <!-- STATUS BAR — Active power-up indicators -->
   <div id="status-bar">
-    <div class="status-item" id="st-frenzy">🔥FNZ</div>
-    <div class="status-item" id="st-ice">❄ICE</div>
-    <div class="status-item" id="st-shield">🛡SLD</div>
-    <div class="status-item" id="st-magnet">🧲MAG</div>
-    <div class="status-item" id="st-ghost">👻GST</div>
-    <div class="status-item" id="st-time">⏳TIM</div>
-    <div class="status-item" id="st-buddy">🐠BDY</div>
-    <div class="status-item" id="st-bomb">💣BOM</div>
-    <div class="status-item" id="st-decoy">👁DCV</div>
-    <div class="status-item" id="st-star">🌟INV</div>
-    <div class="status-item" id="st-hook">🪝HUK</div>
-    <div class="status-item" id="st-goop">🧪GOP</div>
-    <div class="status-item" id="st-crazy">🍄CRZ</div>
-    <div class="status-item" id="st-rainbow">🌈RBW</div>
-    <div class="status-item" id="st-prompt">✍️PRM</div>
-    <div class="status-item" id="st-claude">🤖CLD</div>
-    <div class="status-item" id="st-bodyswap">🎭BSW</div>
-    <div class="status-item" id="st-hell">👹HEL</div>
-    <div class="status-item" id="st-combo">⚡x1</div>
+    <div class="status-item" id="st-frenzy"   data-tooltip="FRENZY — 2x pts + speed">🔥FNZ</div>
+    <div class="status-item" id="st-ice"      data-tooltip="ICE — shark slowed">❄ICE</div>
+    <div class="status-item" id="st-shield"   data-tooltip="SHIELD — blocks 1 hit">🛡SLD</div>
+    <div class="status-item" id="st-magnet"   data-tooltip="MAGNET — pulls treats">🧲MAG</div>
+    <div class="status-item" id="st-ghost"    data-tooltip="GHOST — shark vanishes">👻GST</div>
+    <div class="status-item" id="st-time"     data-tooltip="TIME STOP — freezes timer &amp; shark">⏳TIM</div>
+    <div class="status-item" id="st-buddy"    data-tooltip="BUDDY — mirror fish collects">🐠BDY</div>
+    <div class="status-item" id="st-bomb"     data-tooltip="BOMB — blasts shark away">💣BOM</div>
+    <div class="status-item" id="st-decoy"    data-tooltip="DECOY — distracts shark">👁DCV</div>
+    <div class="status-item" id="st-star"     data-tooltip="STAR — invincibility">🌟INV</div>
+    <div class="status-item" id="st-hook"     data-tooltip="HOOK — grapple to treat">🪝HUK</div>
+    <div class="status-item" id="st-goop"     data-tooltip="GOOP — you are slowed!">🧪GOP</div>
+    <div class="status-item" id="st-crazy"    data-tooltip="CRAZY — treat flood, then death">🍄CRZ</div>
+    <div class="status-item" id="st-rainbow"  data-tooltip="RAINBOW — all buffs at once!">🌈RBW</div>
+    <div class="status-item" id="st-prompt"   data-tooltip="PROMPT — confuses shark">✍️PRM</div>
+    <div class="status-item" id="st-claude"   data-tooltip="THE CLAUDE — auto-collects all">🤖CLD</div>
+    <div class="status-item" id="st-bodyswap" data-tooltip="BODY SWAP — you are the shark">🎭BSW</div>
+    <div class="status-item" id="st-hell"     data-tooltip="HELL — treats drain score!">👹HEL</div>
+    <div class="status-item" id="st-combo"    data-tooltip="COMBO — collect fast for multiplier">⚡x1</div>
   </div>
 
   <!-- GAME CANVAS -->
@@ -76,6 +79,11 @@
     <button id="welcome-reopen-btn" class="welcome-reopen-btn" title="Show welcome notice">🐟</button>
     <h1>FISH FRENZY</h1>
     <p class="subtitle">EAT ALL TREATS &middot; ESCAPE THE SHARK</p>
+    <div class="difficulty-row">
+      <button id="diff-easy" class="diff-btn diff-easy">EASY</button>
+      <button id="diff-normal" class="diff-btn diff-normal">NORMAL</button>
+      <button id="diff-hard" class="diff-btn diff-hard">HARD</button>
+    </div>
     <div class="menu-buttons">
       <button id="start-btn" class="btn-primary">START</button>
       <button id="rules-btn" class="btn-secondary">RULES</button>
@@ -158,6 +166,31 @@
         <button id="toggle-smart-shark-btn" class="settings-toggle">OFF</button>
       </div>
       <p class="settings-hint">Shark predicts your movement. Gets sharper each level.</p>
+    </div>
+    <div class="settings-section">
+      <div class="settings-row">
+        <span class="settings-label">TUTORIAL LEVEL</span>
+        <button id="toggle-tutorial-btn" class="settings-toggle">OFF</button>
+      </div>
+      <p class="settings-hint">Guided hints on level 1 — controls, collecting and the shark.</p>
+    </div>
+    <div class="settings-section">
+      <div class="settings-row">
+        <span class="settings-label">MUSIC</span>
+        <div class="audio-ctrl-group">
+          <button id="toggle-music-btn" class="settings-toggle">ON</button>
+          <input type="range" id="music-vol-slider" class="vol-slider" min="0" max="100" value="70">
+          <span id="music-vol-pct" class="vol-pct">70%</span>
+        </div>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">SOUND FX</span>
+        <div class="audio-ctrl-group">
+          <button id="toggle-sfx-btn" class="settings-toggle">ON</button>
+          <input type="range" id="sfx-vol-slider" class="vol-slider" min="0" max="100" value="80">
+          <span id="sfx-vol-pct" class="vol-pct">80%</span>
+        </div>
+      </div>
     </div>
     <div class="settings-section">
       <div class="settings-label" style="margin-bottom:12px;">FISH SKIN</div>
@@ -282,20 +315,55 @@
 
   <!-- WELCOME POPUP (first visit) -->
   <div id="welcome-overlay" class="game-overlay hidden">
-    <h1 style="font-size:20px;color:#ff8833;">🐟 FISH FRENZY 🐟</h1>
-    <p class="subtitle" style="margin:12px 0 6px;">WELCOME, ANGLER!</p>
-    <p class="rules-text" style="max-width:360px;text-align:center;line-height:1.8;margin:8px auto;">
-      Swim around, collect treats, dodge the shark!<br>
-      Power-ups will help you... or hinder you! ☠️<br>
-      Check the RULES page for full details.
-    </p>
-    <p style="color:#44ddff;font-size:8px;margin:14px 0 6px;">🐟 "Fish tee hee hee!" 🐟</p>
-    <button id="welcome-rules-btn" class="btn-secondary" style="padding:8px 20px;font-size:8px;margin-bottom:10px;">READ THE RULES</button>
-    <label id="rules-ack-label" class="rules-ack-label" style="margin:4px 0;">
+    <div class="welcome-title">🐟 FISH FRENZY</div>
+    <div class="welcome-subtitle">WELCOME, ANGLER!</div>
+
+    <div class="welcome-info-grid">
+      <div class="welcome-info-row">
+        <span class="welcome-icon">🎯</span>
+        <div>
+          <div class="welcome-row-label">GOAL</div>
+          <div class="welcome-row-desc">Collect ALL treats before the timer runs out</div>
+        </div>
+      </div>
+      <div class="welcome-info-row">
+        <span class="welcome-icon">🕹️</span>
+        <div>
+          <div class="welcome-row-label">CONTROLS</div>
+          <div class="welcome-row-desc">Arrow Keys / WASD to swim</div>
+          <div class="welcome-row-desc welcome-row-touch">Tap &amp; drag anywhere on mobile</div>
+        </div>
+      </div>
+      <div class="welcome-info-row">
+        <span class="welcome-icon">🦈</span>
+        <div>
+          <div class="welcome-row-label">DANGER</div>
+          <div class="welcome-row-desc">The shark will chase you — if it catches you, it's game over!</div>
+        </div>
+      </div>
+      <div class="welcome-info-row">
+        <span class="welcome-icon">✨</span>
+        <div>
+          <div class="welcome-row-label">POWER-UPS</div>
+          <div class="welcome-row-desc">Glowing items give bonuses — but ☠️ and 🧪 are traps!</div>
+        </div>
+      </div>
+      <div class="welcome-info-row">
+        <span class="welcome-icon">⚡</span>
+        <div>
+          <div class="welcome-row-label">SCORING</div>
+          <div class="welcome-row-desc">10 pts per treat &middot; Collect quickly to build combos (up to x5)</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="welcome-quip">🐟 "Fish tee hee hee!" 🐟</p>
+    <button id="welcome-rules-btn" class="btn-secondary welcome-rules-btn">FULL RULES</button>
+    <label id="rules-ack-label" class="rules-ack-label">
       <input type="checkbox" id="rules-ack-checkbox">
       I UNDERSTAND THE RULES
     </label>
-    <button id="welcome-close-btn" class="btn-primary" style="padding:10px 28px;font-size:10px;margin-top:10px;" disabled>GOT IT!</button>
+    <button id="welcome-close-btn" class="btn-primary welcome-close-btn" disabled>LET'S GO!</button>
   </div>
 
   <!-- LOADING OVERLAY — Shown during Firebase operations -->

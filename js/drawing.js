@@ -1164,6 +1164,92 @@ export function drawHellAnim() {
   ctx.restore();
 }
 
+// ─── TUTORIAL HINTS ───
+const TUTORIAL_HINTS = [
+  { title: 'MOVE',    body: 'ARROW KEYS / WASD TO SWIM  \u2022  TAP & DRAG ON MOBILE' },
+  { title: 'COLLECT', body: 'GRAB ALL TREATS BEFORE THE TIMER RUNS OUT' },
+  { title: 'DANGER!', body: 'THE SHARK IS STARTING TO MOVE \u2014 IT WILL CHASE YOU!' },
+  { title: 'DODGE!',  body: "AVOID THE SHARK OR IT'S GAME OVER. GOOD LUCK!" },
+];
+
+export function drawTutorialHints() {
+  if (!S.tutorialActive) return;
+  const hint = TUTORIAL_HINTS[S.tutorialStep];
+  if (!hint) return;
+
+  const elapsed = (Date.now() - S.tutorialStepTime) / 1000;
+  const stepDuration = 3.0;
+  const fadeIn = Math.min(1, elapsed / 0.3);
+  const fadeOut = S.tutorialStep === 0 ? 1 : Math.max(0, 1 - (elapsed - (stepDuration - 0.4)) / 0.4);
+  const alpha = fadeIn * (elapsed < stepDuration - 0.4 ? 1 : fadeOut);
+  if (alpha <= 0) return;
+
+  const bw = 400, bh = 58, bx = W / 2 - bw / 2, by = H - bh - 14;
+  const stepDots = TUTORIAL_HINTS.map((_, i) => i === S.tutorialStep ? '\u25cf' : '\u25cb').join('  ');
+
+  ctx.save();
+  ctx.globalAlpha = alpha * 0.95;
+
+  ctx.fillStyle = 'rgba(2,6,18,0.94)';
+  ctx.fillRect(bx, by, bw, bh);
+  ctx.strokeStyle = '#44ddff';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  ctx.font = '8px "Press Start 2P", monospace';
+  ctx.fillStyle = '#44ddff';
+  ctx.shadowColor = '#44ddff';
+  ctx.shadowBlur = 10;
+  ctx.fillText(hint.title, W / 2, by + 16);
+
+  ctx.font = '6px "Press Start 2P", monospace';
+  ctx.fillStyle = '#7799bb';
+  ctx.shadowBlur = 0;
+  ctx.fillText(hint.body, W / 2, by + 34);
+
+  ctx.fillStyle = '#335566';
+  ctx.fillText(stepDots, W / 2, by + 50);
+
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+// ─── LEVEL BANNER ───
+export function drawLevelBanner() {
+  if (!S.levelBanner) return;
+  const elapsed = (Date.now() - S.levelBanner.startTime) / 1000;
+  if (elapsed > 1.8) { S.levelBanner = null; return; }
+
+  const alpha = elapsed < 0.35 ? elapsed / 0.35
+              : elapsed < 1.2  ? 1
+              : Math.max(0, 1 - (elapsed - 1.2) / 0.6);
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  ctx.font = 'bold 26px "Press Start 2P", monospace';
+  ctx.shadowColor = '#44ddff';
+  ctx.shadowBlur = 30;
+  ctx.fillStyle = '#44ddff';
+  ctx.fillText(S.levelBanner.text, W / 2, H / 2 - (S.levelBanner.sub ? 10 : 0));
+
+  if (S.levelBanner.sub) {
+    ctx.font = '9px "Press Start 2P", monospace';
+    ctx.fillStyle = '#88bbdd';
+    ctx.shadowBlur = 10;
+    ctx.fillText(S.levelBanner.sub, W / 2, H / 2 + 20);
+  }
+
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
 // ─── CARD MINI-GAME ───
 export function drawCardAnim() {
   if (!S.cardAnim) return;

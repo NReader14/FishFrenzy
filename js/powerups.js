@@ -18,6 +18,8 @@ import {
 } from './constants.js';
 import { fetchGameConfig } from '../firebase-config.js';
 import { gameVars } from './game-vars.js';
+import { sfxPowerup } from './audio.js';
+import { SKINS } from './skins.js';
 
 // ─── HELPERS ───
 export function clearTO(t) { if (t) clearTimeout(t); return null; }
@@ -604,6 +606,12 @@ const CARD_POOL = [
   { label: 'ICE SHARK',   emoji: '❄', good: true,  fn: () => activateIce() },
   { label: 'TIME FREEZE', emoji: '⏳', good: true,  fn: () => activateHourglass() },
   { label: 'BUDDY FISH',  emoji: '🐠', good: true,  fn: () => activateBuddy() },
+  { label: 'RANDOM OUTFIT', emoji: '👕', good: true, fn: () => {
+    let next;
+    do { next = Math.floor(Math.random() * SKINS.length); } while (next === S.settings.skin && SKINS.length > 1);
+    S.settings.skin = next;
+    S.scorePopups.push({ x: S.fish.x, y: S.fish.y - 34, pts: `${SKINS[next].name.toUpperCase()} OUTFIT!`, life: 1.8, decay: 0.015 });
+  } },
   // Bad
   { label: '-25 PTS',     emoji: '💸', good: false, fn: () => { S.score = Math.max(0, S.score - 25); scoreEl.textContent = S.score; } },
   { label: '-7 SECONDS',  emoji: '⌛', good: false, fn: () => { S.timeLeft = Math.max(1, S.timeLeft - 7); timerEl.textContent = S.timeLeft; } },
@@ -755,6 +763,7 @@ export function updatePWItems() {
 
     if (dist(item, S.fish) < 26) {
       spawnParticles(item.x, item.y, pwConfig[k].glow, 12);
+      sfxPowerup();
       pwConfig[k].fn();
       S.pwItems[k] = null;
       continue;

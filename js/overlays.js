@@ -238,6 +238,8 @@ export function showNameEntry(finalScore, finalLevel, msg) {
     const idx = await saveHighScore(name, finalScore, finalLevel);
     hideLoading();
     const scores = await fetchHighScores();
+    const hiEl = document.getElementById('global-hi-score');
+    if (hiEl && scores.length > 0) hiEl.textContent = scores[0].score.toLocaleString();
     endScreenOverlay.classList.remove('hidden');
     endScreenOverlay.innerHTML = `
       <div class="result lose">GAME OVER</div>

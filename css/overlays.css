@@ -154,6 +154,114 @@
 }
 
 
+/* ─── DIFFICULTY SELECT ─── */
+.difficulty-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.diff-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  padding: 6px 12px;
+  border: 2px solid #334455;
+  background: transparent;
+  color: #446688;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: border-color .15s, color .15s, box-shadow .15s;
+}
+
+.diff-btn:hover {
+  border-color: #557799;
+  color: #88aabb;
+}
+
+.diff-btn.diff-easy.diff-active  { border-color: #44ee88; color: #44ee88; box-shadow: 0 0 8px rgba(68,238,136,.25); }
+.diff-btn.diff-normal.diff-active { border-color: #44ddff; color: #44ddff; box-shadow: 0 0 8px rgba(68,221,255,.25); }
+.diff-btn.diff-hard.diff-active   { border-color: #ff5566; color: #ff5566; box-shadow: 0 0 8px rgba(255,85,102,.25); }
+
+
+/* ─── WELCOME OVERLAY ─── */
+.welcome-title {
+  font-size: 20px;
+  color: #ff8833;
+  text-shadow: 0 0 18px rgba(255,136,51,.5), 2px 2px 0 #441100;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+
+.welcome-subtitle {
+  font-size: 8px;
+  color: #5588aa;
+  letter-spacing: 3px;
+  margin-bottom: 20px;
+}
+
+.welcome-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 380px;
+  margin-bottom: 16px;
+}
+
+.welcome-info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(68,221,255,.04);
+  border: 1px solid #1a2a3a;
+  border-radius: 4px;
+  padding: 8px 12px;
+}
+
+.welcome-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  width: 24px;
+  text-align: center;
+}
+
+.welcome-row-label {
+  font-size: 8px;
+  color: #ffdd44;
+  letter-spacing: 1.5px;
+  margin-bottom: 3px;
+  text-shadow: 0 0 6px rgba(255,221,68,.3);
+}
+
+.welcome-row-desc {
+  font-size: 7px;
+  color: #7799bb;
+  letter-spacing: .5px;
+  line-height: 2;
+}
+
+.welcome-row-touch {
+  color: #446688;
+}
+
+.welcome-quip {
+  font-size: 8px;
+  color: #44ddff;
+  letter-spacing: 1px;
+  margin: 2px 0 14px;
+  text-shadow: 0 0 8px rgba(68,221,255,.3);
+}
+
+.welcome-rules-btn {
+  margin-bottom: 14px;
+}
+
+.welcome-close-btn {
+  margin-top: 10px;
+}
+
+
 /* ─── RULES PAGE ─── */
 .rules-container {
   max-width: 580px;
@@ -414,12 +522,12 @@
   color: #44ddff;
   text-shadow: 0 0 16px rgba(68,221,255,.4), 2px 2px 0 #113355;
   letter-spacing: 3px;
-  margin-bottom: 28px;
+  margin-bottom: 16px;
 }
 
 .settings-section {
   width: 320px;
-  margin-bottom: 24px;
+  margin-bottom: 14px;
 }
 
 .settings-row {
@@ -427,7 +535,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .settings-label {
@@ -439,14 +547,14 @@
 .settings-toggle {
   font-family: 'Press Start 2P', monospace;
   font-size: 9px;
-  padding: 6px 16px;
+  padding: 5px 14px;
   border: 2px solid #446688;
   background: transparent;
   color: #446688;
   cursor: pointer;
   letter-spacing: 1px;
   transition: all .15s;
-  min-width: 64px;
+  min-width: 58px;
 }
 
 .settings-toggle:hover {
@@ -458,7 +566,67 @@
   font-size: 7px;
   color: #334455;
   letter-spacing: .5px;
-  line-height: 2;
+  line-height: 1.7;
+}
+
+.audio-ctrl-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.vol-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 90px;
+  height: 18px;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.vol-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  background: #1a2a44;
+  border-radius: 2px;
+}
+
+.vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: #44ddff;
+  margin-top: -4px;
+  box-shadow: 0 0 6px rgba(68,221,255,0.5);
+  cursor: pointer;
+}
+
+.vol-slider::-moz-range-track {
+  height: 4px;
+  background: #1a2a44;
+  border-radius: 2px;
+}
+
+.vol-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: none;
+  background: #44ddff;
+  box-shadow: 0 0 6px rgba(68,221,255,0.5);
+  cursor: pointer;
+}
+
+.vol-pct {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: #ccddee;
+  text-align: right;
+  white-space: nowrap;
+  min-width: 36px;
 }
 
 /* ─── SKIN PICKER ─── */

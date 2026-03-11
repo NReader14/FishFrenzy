@@ -70,3 +70,35 @@
   opacity: 1;
   transform: translate(-50%, -50%) scale(1);
 }
+
+
+/* ─── STATUS BAR TOOLTIPS ─── */
+.status-item[data-tooltip] {
+  position: relative;
+}
+
+.status-item[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(4, 8, 20, 0.97);
+  border: 1px solid #334455;
+  color: #88aabb;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 5px;
+  padding: 4px 7px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s;
+  z-index: 200;
+  letter-spacing: 0.5px;
+  line-height: 1.6;
+  border-radius: 2px;
+}
+
+.status-item[data-tooltip]:hover::after {
+  opacity: 1;
+}
