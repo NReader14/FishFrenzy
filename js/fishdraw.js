@@ -36,8 +36,9 @@ export function openFishDraw() {
   refreshAllAccPreviews();
   updatePreview();
   // Reset name selection
-  document.getElementById('fd-names-grid')?.querySelectorAll('.fd-name-btn')
-    .forEach((b, i) => b.classList.toggle('selected', i === 0));
+  const sel = document.getElementById('fd-name-select');
+  if (sel) sel.value = NAMES[0];
+  state.name = NAMES[0];
 }
 
 // ─── Build overlay HTML ────────────────────────────────────────
@@ -46,7 +47,7 @@ function buildOverlay(ov) {
   ov.innerHTML = `
     <div class="fishdraw-title">DESIGN YOUR FISH</div>
     <div class="fishdraw-preview-wrap">
-      <canvas id="fishdraw-preview" width="160" height="100"></canvas>
+      <canvas id="fishdraw-preview" width="240" height="150"></canvas>
     </div>
     <div class="fishdraw-section-label">COLOURS</div>
     <div class="fishdraw-colours">
@@ -73,7 +74,7 @@ function buildOverlay(ov) {
     <div id="fd-panel-mask"   class="fishdraw-acc-grid hidden"></div>
     <div id="fd-panel-outfit" class="fishdraw-acc-grid hidden"></div>
     <div class="fishdraw-section-label">PICK A NAME</div>
-    <div class="fishdraw-names-grid" id="fd-names-grid"></div>
+    <select id="fd-name-select" class="fd-name-select"></select>
     <div class="fishdraw-btn-row">
       <button id="fd-save-btn" class="btn-primary">SAVE SKIN</button>
       <button id="fd-cancel-btn" class="btn-secondary">BACK</button>
@@ -82,13 +83,15 @@ function buildOverlay(ov) {
   `;
 
   buildAllAccGrids();
-  buildNamesGrid();
+  buildNameDropdown();
 
+  let accRefreshTimer = null;
   ['c1', 'c2', 'c3'].forEach(key => {
     document.getElementById(`fd-${key}`)?.addEventListener('input', e => {
       state[key] = e.target.value;
       updatePreview();
-      refreshAllAccPreviews();
+      clearTimeout(accRefreshTimer);
+      accRefreshTimer = setTimeout(refreshAllAccPreviews, 80);
     });
   });
 
@@ -147,21 +150,18 @@ function buildAllAccGrids() {
   });
 }
 
-function buildNamesGrid() {
-  const grid = document.getElementById('fd-names-grid');
-  if (!grid) return;
-  grid.innerHTML = '';
-  NAMES.forEach((name, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'fd-name-btn' + (i === 0 ? ' selected' : '');
-    btn.textContent = name;
-    btn.addEventListener('click', () => {
-      state.name = name;
-      grid.querySelectorAll('.fd-name-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-    });
-    grid.appendChild(btn);
+function buildNameDropdown() {
+  const sel = document.getElementById('fd-name-select');
+  if (!sel) return;
+  sel.innerHTML = '';
+  NAMES.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    sel.appendChild(opt);
   });
+  sel.value = NAMES[0];
+  sel.addEventListener('change', () => { state.name = sel.value; });
 }
 
 // ─── Preview ───────────────────────────────────────────────────
@@ -186,7 +186,7 @@ function syncColourInputs() {
 function updatePreview() {
   const cvs = document.getElementById('fishdraw-preview');
   if (!cvs) return;
-  drawSkinPreview(cvs.getContext('2d'), { c1: state.c1, c2: state.c2, c3: state.c3, extras: getExtrasFn() }, 160, 100);
+  drawSkinPreview(cvs.getContext('2d'), { c1: state.c1, c2: state.c2, c3: state.c3, extras: getExtrasFn() }, 240, 150);
 }
 
 function refreshAllAccPreviews() {

@@ -908,10 +908,10 @@
   background: #0a1628;
   border: 2px solid #1a3a5a;
   border-radius: 4px;
-  padding: 8px 16px;
-  margin-bottom: 10px;
+  padding: 12px 20px;
+  margin-bottom: 12px;
 }
-#fishdraw-preview { display: block; image-rendering: pixelated; }
+#fishdraw-preview { display: block; image-rendering: pixelated; width: 300px; height: auto; }
 .fishdraw-section-label {
   font-size: 7px;
   color: #5588aa;
@@ -933,35 +933,34 @@
 .fishdraw-acc-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 5px;
-  margin-bottom: 6px;
+  gap: 6px;
+  margin-bottom: 8px;
   width: 100%;
-  max-width: 370px;
+  max-width: 460px;
 }
 .fd-acc-btn {
   display: flex; flex-direction: column; align-items: center;
   background: #0a1628; border: 2px solid #1a3a5a;
-  border-radius: 3px; padding: 3px; cursor: pointer;
+  border-radius: 3px; padding: 4px; cursor: pointer;
   width: 100%;
   transition: border-color .12s, background .12s;
 }
 .fd-acc-btn canvas { image-rendering: pixelated; width: 100%; height: auto; }
 .fd-acc-btn:hover { border-color: #2a5a8a; background: #0d1e3a; }
 .fd-acc-btn.selected { border-color: #44ddff; background: #0d2a3a; box-shadow: 0 0 8px rgba(68,221,255,.25); }
-.fd-acc-label { font-size: 5px; color: #5588aa; margin-top: 2px; }
+.fd-acc-label { font-size: 9px; color: #5588aa; margin-top: 3px; }
 .fd-acc-btn.selected .fd-acc-label { color: #44ddff; }
-.fishdraw-names-grid {
-  display: flex; flex-wrap: wrap; gap: 5px; justify-content: center;
-  margin-bottom: 12px; max-width: 380px;
+.fd-name-select {
+  font-family: inherit; font-size: 11px;
+  background: #0a1628; color: #44ddff;
+  border: 1px solid #1a3a5a; border-radius: 3px;
+  padding: 6px 10px; width: 100%; max-width: 460px;
+  margin-bottom: 12px; cursor: pointer;
+  appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2344ddff'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
 }
-.fd-name-btn {
-  font-size: 8px; color: #7799bb;
-  background: #0a1628; border: 1px solid #1a3a5a;
-  border-radius: 2px; padding: 5px 7px; cursor: pointer;
-  transition: border-color .12s, color .12s;
-}
-.fd-name-btn:hover { border-color: #2a5a8a; color: #aabbcc; }
-.fd-name-btn.selected { border-color: #44ddff; color: #44ddff; background: #0d2a3a; }
+.fd-name-select:focus { outline: none; border-color: #44ddff; }
 .fishdraw-btn-row { display: flex; gap: 10px; margin-bottom: 8px; }
 .fishdraw-hint { font-size: 5px; color: #3a5a7a; text-align: center; line-height: 1.8; max-width: 320px; }
 
