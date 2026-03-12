@@ -222,9 +222,16 @@ function drawFez(c) {
 }
 
 function drawAntlers(c) {
+  // Fish faces right — head is at positive x, so antlers rise from above x≈5–14
   c.fillStyle = '#885533';
-  c.fillRect(-16,-28, 4,16);  c.fillRect(-16,-28,10, 4);  c.fillRect(-10,-24, 4, 4);
-  c.fillRect( 14,-28, 4,16);  c.fillRect(  8,-28,10, 4);  c.fillRect(  8,-24, 4, 4);
+  // Back antler (x≈5)
+  c.fillRect(4, -22, 4, 14);    // main stem up from head
+  c.fillRect(0, -20, 5, 3);     // branch pointing toward tail
+  c.fillRect(4, -16, 6, 3);     // branch pointing forward
+  // Front antler (x≈11)
+  c.fillRect(11,-22, 4, 14);    // main stem
+  c.fillRect(11,-20, 7, 3);     // branch pointing forward (face side)
+  c.fillRect( 8,-16, 6, 3);     // branch pointing toward tail
 }
 
 function drawTopHat(c) {
@@ -340,18 +347,26 @@ function drawSkiMask(c) {
 // ─── Additional outfit draw functions ─────────────────────────
 
 function drawTuxedo(c) {
-  c.fillStyle = '#eeeeff';
-  c.fillRect(-3, -7, 5, 14);   // white shirt
+  // Dark jacket — tail half (x=-14 to x=0), full torso height (y=-8 to y=8)
   c.fillStyle = '#111122';
-  c.fillRect(-14, -8, 8, 10);  // left lapel
-  c.fillRect(  3, -8, 8, 10);  // right lapel
+  c.fillRect(-14, -8, 14, 16);
+  // White shirt strip down the centre
+  c.fillStyle = '#eeeeff';
+  c.fillRect(-12, -6, 10, 12);
+  // Lapels at the opening edge forming a V
+  c.fillStyle = '#111122';
+  c.fillRect(-2, -6, 3, 4);    // top lapel flap
+  c.fillRect(-2,  2, 3, 4);    // bottom lapel flap
+  // Bow tie at the jacket opening
   c.fillStyle = '#dd2244';
-  c.fillRect(-3, -5, 3, 4);    // left bow wing
-  c.fillRect( 2, -5, 3, 4);    // right bow wing
-  c.fillRect(-1, -4, 4, 2);    // bow centre
-  c.fillStyle = '#aabbcc';
-  c.fillRect(-1, -3, 2, 2);    // button 1
-  c.fillRect(-1,  1, 2, 2);    // button 2
+  c.fillRect(-4, -1, 3, 2);    // left wing
+  c.fillRect(-1, -1, 3, 2);    // right wing
+  c.fillRect(-3, -1, 3, 2);    // centre knot
+  // Shirt buttons
+  c.fillStyle = '#9aabbb';
+  c.fillRect(-11, -2, 2, 2);
+  c.fillRect(-8,  -2, 2, 2);
+  c.fillRect(-5,  -2, 2, 2);
 }
 
 function drawStripes(c) {
@@ -378,11 +393,16 @@ function drawFlames(c) {
 }
 
 function drawCamo(c) {
-  c.fillStyle = 'rgba(60,80,40,0.6)';
-  c.fillRect(-14,-8, 8,6);  c.fillRect(-2,-8,10,4);  c.fillRect( 8,-4, 6,6);
-  c.fillRect(-12,-2, 6,6);  c.fillRect( 0,-2, 8,6);
-  c.fillStyle = 'rgba(80,60,30,0.5)';
-  c.fillRect(-8,-6, 6,5);  c.fillRect( 4,-6, 6,4);  c.fillRect(-10,0, 5,4);  c.fillRect(2,2, 6,4);
+  // Green base covering tail half, full torso height
+  c.fillStyle = '#4a5e30';
+  c.fillRect(-14, -8, 14, 16);
+  // Dark camo patches over the base
+  c.fillStyle = 'rgba(30,45,15,0.8)';
+  c.fillRect(-14,-8, 8,6);  c.fillRect(-6,-4,7,5);  c.fillRect(-12,2,6,6);
+  c.fillStyle = 'rgba(80,70,30,0.7)';
+  c.fillRect(-11,-3, 5,5);  c.fillRect(-4, 1, 6,5);  c.fillRect(-13,5,5,4);
+  c.fillStyle = 'rgba(60,80,40,0.5)';
+  c.fillRect(-9,-7, 4,4);  c.fillRect(-3,-6,5,4);  c.fillRect(-8, 4,5,4);
 }
 
 function drawCheckerboard(c) {
@@ -399,11 +419,59 @@ function drawRainbowBody(c) {
 }
 
 function drawScalesPattern(c) {
-  c.fillStyle = 'rgba(200,220,255,0.25)';
-  for (let row = 0; row < 3; row++) {
-    const ox = row % 2 === 0 ? 0 : 4;
-    for (let col = 0; col < 6; col++) { c.fillRect(-14 + col*5 + ox, -6 + row*5, 4,3); }
-  }
+  // Grey shark body — full coverage
+  c.fillStyle = '#6688aa';
+  c.fillRect(-14, -8, 28, 16);
+  // White belly
+  c.fillStyle = '#ddeeff';
+  c.fillRect(-14,  2, 28, 6);
+  // Dark dorsal stripe
+  c.fillStyle = '#445566';
+  c.fillRect(-14, -8, 28, 3);
+  // Dorsal fin
+  c.fillStyle = '#6688aa';
+  c.fillRect(-4, -14, 6, 6);
+  c.fillRect(-3, -16, 4, 2);
+  c.fillRect(-2, -18, 2, 2);
+  // Gill slits
+  c.fillStyle = '#334455';
+  c.fillRect(2, -6, 2, 8);
+  c.fillRect(5, -5, 2, 7);
+  // Eye hole — clear circle with dark rim so fish eye shows through
+  c.fillStyle = '#223344';
+  c.fillRect(7, -7, 8, 2);     // top rim
+  c.fillRect(7,  0, 8, 2);     // bottom rim
+  c.fillRect(7, -7, 2, 9);     // left rim
+  c.fillRect(13,-7, 2, 9);     // right rim
+  // clear the inside of the eye hole (paint skin colour back = transparent window)
+  c.clearRect(9, -5, 4, 5);
+
+  // ── BIG SHARK MOUTH ──────────────────────────────────────────
+  // Deep red throat / mouth cavity
+  c.fillStyle = '#aa1133';
+  c.fillRect(8,  2, 6, 6);
+  // Darker inner throat
+  c.fillStyle = '#660022';
+  c.fillRect(10, 4, 4, 4);
+  // Upper jaw (grey, above mouth)
+  c.fillStyle = '#6688aa';
+  c.fillRect(8,  1, 6, 2);
+  // Lower jaw (grey, below mouth)
+  c.fillStyle = '#6688aa';
+  c.fillRect(8,  7, 6, 2);
+  // Upper teeth — jagged row pointing down into mouth
+  c.fillStyle = '#eeeeff';
+  c.fillRect( 8,  2, 2, 3);   // tooth U1
+  c.fillRect(11,  2, 2, 4);   // tooth U2 (longer, centre)
+  c.fillRect(13,  2, 2, 2);   // tooth U3
+  // Lower teeth — jagged row pointing up into mouth
+  c.fillStyle = '#eeeeff';
+  c.fillRect( 9,  5, 2, 3);   // tooth L1
+  c.fillRect(12,  4, 2, 4);   // tooth L2 (longer)
+  // Dark gaps between upper teeth (shadow effect)
+  c.fillStyle = '#660022';
+  c.fillRect(10,  2, 1, 2);   // gap between U1 and U2
+  c.fillRect(13,  2, 1, 1);   // gap between U2 and U3
 }
 
 function drawIceFrost(c) {
@@ -415,12 +483,16 @@ function drawIceFrost(c) {
 }
 
 function drawHawaiian(c) {
-  c.fillStyle = 'rgba(255,80,120,0.5)';
-  c.fillRect(-12,-4,6,6);  c.fillRect(-2,-6,6,6);  c.fillRect(6,-3,6,6);
-  c.fillStyle = 'rgba(255,200,0,0.6)';
-  c.fillRect(-10,-2,3,3);  c.fillRect(0,-4,3,3);  c.fillRect(8,-1,3,3);
-  c.fillStyle = 'rgba(0,180,100,0.5)';
-  c.fillRect(-14,-8,4,4);  c.fillRect(-6,2,4,4);  c.fillRect(4,-7,4,3);  c.fillRect(10,3,4,3);
+  // Pink base t-shirt covering tail half, full torso height
+  c.fillStyle = '#e8507a';
+  c.fillRect(-14, -8, 14, 16);
+  // Floral pattern patches
+  c.fillStyle = 'rgba(255,80,120,0.8)';
+  c.fillRect(-12,-4,6,6);  c.fillRect(-5,-6,5,5);
+  c.fillStyle = 'rgba(255,200,0,0.9)';
+  c.fillRect(-10,-2,3,3);  c.fillRect(-3,-5,3,3);  c.fillRect(-8,3,3,3);
+  c.fillStyle = 'rgba(0,200,100,0.8)';
+  c.fillRect(-13,-7,4,4);  c.fillRect(-6,2,4,4);  c.fillRect(-2,-2,4,4);
 }
 
 function drawPlaid(c) {
@@ -434,21 +506,27 @@ function drawPlaid(c) {
 }
 
 function drawTie(c) {
+  // Knot sits at the chin/neck area of the fish (head is right/+x)
   c.fillStyle = '#cc2222';
-  c.fillRect(-1,-8,5,4);
-  c.fillRect( 0,-4,4,10);
-  c.fillRect(-2, 4,8, 4);
+  c.fillRect(5,  0, 6, 3);     // knot
+  c.fillRect(6,  3, 4, 3);     // body narrows
+  c.fillRect(4,  6, 8, 2);     // wide tip (along belly edge)
   c.fillStyle = '#881111';
-  c.fillRect(1,-6,2,2);
+  c.fillRect(6,  1, 2, 2);     // knot shadow
 }
 
 function drawChain(c) {
+  // Belly chain running horizontally along the fish
   c.fillStyle = '#ffcc00';
-  for (let x = -12; x < 12; x += 6) {
-    c.fillRect(x,-2,5,2);  c.fillRect(x+5,-4,2,6);
+  for (let x = -12; x < 10; x += 5) {
+    c.fillRect(x,  3, 4, 2);   // horizontal link
+    c.fillRect(x+4,1, 2, 6);   // vertical connector
   }
+  // Pendant hanging from belly centre
   c.fillStyle = '#ffee88';
-  c.fillRect(-2,-6,6,6);  c.fillRect(0,-4,2,2);
+  c.fillRect(-2, 5, 6, 4);
+  c.fillStyle = '#ffcc00';
+  c.fillRect(-1, 6, 4, 2);     // shine
 }
 
 // ─── Accessory registry — organised by tab ────────────────────
@@ -506,7 +584,7 @@ export const ACCESSORY_TABS = [
       { key: 'camo',      label: 'CAMO',    fn: drawCamo },
       { key: 'checker',   label: 'CHECKER', fn: drawCheckerboard },
       { key: 'rainbow',   label: 'RAINBOW', fn: drawRainbowBody },
-      { key: 'scales',    label: 'SCALES',  fn: drawScalesPattern },
+      { key: 'scales',    label: 'SHARK',   fn: drawScalesPattern },
       { key: 'frost',     label: 'FROST',   fn: drawIceFrost },
       { key: 'hawaiian',  label: 'HAWAIIAN',fn: drawHawaiian },
       { key: 'plaid',     label: 'PLAID',   fn: drawPlaid },

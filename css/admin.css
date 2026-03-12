@@ -92,11 +92,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: 440px;
-  width: 100%;
+  max-width: 760px;
+  width: 96%;
   max-height: 90%;
   overflow-y: auto;
-  padding: 12px;
+  padding: 16px 20px;
 }
 
 .admin-section {
@@ -132,7 +132,7 @@
 /* Variable editor grid */
 .admin-var-grid {
   display: grid;
-  grid-template-columns: 1fr 56px 80px;
+  grid-template-columns: 1fr 70px 100px;
   gap: 6px 10px;
   align-items: center;
   max-height: 320px;

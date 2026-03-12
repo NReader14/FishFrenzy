@@ -447,12 +447,23 @@ function buildGameVarEditor() {
   });
 }
 
-function showPanelMsg(msg, isError) {
+function showPanelMsg(msg, isError, btn) {
   const el = document.getElementById('admin-panel-msg');
   el.textContent = msg;
   el.style.color = isError ? '#ee5566' : '#44ee88';
   el.classList.remove('hidden');
   setTimeout(() => el.classList.add('hidden'), 3000);
+
+  if (btn) {
+    const icon = document.createElement('span');
+    icon.textContent = isError ? ' ✗' : ' ✓';
+    icon.style.color = isError ? '#ee5566' : '#44ee88';
+    icon.style.fontWeight = 'bold';
+    icon.className = 'admin-save-icon';
+    btn.querySelectorAll('.admin-save-icon').forEach(e => e.remove());
+    btn.appendChild(icon);
+    setTimeout(() => icon.remove(), 3000);
+  }
 }
 
 export function openAdminPanel(currentMaint) {
@@ -512,8 +523,8 @@ export function setupAdminEvents() {
   });
 
   // Save config
-  document.getElementById('admin-save-config-btn')?.addEventListener('click', async () => {
-    if (!S.adminCredentials) { showPanelMsg('NOT LOGGED IN', true); return; }
+  document.getElementById('admin-save-config-btn')?.addEventListener('click', async function() {
+    if (!S.adminCredentials) { showPanelMsg('NOT LOGGED IN', true, this); return; }
     const grid = document.getElementById('admin-var-editor');
     const config = {};
     grid.querySelectorAll('.admin-var-input').forEach(inp => {
@@ -526,9 +537,9 @@ export function setupAdminEvents() {
       for (const [key, rarity] of Object.entries(config)) {
         if (pwConfig[key]) pwConfig[key].rarity = rarity;
       }
-      showPanelMsg('CONFIG SAVED & APPLIED', false);
+      showPanelMsg('CONFIG SAVED & APPLIED', false, this);
     } catch (err) {
-      showPanelMsg('SAVE FAILED: ' + (err.message || 'UNKNOWN'), true);
+      showPanelMsg('SAVE FAILED: ' + (err.message || 'UNKNOWN'), true, this);
     }
   });
 
@@ -542,8 +553,8 @@ export function setupAdminEvents() {
   });
 
   // Save game vars
-  document.getElementById('admin-save-gamevars-btn')?.addEventListener('click', async () => {
-    if (!S.adminCredentials) { showPanelMsg('NOT LOGGED IN', true); return; }
+  document.getElementById('admin-save-gamevars-btn')?.addEventListener('click', async function() {
+    if (!S.adminCredentials) { showPanelMsg('NOT LOGGED IN', true, this); return; }
     const grid = document.getElementById('admin-gamevar-editor');
     const config = {};
     grid.querySelectorAll('.admin-gv-slider').forEach(inp => {
@@ -556,9 +567,9 @@ export function setupAdminEvents() {
     try {
       await saveGameConfig({ gameVars: config }, S.adminCredentials.email, S.adminCredentials.password);
       for (const [key, val] of Object.entries(config)) gameVars[key] = val;
-      showPanelMsg('GAME VARS SAVED & APPLIED', false);
+      showPanelMsg('GAME VARS SAVED & APPLIED', false, this);
     } catch (err) {
-      showPanelMsg('SAVE FAILED: ' + (err.message || 'UNKNOWN'), true);
+      showPanelMsg('SAVE FAILED: ' + (err.message || 'UNKNOWN'), true, this);
     }
   });
 

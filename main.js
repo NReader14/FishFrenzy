@@ -456,10 +456,14 @@ function updateFish(dt = 1) {
 
   const s = S.fish.speed + S.accelBonus;
 
-  if (moveX < 0) { S.fish.vx -= s * 0.3; S.fish.dir = -1; }
-  if (moveX > 0) { S.fish.vx += s * 0.3; S.fish.dir = 1; }
-  if (moveY < 0) S.fish.vy -= s * 0.3;
-  if (moveY > 0) S.fish.vy += s * 0.3;
+  const inputLen = Math.hypot(moveX, moveY);
+  const nx = inputLen > 0 ? moveX / inputLen : 0;
+  const ny = inputLen > 0 ? moveY / inputLen : 0;
+
+  if (nx < 0) S.fish.dir = -1;
+  if (nx > 0) S.fish.dir = 1;
+  S.fish.vx += nx * s * 0.3;
+  S.fish.vy += ny * s * 0.3;
 
   S.fish.vx *= S.fish.friction;
   S.fish.vy *= S.fish.friction;
