@@ -9,6 +9,7 @@ import { spawnParticles } from './particles.js';
 import {
   FRENZY_DURATION, ICE_DURATION, GHOST_DURATION, HOURGLASS_DURATION,
   BUDDY_DURATION, BOMB_DURATION, CRAZY_DURATION, GOOP_DURATION,
+  DECOY_DURATION, STAR_DURATION,
   CRAZY_ITEM_LIFETIME, CLAUDE_ITEM_LIFETIME,
   PROMPT_FREEZE_DURATION, PROMPT_WANDER_DURATION, BODY_SWAP_DURATION, RAINBOW_DURATION,
   HELL_DURATION,
@@ -34,10 +35,12 @@ export function setEndGame(fn) { _endGame = fn; }
 let _spawnTreat = null;
 export function setSpawnTreat(fn) { _spawnTreat = fn; }
 
+// Tracked timeouts for Claude's typewriter effect (cleared on game end)
+let _claudeTypewriterTOs = [];
+
 // ─── FRENZY ───
 function activateFrenzy() {
   S.frenzyActive = true;
-  S.frenzyTimer = Date.now();
   S.fish.speed = gameVars.fishSpeed + FRENZY_SPEED_BOOST;
   stOn('frenzy', 's-frenzy');
   S.frenzyTO = clearTO(S.frenzyTO);
@@ -46,7 +49,8 @@ function activateFrenzy() {
 
 function deactivateFrenzy() {
   S.frenzyActive = false;
-  S.fish.speed = gameVars.fishSpeed;
+  // Don't reset speed while goop is still active — goop will restore it
+  if (!S.goopActive) S.fish.speed = gameVars.fishSpeed;
   stOff('frenzy', 's-frenzy');
   S.frenzyTO = null;
 }
@@ -105,7 +109,8 @@ function activateMagnet() {
   S.magnetActive = true;
   stOn('magnet', 's-magnet');
   S.scorePopups.push({ x: S.fish.x, y: S.fish.y - 20, pts: 'MAGNET!', life: 1, decay: 0.025 });
-  setTimeout(() => { S.magnetActive = false; stOff('magnet', 's-magnet'); }, 1500);
+  S.magnetTO = clearTO(S.magnetTO);
+  S.magnetTO = setTimeout(() => { S.magnetActive = false; stOff('magnet', 's-magnet'); S.magnetTO = null; }, 1500);
 }
 
 // ─── GHOST ───
@@ -242,7 +247,7 @@ function activateDecoy() {
   S.scorePopups.push({ x: S.fish.x, y: S.fish.y - 20, pts: 'DECOY!', life: 1, decay: 0.03 });
   spawnParticles(S.decoyFish.x, S.decoyFish.y, '#ffaa44', 12);
   S.decoyTO = clearTO(S.decoyTO);
-  S.decoyTO = setTimeout(deactivateDecoy, 4000);
+  S.decoyTO = setTimeout(deactivateDecoy, DECOY_DURATION);
 }
 
 export function deactivateDecoy() {
@@ -272,7 +277,7 @@ function activateStar() {
   S.scorePopups.push({ x: S.fish.x, y: S.fish.y - 20, pts: 'STAR!', life: 1, decay: 0.03 });
   spawnParticles(S.fish.x, S.fish.y, '#ffee44', 20);
   S.starTO = clearTO(S.starTO);
-  S.starTO = setTimeout(deactivateStar, 3000);
+  S.starTO = setTimeout(deactivateStar, STAR_DURATION);
 }
 
 function deactivateStar() {
@@ -379,6 +384,14 @@ function activateRainbow() {
     S.rainbowActive = false;
     stOff('rainbow', 's-rainbow');
     S.rainbowTO = null;
+    // End all child effects that rainbow spawned
+    if (S.frenzyActive)    { S.frenzyTO    = clearTO(S.frenzyTO);    deactivateFrenzy(); }
+    if (S.iceActive)       { S.iceTO       = clearTO(S.iceTO);       deactivateIce(); }
+    if (S.hourglassActive) { S.hourglassTO = clearTO(S.hourglassTO); deactivateHourglass(); }
+    if (S.shieldActive)    { S.shieldActive = false; stOff('shield', 's-shield'); }
+    if (S.buddyActive)     { S.buddyTO     = clearTO(S.buddyTO);     deactivateBuddy(); }
+    if (S.decoyActive)     { S.decoyTO     = clearTO(S.decoyTO);     deactivateDecoy(); }
+    if (S.starActive)      { S.starTO      = clearTO(S.starTO);      deactivateStar(); }
   }, RAINBOW_DURATION);
 }
 
@@ -511,10 +524,12 @@ function activateClaude() {
   S.shark.speed = 0;
   stOn('claude', 's-claude');
 
-  // Typewriter effect
+  // Typewriter effect — tracked so they can be cancelled on game end
   const target = S.claudeAnim.textTarget;
+  _claudeTypewriterTOs.forEach(clearTO);
+  _claudeTypewriterTOs = [];
   for (let i = 0; i <= target.length; i++) {
-    setTimeout(() => { if (S.claudeAnim) S.claudeAnim.text = target.slice(0, i); }, i * 55);
+    _claudeTypewriterTOs.push(setTimeout(() => { if (S.claudeAnim) S.claudeAnim.text = target.slice(0, i); }, i * 55));
   }
 
   // Collect treats sequentially starting at 900ms
@@ -593,7 +608,7 @@ export const pwConfig = {
   swap:      { emoji: '🔄', glow: '#aa44ff', fn: activateSwap,      rarity: 4, ok: () => !S.swapAnim },
   star:      { emoji: '🌟', glow: '#ffee44', fn: activateStar,      rarity: 5, ok: () => !S.starActive },
   double:    { emoji: '💎', glow: '#44ddff', fn: activateDouble,    rarity: 5, ok: () => S.treats.length > 0 },
-  magnet:    { emoji: '🧲', glow: '#dd44ff', fn: activateMagnet,    rarity: 5, ok: () => !S.magnetActive },
+  magnet:    { emoji: '🧲', glow: '#dd44ff', fn: activateMagnet,    rarity: 5, ok: () => !S.magnetActive  },
   wave:      { emoji: '🌊', glow: '#4488ff', fn: activateWave,      rarity: 5, ok: () => S.treats.length > 0 },
   bodyswap:  { emoji: '🎭', glow: '#ff4488', fn: activateBodySwap,  rarity: 5, ok: () => !S.bodySwapActive },
   crazy:     { emoji: '🍄', glow: '#ff00aa', fn: activateCrazy,     rarity: 6, ok: () => S.level >= 9 && !S.crazyActive, life: CRAZY_ITEM_LIFETIME },
@@ -793,5 +808,7 @@ export function updatePWItems() {
 export function clearAllPowerupTimeouts() {
   [S.frenzyTO, S.iceTO, S.ghostTO, S.hourglassTO, S.buddyTO,
    S.bombTO, S.crazyTO, S.decoyTO, S.starTO, S.rainbowTO,
-   S.promptTO, S.promptTO2, S.claudeTO, S.bodySwapTO, S.hellTO].forEach(clearTO);
+   S.magnetTO, S.promptTO, S.promptTO2, S.claudeTO, S.bodySwapTO, S.hellTO].forEach(clearTO);
+  _claudeTypewriterTOs.forEach(clearTO);
+  _claudeTypewriterTOs = [];
 }

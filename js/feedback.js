@@ -70,37 +70,37 @@ async function submitFeedback() {
 
   const typeLabel = _fbType === 'bug' ? 'BUG REPORT' : 'SUGGESTION';
 
+  // Step 1: Save to Firebase. If this fails, re-enable the button so the player can retry.
   try {
-    // Save to Firebase
     await saveFeedback(_fbType, text);
-
-    // Send email via EmailJS
-    if (typeof emailjs !== 'undefined') {
-      try {
-        emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
-        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-          title:   `🐟 Fish Frenzy — ${typeLabel}`,
-          message: `${text}\n\n${GAME_LINK}`,
-          time:    new Date().toLocaleString(),
-        });
-      } catch (emailErr) {
-        console.warn('[Feedback] EmailJS failed:', emailErr);
-        if (statusEl) { statusEl.textContent = `EMAIL ERR: ${emailErr?.status ?? emailErr?.message ?? emailErr}`; statusEl.style.color = '#ffaa44'; }
-      }
-    }
-
-    // Success
-    if (statusEl) { statusEl.textContent = '✓ SENT — THANKS!'; statusEl.style.color = '#44ff88'; }
-    document.getElementById('fb-text').value = '';
-    setTimeout(() => {
-      if (statusEl) statusEl.textContent = '';
-      document.getElementById('feedback-overlay')?.classList.add('hidden');
-    }, 2500);
-
   } catch (err) {
-    console.warn('[Feedback] Submit failed:', err);
+    console.warn('[Feedback] Firebase save failed:', err);
     if (statusEl) { statusEl.textContent = '✗ FAILED — TRY AGAIN'; statusEl.style.color = '#ee5566'; }
-  } finally {
     if (btn) btn.disabled = false;
+    return;
   }
+
+  // Step 2: Send email. Firebase already has the data so this is best-effort.
+  // Don't re-enable the button — feedback is saved, no need to allow re-send.
+  if (typeof emailjs !== 'undefined') {
+    try {
+      emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        title:   `🐟 Fish Frenzy — ${typeLabel}`,
+        message: `${text}\n\n${GAME_LINK}`,
+        time:    new Date().toLocaleString(),
+      });
+    } catch (emailErr) {
+      console.warn('[Feedback] EmailJS failed:', emailErr);
+    }
+  }
+
+  // Success — data is safely in Firebase
+  if (statusEl) { statusEl.textContent = '✓ SENT — THANKS!'; statusEl.style.color = '#44ff88'; }
+  document.getElementById('fb-text').value = '';
+  setTimeout(() => {
+    if (statusEl) statusEl.textContent = '';
+    if (btn) btn.disabled = false;
+    document.getElementById('feedback-overlay')?.classList.add('hidden');
+  }, 2500);
 }

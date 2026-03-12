@@ -81,7 +81,12 @@ export async function showFullLeaderboard() {
   el.classList.remove('hidden');
   scoreboardOverlay.classList.add('hidden');
 
-  const scores = await fetchAllScores(100);
+  let scores;
+  try { scores = await fetchAllScores(100); }
+  catch (_) {
+    el.innerHTML = '<p class="loading-text">FAILED TO LOAD — CHECK CONNECTION</p>';
+    return;
+  }
 
   const tableHtml = buildScoreboardHtml(scores);
   el.innerHTML = `
@@ -101,7 +106,12 @@ export async function showFullLeaderboard() {
 export async function showScoreboard(highlightIdx = -1) {
   scoreboardContent.innerHTML = '<p class="loading-text">LOADING...</p>';
   scoreboardOverlay.classList.remove('hidden');
-  const scores = await fetchHighScores();
+  let scores;
+  try { scores = await fetchHighScores(); }
+  catch (_) {
+    scoreboardContent.innerHTML = '<p class="loading-text">FAILED TO LOAD — CHECK CONNECTION</p>';
+    return;
+  }
   // If no explicit index, try to highlight the last player's name
   if (highlightIdx === -1 && S.lastPlayerName) {
     const found = scores.findIndex(s => s.name === S.lastPlayerName);

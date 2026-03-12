@@ -44,7 +44,6 @@ export const SHARK_START_DELAY = 90;
 // Gameplay
 export const COMBO_WINDOW    = 1200;
 export const PW_SPAWN_CHANCE = 0.007;
-export const MAX_SCORES      = 5;
 
 // Canvas
 export const W = 720;

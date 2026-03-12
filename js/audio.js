@@ -331,7 +331,7 @@ let _musicActive = false;
 let _fishWhisperTimer = null;
 
 function whisperFish() {
-  if (!_musicActive) return;
+  if (!_musicActive || !S.gameRunning || S.gamePaused) return;
   const ss = window.speechSynthesis;
   if (!ss) return;
   // Clear any stuck queue (Chrome bug)

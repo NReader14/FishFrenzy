@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Read(//c/Users/Nathan/.claude/projects/c--Users-Nathan-Downloads-FishFrenzy/**)",
-      "Bash(\"c:/Users/Nathan/Downloads/FishFrenzy/css/overlays.css\")"
+      "Bash(\"c:/Users/Nathan/Downloads/FishFrenzy/css/overlays.css\")",
+      "Bash(grep -r \"leaderboard\\\\|Leaderboard\\\\|LEADERBOARD\" /c/Users/Nathan/Downloads/FishFrenzy/*.js /c/Users/Nathan/Downloads/FishFrenzy/js/*.js)",
+      "Bash(grep -n \"newFilesystem.random\\(\\)\\\\|Math.floor\\(Math.random\\\\|Math.ceil\\(Math.random\" /c/Users/Nathan/Downloads/FishFrenzy/js/*.js)",
+      "Bash(grep -n \"display: none\\\\|hidden\\\\|opacity: 0\" /c/Users/Nathan/Downloads/FishFrenzy/css/*.css)"
     ]
   }
 }

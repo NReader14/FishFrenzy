@@ -59,15 +59,21 @@ export function drawParticles() {
 export function drawScorePopups() {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
+  // Track how many popups are near each x-slot to stagger them vertically
+  const clusterOffset = new Map();
   for (const p of S.scorePopups) {
+    const slot = Math.round(p.x / 30); // group by 30px x-bands
+    const idx = clusterOffset.get(slot) ?? 0;
+    clusterOffset.set(slot, idx + 1);
+    const yOff = idx * -12; // each overlapping popup rises 12px above the previous
     ctx.globalAlpha = p.life;
     ctx.font = p.font || '8px "Press Start 2P"';
     if (typeof p.pts === 'string') {
       ctx.fillStyle = p.color || '#44ee88';
-      ctx.fillText(p.pts, p.x, p.y);
+      ctx.fillText(p.pts, p.x, p.y + yOff);
     } else {
       ctx.fillStyle = p.pts >= 20 ? '#ff8800' : '#ffdd44';
-      ctx.fillText('+' + p.pts, p.x, p.y);
+      ctx.fillText('+' + p.pts, p.x, p.y + yOff);
     }
   }
   ctx.globalAlpha = 1;

@@ -94,6 +94,7 @@ export function drawFish() {
         ctx.scale(S.fish.dir, 1);
         ctx.rotate(S.fish.angle || 0);
         ctx.translate(off.x, off.y);
+        if (off.sx !== undefined || off.sy !== undefined) ctx.scale(off.sx ?? 1, off.sy ?? 1);
         fn(ctx);
         ctx.restore();
       }

@@ -763,13 +763,19 @@ function drawClownfishBody(ctx2, c1, c2, c3, phase) {
   ctx2.fillRect(0, -12, 4, 2);
 }
 
-// Per-type, per-category offsets applied before drawing accessories.
-// Each fishType has hat/mask/outfit sub-offsets {x, y}.
+// Per-type, per-category transforms applied before drawing accessories.
+// x/y = translation offset; sx/sy = scale (default 1).
+// Angler body is 4px taller (y:-10..+10 vs standard y:-8..+8):
+//   hats  → shift up 2px to sit flush above the taller top
+//   masks → eye is at the same absolute y position, no shift needed
+//   outfits → scale vertically 1.25× so they fill the full taller body
+// Goldfish body top is 1px higher than standard → hats shift up 1px
+// Clownfish eye is 4px further right due to white stripe → masks shift right 4px
 export const FISH_TYPE_EXTRAS_OFFSET = {
-  standard:  { hat: {x:0,y:0},  mask: {x:0,y:0},  outfit: {x:0,y:0}  },
-  angler:    { hat: {x:0,y:-2}, mask: {x:0,y:0},  outfit: {x:0,y:1}  },
-  goldfish:  { hat: {x:0,y:-2}, mask: {x:0,y:-2}, outfit: {x:0,y:0}  },
-  clownfish: { hat: {x:0,y:0},  mask: {x:0,y:0},  outfit: {x:0,y:0}  },
+  standard:  { hat: {x:0,y:0},          mask: {x:0,y:0},          outfit: {x:0,y:0}            },
+  angler:    { hat: {x:0,y:-2},         mask: {x:0,y:0},          outfit: {x:0,y:0,sx:1,sy:1.25} },
+  goldfish:  { hat: {x:0,y:-1},         mask: {x:0,y:-2},         outfit: {x:0,y:0}            },
+  clownfish: { hat: {x:0,y:0},          mask: {x:4,y:0},          outfit: {x:0,y:0}            },
 };
 
 // Dispatch to the correct body drawing function.
@@ -902,6 +908,7 @@ export function drawSkinPreview(ctx2, skin, w, h, time = 0) {
       const off = typeOff[key] || { x: 0, y: 0 };
       ctx2.save();
       ctx2.translate(off.x, off.y);
+      if (off.sx !== undefined || off.sy !== undefined) ctx2.scale(off.sx ?? 1, off.sy ?? 1);
       fn(ctx2);
       ctx2.restore();
     }
@@ -909,8 +916,9 @@ export function drawSkinPreview(ctx2, skin, w, h, time = 0) {
 
   // Legacy extras (predefined skins like Joker, Ninja, etc.)
   if (skin.extras) {
+    const off = typeOff.mask || { x: 0, y: 0 };
     ctx2.save();
-    ctx2.translate(typeOff.mask.x, typeOff.mask.y);
+    ctx2.translate(off.x, off.y);
     skin.extras(ctx2);
     ctx2.restore();
   }
