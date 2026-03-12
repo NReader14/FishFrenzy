@@ -52,6 +52,7 @@ export function openFishDraw() {
   switchTab('hat');
   refreshAllAccPreviews();
   updatePreview();
+  startPreviewAnimation();
   const t = document.getElementById('fd-name-title');
   const m = document.getElementById('fd-name-middle');
   const n = document.getElementById('fd-name-first');
@@ -135,6 +136,7 @@ function buildOverlay(ov) {
 
   document.getElementById('fd-save-btn')?.addEventListener('click', saveSkin);
   document.getElementById('fd-cancel-btn')?.addEventListener('click', () => {
+    stopPreviewAnimation();
     ov.classList.add('hidden');
     document.getElementById('settings-overlay')?.classList.remove('hidden');
   });
@@ -232,10 +234,27 @@ function syncColourInputs() {
   });
 }
 
+let _previewRaf = null;
+
 function updatePreview() {
   const cvs = document.getElementById('fishdraw-preview');
   if (!cvs) return;
-  drawSkinPreview(cvs.getContext('2d'), { c1: state.c1, c2: state.c2, c3: state.c3, extras: getExtrasFn() }, 240, 150);
+  drawSkinPreview(cvs.getContext('2d'), { c1: state.c1, c2: state.c2, c3: state.c3, extras: getExtrasFn() }, 240, 150, performance.now());
+}
+
+function startPreviewAnimation() {
+  if (_previewRaf) return;
+  function tick() {
+    const ov = document.getElementById('fishdraw-overlay');
+    if (!ov || ov.classList.contains('hidden')) { _previewRaf = null; return; }
+    updatePreview();
+    _previewRaf = requestAnimationFrame(tick);
+  }
+  _previewRaf = requestAnimationFrame(tick);
+}
+
+function stopPreviewAnimation() {
+  if (_previewRaf) { cancelAnimationFrame(_previewRaf); _previewRaf = null; }
 }
 
 function refreshAllAccPreviews() {
@@ -278,6 +297,7 @@ async function saveSkin() {
     window.dispatchEvent(new CustomEvent('fishSkinSaved', { detail: { idx } }));
     if (btn) btn.textContent = 'SAVED!';
     setTimeout(() => {
+      stopPreviewAnimation();
       document.getElementById('fishdraw-overlay')?.classList.add('hidden');
       document.getElementById('settings-overlay')?.classList.remove('hidden');
       if (btn) btn.textContent = 'SAVE SKIN';

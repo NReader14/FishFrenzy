@@ -261,7 +261,8 @@ function startLevel() {
     speed: gameVars.fishSpeed, friction: gameVars.fishFriction
   };
 
-  const sharkSpeed = (gameVars.fishSpeed + gameVars.sharkSpeedBase) + S.level * gameVars.sharkSpeedPerLevel;
+  // Sqrt curve: scales fast early, softens at high levels to stay fair
+  const sharkSpeed = (gameVars.fishSpeed + gameVars.sharkSpeedBase) + gameVars.sharkSpeedPerLevel * Math.sqrt(S.level * 2);
   S.shark = {
     x: rand(60, W - 60), y: rand(60, H - 60),
     speed: sharkSpeed, savedSpeed: sharkSpeed, savedSpeed2: sharkSpeed,
@@ -351,6 +352,24 @@ function endGame(won, msg) {
   S.gameRunning = false;
   clearInterval(S.timerInterval);
   cancelAnimationFrame(S.gameLoop);
+
+  // Capture whichever powerup was active at time of death
+  S.deathPowerup = S.frenzyActive ? '🔥 FRENZY'
+    : S.iceActive       ? '❄️ ICE'
+    : S.ghostActive     ? '👻 GHOST'
+    : S.hourglassActive ? '⏳ HOURGLASS'
+    : S.buddyActive     ? '🐠 BUDDY'
+    : S.bombActive      ? '💣 BOMB'
+    : S.crazyActive     ? '🍄 MUSHROOM'
+    : S.decoyActive     ? '👁️ DECOY'
+    : S.starActive      ? '⭐ STAR'
+    : S.goopActive      ? '🧪 GOOP'
+    : S.rainbowActive   ? '🌈 RAINBOW'
+    : S.promptActive    ? '✍️ PROMPT'
+    : S.claudeActive    ? '🤖 CLAUDE'
+    : S.bodySwapActive  ? '🎭 BODY SWAP'
+    : S.hellActive      ? '👹 HELL'
+    : null;
 
   clearAllPowerupTimeouts();
   S.frenzyActive = S.iceActive = S.ghostActive = S.hourglassActive = false;

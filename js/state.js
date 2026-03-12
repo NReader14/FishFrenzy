@@ -87,6 +87,10 @@ const S = {
   // Admin credentials (temporary)
   adminCredentials: null,
 
+  // Last player name entered (for scoreboard highlight)
+  lastPlayerName: null,
+  deathPowerup: null,
+
   // Smart shark position history (ring buffer, filled each frame)
   smartSharkHistory: [],
 

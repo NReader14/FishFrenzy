@@ -18,7 +18,7 @@ import {
 } from '../firebase-config.js';
 import { pwConfig, clearTO } from './powerups.js';
 import { setupItemTestEvents } from './admin.js';
-import { gameVars, GAME_VAR_META, GAME_VAR_DEFAULTS } from './game-vars.js';
+import { gameVars, GAME_VAR_META, GAME_VAR_DEFAULTS, firebaseGameVars } from './game-vars.js';
 
 // Forward references (set by main.js)
 let _initGame = null;
@@ -102,6 +102,11 @@ export async function showScoreboard(highlightIdx = -1) {
   scoreboardContent.innerHTML = '<p class="loading-text">LOADING...</p>';
   scoreboardOverlay.classList.remove('hidden');
   const scores = await fetchHighScores();
+  // If no explicit index, try to highlight the last player's name
+  if (highlightIdx === -1 && S.lastPlayerName) {
+    const found = scores.findIndex(s => s.name === S.lastPlayerName);
+    if (found !== -1) highlightIdx = found;
+  }
   scoreboardContent.innerHTML = buildScoreboardHtml(scores, highlightIdx);
   if (!isFirebaseOnline()) {
     scoreboardContent.innerHTML += '<p class="no-scores" style="color:#cc8844;">⚠ OFFLINE — SHOWING CACHED SCORES</p>';
@@ -120,9 +125,14 @@ export function showNameEntry(finalScore, finalLevel, msg) {
   function render() {
     const errH = errorMsg ? `<div class="name-error">${errorMsg}</div>` : '';
 
+    const pwLine = S.deathPowerup
+      ? `<div style="font-size:8px;color:#ffaa44;margin-bottom:4px;letter-spacing:0.1em;">ACTIVE: ${S.deathPowerup}</div>`
+      : '';
+
     let html = `
       <div class="name-entry-title">GAME OVER</div>
       <div class="name-entry-score">${msg.toUpperCase()} &mdash; SCORE: ${finalScore} &middot; LVL: ${finalLevel}</div>
+      ${pwLine}
       <div class="name-entry-prompt">ENTER YOUR INITIALS</div>
       ${errH}
       <div class="name-slots">`;
@@ -231,6 +241,7 @@ export function showNameEntry(finalScore, finalLevel, msg) {
   async function doSave(name) {
     if (!S.nameEntryActive) return;
     S.nameEntryActive = false;
+    S.lastPlayerName = name;
     confirming = false;
     document.removeEventListener('keydown', onKey);
     nameEntryOverlay.classList.add('hidden');
@@ -433,7 +444,9 @@ function buildGameVarEditor() {
   let html = `<div class="admin-var-label" style="color:#44ddff;">VARIABLE</div><div class="admin-var-label" style="color:#44ddff;">SLIDER</div><div class="admin-var-label" style="color:#44ddff;">VAL</div>`;
   for (const [key, meta] of Object.entries(GAME_VAR_META)) {
     const val = gameVars[key];
-    html += `<div class="admin-var-label">${meta.label}</div>`;
+    const isFirebase = key in firebaseGameVars;
+    const dot = isFirebase ? `<span title="Firebase override" style="color:#44ff88;margin-right:3px;">●</span>` : '';
+    html += `<div class="admin-var-label">${dot}${meta.label}</div>`;
     html += `<input type="range" class="admin-gv-slider" data-gv="${key}" min="${meta.min}" max="${meta.max}" step="${meta.step}" value="${val}">`;
     html += `<div class="admin-gv-val" data-gv-val="${key}">${val}</div>`;
   }
@@ -573,9 +586,12 @@ export function setupAdminEvents() {
     }
   });
 
-  // Reset game var defaults
+  // Reset game var defaults (also clears Firebase cache so next game start doesn't re-apply)
   document.getElementById('admin-reset-gamevars-btn')?.addEventListener('click', () => {
-    for (const key of Object.keys(GAME_VAR_DEFAULTS)) gameVars[key] = GAME_VAR_DEFAULTS[key];
+    for (const key of Object.keys(GAME_VAR_DEFAULTS)) {
+      gameVars[key] = GAME_VAR_DEFAULTS[key];
+      delete firebaseGameVars[key];
+    }
     buildGameVarEditor();
     showPanelMsg('GAME VARS RESET (NOT SAVED YET)', false);
   });

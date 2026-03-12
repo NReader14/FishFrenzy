@@ -678,7 +678,7 @@ export const SKINS = [
 // Draws a static fish (facing right) on any 2D context.
 // Call with the skin's own ctx so it doesn't touch the game canvas.
 
-export function drawSkinPreview(ctx2, skin, w, h) {
+export function drawSkinPreview(ctx2, skin, w, h, time = 0) {
   const { c1, c2, c3 } = skin;
   ctx2.clearRect(0, 0, w, h);
   ctx2.save();
@@ -701,12 +701,13 @@ export function drawSkinPreview(ctx2, skin, w, h) {
   ctx2.fillStyle = c3;
   ctx2.fillRect(-10,-10, 20, 3);
 
-  // Tail (static)
+  // Animated tail — wags with a sine wave (only on large preview)
+  const wag = isPreview ? Math.round(Math.sin(time * 0.003) * 3) : 0;
   ctx2.fillStyle = c1;
-  ctx2.fillRect(-22,-6, 8, 4);
-  ctx2.fillRect(-22, 2, 8, 4);
-  ctx2.fillRect(-26,-8, 4, 4);
-  ctx2.fillRect(-26, 4, 4, 4);
+  ctx2.fillRect(-22, -6 + wag, 8, 4);
+  ctx2.fillRect(-22,  2 + wag, 8, 4);
+  ctx2.fillRect(-26, -8 + wag, 4, 4);
+  ctx2.fillRect(-26,  4 + wag, 4, 4);
 
   // Eye
   ctx2.fillStyle = '#fff';

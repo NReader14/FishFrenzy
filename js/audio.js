@@ -337,7 +337,7 @@ function whisperFish() {
   // Clear any stuck queue (Chrome bug)
   ss.cancel();
   const u = new SpeechSynthesisUtterance('fish');
-  u.volume = 1.0;
+  u.volume = 0.6;
   u.rate   = 0.6;
   u.pitch  = 0.3;
   // Pick a voice if available — prefer a soft English one

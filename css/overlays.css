@@ -1090,6 +1090,12 @@
   gap: 0 28px;
   align-items: start;
 }
+@media (max-width: 540px) {
+  .patch-notes-container {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
 .patch-notes-container::-webkit-scrollbar { width: 6px; }
 .patch-notes-container::-webkit-scrollbar-track { background: #0a1628; }
 .patch-notes-container::-webkit-scrollbar-thumb { background: #1a3a5a; border-radius: 3px; }
