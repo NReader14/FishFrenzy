@@ -14,7 +14,7 @@ import { playCRTWipe } from './animations.js';
 import {
   fetchHighScores, fetchAllScores, saveHighScore, isFirebaseOnline,
   adminWipeScores, fetchMaintenance, setMaintenance,
-  saveGameConfig, fetchPatchNotes, savePatchNotes
+  saveGameConfig, fetchPatchNotes, savePatchNotes, fetchFeedback
 } from '../firebase-config.js';
 import { pwConfig, clearTO } from './powerups.js';
 import { setupItemTestEvents } from './admin.js';
@@ -614,6 +614,27 @@ export function setupAdminEvents() {
       if (statusEl) { statusEl.textContent = '✗ ERROR'; statusEl.style.color = '#ee5566'; }
     }
     setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 3000);
+  });
+
+  // Load feedback entries
+  document.getElementById('admin-load-feedback-btn')?.addEventListener('click', async function() {
+    const list = document.getElementById('admin-feedback-list');
+    const count = document.getElementById('admin-feedback-count');
+    if (!list) return;
+    list.textContent = 'LOADING...';
+    const entries = await fetchFeedback(30);
+    if (!entries.length) { list.textContent = 'NO FEEDBACK YET'; count.textContent = ''; return; }
+    count.textContent = `${entries.length} ENTR${entries.length === 1 ? 'Y' : 'IES'}`;
+    list.innerHTML = entries.map(e => {
+      const typeLabel = e.type === 'bug' ? '🐛' : '💡';
+      const when = e.timestamp?.toDate ? e.timestamp.toDate().toLocaleString() : '—';
+      const msg = (e.message || '').slice(0, 120) + (e.message?.length > 120 ? '…' : '');
+      return `<div style="border-bottom:1px solid #1a2a3a;padding:4px 0;">
+        <span style="color:${e.type === 'bug' ? '#ee5566' : '#44ddff'}">${typeLabel} ${e.type?.toUpperCase()}</span>
+        <span style="color:#445566;margin-left:6px;">${when}</span>
+        <div style="color:#aabbcc;margin-top:2px;">${msg}</div>
+      </div>`;
+    }).join('');
   });
 
   // Close admin panel

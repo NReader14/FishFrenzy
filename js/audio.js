@@ -387,6 +387,7 @@ export function startMusic() {
   if (!S.settings?.music) return;
   if (_musicActive) return;
   _musicActive = true;
+  _tempoMult = 1.0;  // Always reset tempo on new game
   _mIdx = 0; _mLeft = 0;
   _bIdx = 0; _bLeft = 0;
   _dStep = 0;

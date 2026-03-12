@@ -19,6 +19,8 @@
   <link rel="stylesheet" href="css/admin.css">
   <link rel="stylesheet" href="css/effects.css">
   <link rel="stylesheet" href="css/mobile.css">
+  <!-- EmailJS — fills in your service/template IDs in js/feedback.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -89,6 +91,7 @@
       <button id="rules-btn" class="btn-secondary">RULES</button>
       <button id="scoreboard-btn" class="btn-secondary">HI-SCORES</button>
       <button id="settings-btn" class="btn-secondary">SETTINGS</button>
+      <button id="feedback-btn" class="btn-secondary">FEEDBACK</button>
     </div>
     <p class="controls-hint">ARROW KEYS / WASD TO SWIM</p>
       <p class="controls-hint controls-hint-touch">TAP &amp; DRAG ANYWHERE TO SWIM</p>
@@ -319,8 +322,36 @@
         </div>
       </div>
 
+      <!-- FEEDBACK VIEWER -->
+      <div class="admin-section">
+        <div class="admin-section-title">PLAYER FEEDBACK</div>
+        <div class="admin-row" style="margin-bottom:6px;">
+          <button id="admin-load-feedback-btn" class="btn-secondary" style="padding:6px 14px;font-size:8px;">LOAD FEEDBACK</button>
+          <span id="admin-feedback-count" style="font-size:7px;color:#5588aa;"></span>
+        </div>
+        <div id="admin-feedback-list" style="max-height:160px;overflow-y:auto;font-size:7px;color:#aabbcc;line-height:1.8;"></div>
+      </div>
+
       <div id="admin-panel-msg" class="admin-error hidden" style="margin-top:10px;"></div>
       <button id="admin-panel-close-btn" class="btn-secondary" style="margin-top:14px;">CLOSE</button>
+    </div>
+  </div>
+
+  <!-- FEEDBACK OVERLAY -->
+  <div id="feedback-overlay" class="game-overlay hidden">
+    <div class="admin-container" style="max-width:340px;">
+      <div class="admin-title" style="margin-bottom:14px;">💬 SEND FEEDBACK</div>
+      <p style="color:#5588aa;font-size:8px;margin-bottom:14px;text-align:center;">Anonymous feedback goes straight to the developer.</p>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button id="fb-type-bug" class="btn-secondary fb-type-btn selected" style="flex:1;padding:8px;font-size:8px;border-color:#ee5566;color:#ee5566;">🐛 BUG REPORT</button>
+        <button id="fb-type-sug" class="btn-secondary fb-type-btn" style="flex:1;padding:8px;font-size:8px;">💡 SUGGESTION</button>
+      </div>
+      <textarea id="fb-text" maxlength="500" placeholder="Describe the bug or idea..." style="width:100%;height:100px;background:#060f1a;color:#aabbcc;border:1px solid #1a3a5a;font-family:inherit;font-size:8px;padding:8px;resize:none;line-height:1.5;box-sizing:border-box;margin-bottom:10px;"></textarea>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <button id="fb-send-btn" class="btn-primary" style="padding:8px 20px;font-size:9px;">SEND</button>
+        <span id="fb-status" style="font-size:7px;color:#5588aa;"></span>
+      </div>
+      <button id="feedback-close-btn" class="btn-secondary">CLOSE</button>
     </div>
   </div>
 
@@ -331,6 +362,16 @@
   <div id="patch-notes-overlay" class="game-overlay hidden">
     <div class="patch-notes-container">
       <div class="patch-notes-title">📋 PATCH NOTES</div>
+
+      <div class="patch-note">
+        <div class="patch-note-version">💬 v0.6 — FEEDBACK UPDATE</div>
+        <div class="patch-note-date">2026</div>
+        <ul class="patch-note-list">
+          <li>💬 New <strong>FEEDBACK</strong> button in Settings — send bug reports or suggestions directly to the developer</li>
+          <li>🔒 Fully anonymous — no account required</li>
+          <li>⏳ Hourglass now also slows the music tempo</li>
+        </ul>
+      </div>
 
       <div class="patch-note">
         <div class="patch-note-version">🎨 v0.5 — CUSTOMISATION UPDATE</div>

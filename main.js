@@ -40,6 +40,7 @@ import {
   showAdminError, hideAdminError, buildRulesHTML, openAdminPanel,
   setupAdminEvents, setInitGame
 } from './js/overlays.js';
+import { setupFeedbackForm } from './js/feedback.js';
 import {
   initAuth, fetchHighScores, fetchMaintenance, setMaintenance,
   verifyAdminCredentials, fetchPatchNotes
@@ -1105,3 +1106,4 @@ adminLoginBtn.addEventListener('click', async () => {
 
 // Wire up admin panel events (maintenance toggle, wipe, save, reset, close)
 setupAdminEvents();
+setupFeedbackForm();

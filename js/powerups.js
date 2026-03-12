@@ -78,7 +78,7 @@ function deactivateIce() {
   S.shark.speed = S.shark.savedSpeed || (0.75 + S.level * 0.2);
   stOff('ice', 's-ice');
   S.iceTO = null;
-  if (!S.goopActive) setMusicTempo(1.0);
+  if (!S.goopActive && !S.hourglassActive) setMusicTempo(1.0);
 }
 
 // ─── SHIELD ───
@@ -135,6 +135,7 @@ function activateHourglass() {
   S.hourglassStartTime = Date.now();
   S.shark.savedSpeed2 = S.shark.speed;
   S.shark.speed = 0;
+  setMusicTempo(1.8);
   timerBar.classList.add('frozen');
   stOn('time', 's-time');
   S.scorePopups.push({ x: W / 2, y: H / 2, pts: 'TIME STOP!', life: 1.2, decay: 0.025 });
@@ -150,6 +151,7 @@ function deactivateHourglass() {
   timerBar.classList.remove('frozen');
   stOff('time', 's-time');
   S.hourglassTO = null;
+  if (!S.iceActive && !S.goopActive) setMusicTempo(1.0);
 }
 
 // ─── BUDDY ───
@@ -395,7 +397,7 @@ function activateGoop() {
     S.fish.speed = S.frenzyActive ? gameVars.fishSpeed + FRENZY_SPEED_BOOST : gameVars.fishSpeed;
     stOff('goop', 's-goop');
     S.goopTO = null;
-    if (!S.iceActive) setMusicTempo(1.0);
+    if (!S.iceActive && !S.hourglassActive) setMusicTempo(1.0);
   }, GOOP_DURATION);
 }
 

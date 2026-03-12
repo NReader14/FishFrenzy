@@ -9,6 +9,7 @@ import {
   collection,
   getDocs,
   setDoc,
+  addDoc,
   doc,
   query,
   orderBy,
@@ -353,4 +354,32 @@ export async function savePatchNotes(notesJson, email, password) {
   });
   await signOut(auth);
   return true;
+}
+
+// ─── FEEDBACK ───
+// NOTE: Firestore rules must allow: match /feedback/{doc} { allow create: if true; }
+
+export async function saveFeedback(type, message) {
+  await addDoc(collection(db, 'feedback'), {
+    type,
+    message: message.trim().slice(0, 1000),
+    timestamp: serverTimestamp(),
+  });
+}
+
+export async function fetchFeedback(max = 30) {
+  try {
+    const q = query(
+      collection(db, 'feedback'),
+      orderBy('timestamp', 'desc'),
+      limit(max)
+    );
+    const snap = await getDocs(q);
+    const results = [];
+    snap.forEach(d => results.push({ id: d.id, ...d.data() }));
+    return results;
+  } catch (err) {
+    console.warn('[Firebase] Could not fetch feedback:', err.message);
+    return [];
+  }
 }
