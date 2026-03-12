@@ -1030,3 +1030,76 @@
 }
 .fd-tab:hover { border-color: #2a5a8a; color: #aabbcc; }
 .fd-tab.selected { border-color: #44ddff; color: #44ddff; background: #0d2a3a; }
+
+/* ─── PATCH NOTES button on main menu ─── */
+.btn-patch-notes {
+  background: transparent;
+  border: none;
+  color: #3a5a7a;
+  font-family: inherit;
+  font-size: 7px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  margin-top: 6px;
+  padding: 4px 8px;
+  text-decoration: underline;
+  transition: color .15s;
+}
+.btn-patch-notes:hover { color: #44ddff; }
+
+/* ─── PATCH NOTES overlay ─── */
+#patch-notes-overlay {
+  justify-content: flex-start;
+  padding: 24px 28px 16px;
+}
+.patch-notes-container {
+  width: 100%;
+  max-width: 660px;
+  max-height: 76vh;
+  overflow-y: auto;
+  margin-bottom: 14px;
+  padding-right: 6px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 28px;
+  align-items: start;
+}
+.patch-notes-container::-webkit-scrollbar { width: 6px; }
+.patch-notes-container::-webkit-scrollbar-track { background: #0a1628; }
+.patch-notes-container::-webkit-scrollbar-thumb { background: #1a3a5a; border-radius: 3px; }
+.patch-notes-title {
+  grid-column: 1 / -1;
+  font-size: 14px;
+  color: #44ddff;
+  letter-spacing: 0.2em;
+  text-align: center;
+  margin-bottom: 18px;
+}
+.patch-note {
+  margin-bottom: 20px;
+  border-left: 2px solid #1a3a5a;
+  padding-left: 12px;
+}
+.patch-note-version {
+  font-size: 9px;
+  color: #44ddff;
+  letter-spacing: 0.08em;
+  margin-bottom: 2px;
+}
+.patch-note-date {
+  font-size: 7px;
+  color: #3a5a7a;
+  margin-bottom: 8px;
+}
+.patch-note-list {
+  margin: 0;
+  padding-left: 14px;
+  list-style: disc;
+}
+.patch-note-list li {
+  font-size: 8px;
+  color: #8899aa;
+  line-height: 2;
+  letter-spacing: 0.04em;
+}
+.patch-note-list li strong { color: #aabbcc; }

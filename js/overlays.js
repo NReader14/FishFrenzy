@@ -14,7 +14,7 @@ import { playCRTWipe } from './animations.js';
 import {
   fetchHighScores, fetchAllScores, saveHighScore, isFirebaseOnline,
   adminWipeScores, fetchMaintenance, setMaintenance,
-  saveGameConfig
+  saveGameConfig, fetchPatchNotes, savePatchNotes
 } from '../firebase-config.js';
 import { pwConfig, clearTO } from './powerups.js';
 import { setupItemTestEvents } from './admin.js';
@@ -578,6 +578,26 @@ export function setupAdminEvents() {
     for (const key of Object.keys(GAME_VAR_DEFAULTS)) gameVars[key] = GAME_VAR_DEFAULTS[key];
     buildGameVarEditor();
     showPanelMsg('GAME VARS RESET (NOT SAVED YET)', false);
+  });
+
+  // Patch notes editor — load from Firebase when panel opens
+  fetchPatchNotes().then(notes => {
+    const ta = document.getElementById('admin-patch-notes-ta');
+    if (ta) ta.value = notes || '';
+  });
+
+  document.getElementById('admin-save-patch-btn')?.addEventListener('click', async () => {
+    const ta = document.getElementById('admin-patch-notes-ta');
+    const statusEl = document.getElementById('admin-patch-status');
+    if (!ta || !S.adminCredentials) return;
+    if (statusEl) statusEl.textContent = 'SAVING...';
+    try {
+      await savePatchNotes(ta.value, S.adminCredentials.email, S.adminCredentials.password);
+      if (statusEl) { statusEl.textContent = '✓ SAVED'; statusEl.style.color = '#44ff88'; }
+    } catch (err) {
+      if (statusEl) { statusEl.textContent = '✗ ERROR'; statusEl.style.color = '#ee5566'; }
+    }
+    setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 3000);
   });
 
   // Close admin panel

@@ -331,3 +331,26 @@ function saveOfflineScore(name, sc, lv) {
 export function isFirebaseOnline() {
   return isOnline;
 }
+
+// ─── PATCH NOTES ───
+
+export async function fetchPatchNotes() {
+  try {
+    const snap = await getDoc(doc(db, 'config', 'patchNotes'));
+    return snap.exists() ? snap.data().notes : null;
+  } catch (err) {
+    console.warn('[Firebase] Could not fetch patch notes:', err.message);
+    return null;
+  }
+}
+
+export async function savePatchNotes(notesJson, email, password) {
+  const adminCred = await signInWithEmailAndPassword(auth, email, password);
+  await setDoc(doc(db, 'config', 'patchNotes'), {
+    notes: notesJson,
+    updatedBy: adminCred.user.uid,
+    timestamp: serverTimestamp(),
+  });
+  await signOut(auth);
+  return true;
+}

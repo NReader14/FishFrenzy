@@ -93,6 +93,7 @@
     <p class="controls-hint">ARROW KEYS / WASD TO SWIM</p>
       <p class="controls-hint controls-hint-touch">TAP &amp; DRAG ANYWHERE TO SWIM</p>
     <p class="insert-coin">PRESS START</p>
+    <button id="patch-notes-btn" class="btn-patch-notes">PATCH NOTES</button>
   </div>
 
   <!-- RULES OVERLAY -->
@@ -307,9 +308,86 @@
         <div id="item-test-msg" style="font-size:7px;color:#5588aa;margin-top:4px;">ITEM TEST OFF</div>
       </div>
 
+      <!-- PATCH NOTES EDITOR -->
+      <div class="admin-section">
+        <div class="admin-section-title">PATCH NOTES EDITOR</div>
+        <p style="color:#5588aa;font-size:7px;margin-bottom:6px;">Edit the patch notes shown to players. Each entry is version · date · bullet points (one per line, prefix with - ).</p>
+        <textarea id="admin-patch-notes-ta" style="width:100%;height:140px;background:#060f1a;color:#aabbcc;border:1px solid #1a3a5a;font-family:inherit;font-size:7px;padding:6px;resize:vertical;line-height:1.6;" placeholder="Loading..."></textarea>
+        <div class="admin-row" style="margin-top:6px;">
+          <button id="admin-save-patch-btn" class="btn-primary" style="padding:6px 14px;font-size:8px;">SAVE TO FIREBASE</button>
+          <span id="admin-patch-status" style="font-size:7px;color:#5588aa;"></span>
+        </div>
+      </div>
+
       <div id="admin-panel-msg" class="admin-error hidden" style="margin-top:10px;"></div>
       <button id="admin-panel-close-btn" class="btn-secondary" style="margin-top:14px;">CLOSE</button>
     </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- PATCH NOTES OVERLAY                                           -->
+  <!-- ⚠ CLAUDE: Always update this with the newest features added! Add Emojis to convey your message as well -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div id="patch-notes-overlay" class="game-overlay hidden">
+    <div class="patch-notes-container">
+      <div class="patch-notes-title">📋 PATCH NOTES</div>
+
+      <div class="patch-note">
+        <div class="patch-note-version">🎨 v0.5 — CUSTOMISATION UPDATE</div>
+        <div class="patch-note-date">2026</div>
+        <ul class="patch-note-list">
+          <li>🐟 Design your own fish in the new <strong>FISH DESIGNER</strong> — pick colours, accessories and a name</li>
+          <li>👒 15 accessories across 3 tabs: <strong>HATS, MASKS, OUTFITS</strong></li>
+          <li>🦈 Outfits include Tuxedo, Hawaiian shirt, Camo, and a Shark costume</li>
+          <li>☁️ Custom fish saved to the cloud and shown for all players under <strong>CUSTOM OUTFITS</strong></li>
+          <li>✏️ Name picker with Title / Middle / Name dropdowns — Mr The Shark anyone?</li>
+        </ul>
+      </div>
+
+      <div class="patch-note">
+        <div class="patch-note-version">🎵 v0.4 — AUDIO &amp; IMMERSION</div>
+        <div class="patch-note-date">2026</div>
+        <ul class="patch-note-list">
+          <li>🥁 Background music with hi-hat pattern</li>
+          <li>❄️ Ice and Goop slow the music tempo</li>
+          <li>🎴 Playing Card triggers upbeat battle music</li>
+          <li>🔉 Softer item collection sounds</li>
+          <li>🫧 Occasional whispered "fish..." in the music</li>
+        </ul>
+      </div>
+
+      <div class="patch-note">
+        <div class="patch-note-version">⚡ v0.3 — POWER-UPS &amp; SHARK AI</div>
+        <div class="patch-note-date">2026</div>
+        <ul class="patch-note-list">
+          <li>🧠 Smart Shark mode — predicts your movement</li>
+          <li>✨ 18+ power-ups including Frenzy, Rainbow, Body Swap and Hell</li>
+          <li>🔥 Combo multiplier up to x5</li>
+          <li>🕹️ Diagonal movement speed normalised</li>
+        </ul>
+      </div>
+
+      <div class="patch-note">
+        <div class="patch-note-version">🏆 v0.2 — ONLINE SCORES</div>
+        <div class="patch-note-date">2026</div>
+        <ul class="patch-note-list">
+          <li>🌍 Global leaderboard via Firebase</li>
+          <li>⚙️ Admin panel for score wipe and game config</li>
+          <li>📴 Offline score fallback</li>
+        </ul>
+      </div>
+
+      <div class="patch-note">
+        <div class="patch-note-version">🐠 v0.1 — INITIAL RELEASE</div>
+        <div class="patch-note-date">2026</div>
+        <ul class="patch-note-list">
+          <li>🎮 Core game loop — collect treats, dodge the shark</li>
+          <li>🎯 Easy / Normal / Hard difficulties</li>
+          <li>🤖 Built entirely by Claude</li>
+        </ul>
+      </div>
+    </div>
+    <button id="patch-notes-back-btn" class="btn-secondary">BACK</button>
   </div>
 
   <!-- PAUSE OVERLAY (tab-out) -->

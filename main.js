@@ -42,7 +42,7 @@ import {
 } from './js/overlays.js';
 import {
   initAuth, fetchHighScores, fetchMaintenance, setMaintenance,
-  verifyAdminCredentials
+  verifyAdminCredentials, fetchPatchNotes
 } from './firebase-config.js';
 import { initControls } from './js/controls.js';
 import { initSettings, saveSettings } from './js/settings.js';
@@ -956,6 +956,34 @@ rulesBtn.addEventListener('click', () => {
 
 rulesBackBtn.addEventListener('click', () => {
   rulesOverlay.classList.add('hidden');
+  overlay.classList.remove('hidden');
+});
+
+// ─── PATCH NOTES ────────────────────────────────────────────────────────────
+document.getElementById('patch-notes-btn')?.addEventListener('click', async () => {
+  overlay.classList.add('hidden');
+  const patchOv = document.getElementById('patch-notes-overlay');
+  patchOv?.classList.remove('hidden');
+  // If admin has saved custom notes to Firebase, render them
+  try {
+    const saved = await fetchPatchNotes();
+    if (saved) {
+      const container = patchOv?.querySelector('.patch-notes-container');
+      if (container) {
+        container.innerHTML = '<div class="patch-notes-title">PATCH NOTES</div>' +
+          saved.split('\n\n').map(block => {
+            const lines = block.split('\n');
+            const header = lines[0] || '';
+            const items = lines.slice(1).filter(l => l.startsWith('- ')).map(l =>
+              `<li>${l.slice(2)}</li>`).join('');
+            return `<div class="patch-note"><div class="patch-note-version">${header}</div><ul class="patch-note-list">${items}</ul></div>`;
+          }).join('');
+      }
+    }
+  } catch (_) { /* fall back to static HTML */ }
+});
+document.getElementById('patch-notes-back-btn')?.addEventListener('click', () => {
+  document.getElementById('patch-notes-overlay')?.classList.add('hidden');
   overlay.classList.remove('hidden');
 });
 
