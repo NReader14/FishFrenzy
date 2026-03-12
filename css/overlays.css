@@ -204,9 +204,12 @@
   color: #88aabb;
 }
 
-.diff-btn.diff-easy.diff-active  { border-color: #44ee88; color: #44ee88; box-shadow: 0 0 8px rgba(68,238,136,.25); }
-.diff-btn.diff-normal.diff-active { border-color: #44ddff; color: #44ddff; box-shadow: 0 0 8px rgba(68,221,255,.25); }
-.diff-btn.diff-hard.diff-active   { border-color: #ff5566; color: #ff5566; box-shadow: 0 0 8px rgba(255,85,102,.25); }
+.diff-btn.diff-easy.diff-active     { border-color: #44ee88; color: #44ee88; box-shadow: 0 0 8px rgba(68,238,136,.25); }
+.diff-btn.diff-normal.diff-active   { border-color: #44ddff; color: #44ddff; box-shadow: 0 0 8px rgba(68,221,255,.25); }
+.diff-btn.diff-hard.diff-active     { border-color: #ff5566; color: #ff5566; box-shadow: 0 0 8px rgba(255,85,102,.25); }
+.diff-btn.diff-tutorial.diff-active { border-color: #ffcc44; color: #ffcc44; box-shadow: 0 0 8px rgba(255,204,68,.25); }
+
+.difficulty-row-tutorial { margin-top: 2px; margin-bottom: 14px; }
 
 
 /* ─── WELCOME OVERLAY ─── */
@@ -939,28 +942,33 @@
 
 
 /* ─── FISH DRAW — Custom skin designer ─── */
+#fishdraw-overlay {
+  justify-content: flex-start;
+  padding-top: 12px;
+}
+
 .fishdraw-title {
-  font-size: 13px;
+  font-size: 11px;
   color: #44ddff;
   text-shadow: 0 0 12px rgba(68,221,255,.4);
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   letter-spacing: 1px;
 }
 .fishdraw-preview-wrap {
   background: #0a1628;
   border: 2px solid #1a3a5a;
   border-radius: 4px;
-  padding: 12px 20px;
-  margin-bottom: 12px;
+  padding: 6px 14px;
+  margin-bottom: 8px;
 }
-#fishdraw-preview { display: block; image-rendering: pixelated; width: 300px; height: auto; }
+#fishdraw-preview { display: block; image-rendering: pixelated; width: 240px; height: auto; }
 .fishdraw-section-label {
   font-size: 7px;
   color: #5588aa;
   letter-spacing: 1px;
-  margin: 6px 0 5px;
+  margin: 4px 0 4px;
 }
-.fishdraw-colours { display: flex; gap: 14px; margin-bottom: 4px; }
+.fishdraw-colours { display: flex; gap: 10px; margin-bottom: 4px; }
 .fishdraw-colour-slot {
   display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer;
 }
@@ -975,8 +983,8 @@
 .fishdraw-acc-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
-  margin-bottom: 8px;
+  gap: 4px;
+  margin-bottom: 6px;
   width: 100%;
   max-width: 460px;
 }
@@ -1056,6 +1064,27 @@
 }
 .fd-tab:hover { border-color: #2a5a8a; color: #aabbcc; }
 .fd-tab.selected { border-color: #44ddff; color: #44ddff; background: #0d2a3a; }
+
+.fd-type-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.fd-type-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  color: #5588aa;
+  background: #0a1628;
+  border: 2px solid #1a3a5a;
+  border-radius: 3px;
+  padding: 5px 8px;
+  cursor: pointer;
+  flex: 1;
+  transition: border-color .12s, color .12s, background .12s;
+}
+.fd-type-btn:hover { border-color: #2a5a8a; color: #aabbcc; }
+.fd-type-btn.selected { border-color: #ff88aa; color: #ff88aa; background: #1a0a14; }
 
 /* ─── PATCH NOTES button on main menu ─── */
 .btn-patch-notes {

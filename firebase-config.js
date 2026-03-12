@@ -367,8 +367,23 @@ export async function saveFeedback(type, message) {
   });
 }
 
-export async function fetchFeedback(max = 30) {
+export async function deleteFeedback(email, password, id) {
+  let adminCred = null;
   try {
+    adminCred = await signInWithEmailAndPassword(auth, email, password);
+    await deleteDoc(doc(db, 'feedback', id));
+  } catch (err) {
+    console.warn('[Firebase] Could not delete feedback:', err.message);
+    throw err;
+  } finally {
+    if (adminCred) await signOut(auth);
+  }
+}
+
+export async function fetchFeedback(email, password, max = 30) {
+  let adminCred = null;
+  try {
+    adminCred = await signInWithEmailAndPassword(auth, email, password);
     const q = query(
       collection(db, 'feedback'),
       orderBy('timestamp', 'desc'),
@@ -381,5 +396,7 @@ export async function fetchFeedback(max = 30) {
   } catch (err) {
     console.warn('[Firebase] Could not fetch feedback:', err.message);
     return [];
+  } finally {
+    if (adminCred) await signOut(auth);
   }
 }

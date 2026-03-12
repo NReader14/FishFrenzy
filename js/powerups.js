@@ -478,6 +478,10 @@ function activateBodySwap() {
   stOn('bodyswap', 's-bodyswap');
   spawnParticles(S.fish.x, S.fish.y, '#ff4488', 20);
   spawnParticles(S.shark.x, S.shark.y, '#44ff88', 16);
+  S.scorePopups.push({ x: W/2, y: H/2 - 22, pts: '🎭 MIND SWAP!', life: 2.5, decay: 0.014, font: '13px "Press Start 2P"', color: '#ff4488' });
+  S.scorePopups.push({ x: W/2, y: H/2 + 18, pts: 'YOU ARE NOW THE SHARK', life: 2.5, decay: 0.014, font: '7px "Press Start 2P"', color: '#ff88aa' });
+  S.inputFrozen = true;
+  setTimeout(() => { S.inputFrozen = false; }, 1200);
 
   S.bodySwapTO = clearTO(S.bodySwapTO);
   S.bodySwapTO = setTimeout(deactivateBodySwap, BODY_SWAP_DURATION);
@@ -488,11 +492,14 @@ export function deactivateBodySwap() {
   S.bodySwapActive = false;
   S.bodySwapAnim = null;
   S.fish.vx = 0; S.fish.vy = 0;
+  S.fish.speed = S.frenzyActive ? gameVars.fishSpeed + FRENZY_SPEED_BOOST : gameVars.fishSpeed;
   S.shark.speed = S.shark.savedBodySwapSpeed || (0.75 + S.level * 0.2);
   stOff('bodyswap', 's-bodyswap');
   spawnParticles(S.fish.x, S.fish.y, '#ff4488', 10);
   spawnParticles(S.shark.x, S.shark.y, '#44ff88', 10);
-  S.scorePopups.push({ x: W / 2, y: H / 2, pts: 'BACK TO NORMAL!', life: 1.5, decay: 0.02 });
+  S.scorePopups.push({ x: W/2, y: H/2 - 22, pts: '🐟 BACK TO FISH', life: 2.5, decay: 0.014, font: '13px "Press Start 2P"', color: '#44ffaa' });
+  S.inputFrozen = true;
+  setTimeout(() => { S.inputFrozen = false; }, 1200);
   S.bodySwapTO = null;
 }
 

@@ -26,6 +26,7 @@ const S = {
   // Input tracking
   keys: {},
   nameEntryActive: false,
+  inputFrozen: false,
 
   // Power-up items on field (null = not spawned)
   pwItems: {

@@ -57,13 +57,13 @@ export function drawParticles() {
 }
 
 export function drawScorePopups() {
-  ctx.font = '8px "Press Start 2P"';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   for (const p of S.scorePopups) {
     ctx.globalAlpha = p.life;
+    ctx.font = p.font || '8px "Press Start 2P"';
     if (typeof p.pts === 'string') {
-      ctx.fillStyle = '#44ee88';
+      ctx.fillStyle = p.color || '#44ee88';
       ctx.fillText(p.pts, p.x, p.y);
     } else {
       ctx.fillStyle = p.pts >= 20 ? '#ff8800' : '#ffdd44';

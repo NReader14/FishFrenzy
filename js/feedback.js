@@ -5,7 +5,7 @@
 import { saveFeedback } from '../firebase-config.js';
 
 const EMAILJS_PUBLIC_KEY  = 's27S-6EeVt9VKmu27';
-const EMAILJS_SERVICE_ID  = 'service_maawt36';
+const EMAILJS_SERVICE_ID  = 'service_05uresw';
 const EMAILJS_TEMPLATE_ID = 'template_naruhfk';
 
 const GAME_LINK = window.location.href;
@@ -75,16 +75,18 @@ async function submitFeedback() {
     await saveFeedback(_fbType, text);
 
     // Send email via EmailJS
-    try {
-      emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
-      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-        feedback_type:    typeLabel,
-        feedback_message: text,
-        game_link:        GAME_LINK,
-        submitted_at:     new Date().toLocaleString(),
-      });
-    } catch (emailErr) {
-      console.warn('[Feedback] EmailJS failed:', emailErr);
+    if (typeof emailjs !== 'undefined') {
+      try {
+        emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          title:   `🐟 Fish Frenzy — ${typeLabel}`,
+          message: `${text}\n\n${GAME_LINK}`,
+          time:    new Date().toLocaleString(),
+        });
+      } catch (emailErr) {
+        console.warn('[Feedback] EmailJS failed:', emailErr);
+        if (statusEl) { statusEl.textContent = `EMAIL ERR: ${emailErr?.status ?? emailErr?.message ?? emailErr}`; statusEl.style.color = '#ffaa44'; }
+      }
     }
 
     // Success

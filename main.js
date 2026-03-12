@@ -23,13 +23,13 @@ import {
 } from './js/animations.js';
 import {
   pwConfig, loadRarities, trySpawnPowerups, updatePWItems,
-  clearAllPowerupTimeouts, clearTO, useShield, deactivateDecoy, deactivatePrompt,
+  clearAllPowerupTimeouts, clearTO, useShield,
   overlapsExisting, setEndGame, setSpawnTreat
 } from './js/powerups.js';
 import {
   drawWater, drawFish, drawBuddy, drawDecoy, drawShark,
   drawTreats, drawPWItems, drawWarning, drawFrenzyOverlay, drawIceOverlay,
-  drawHourglassOverlay, drawCrazyOverlay, drawFishGlow, drawMagnetLines,
+  drawHourglassOverlay, drawGhostIndicator, drawCrazyOverlay, drawFishGlow, drawMagnetLines,
   drawScanlines, drawClosestTreatArrow, drawPowerupTimerBars, drawRainbowOverlay,
   drawClaudeOverlay, drawBodySwapAnim, drawBombAnim, drawHellAnim, drawCardAnim,
   drawLevelBanner, drawTutorialHints
@@ -65,8 +65,24 @@ setInitGame(initGame);
 function advanceTutorial() {
   S.tutorialStep++;
   S.tutorialStepTime = Date.now();
-  if (S.tutorialStep === 2) S.sharkDelay = 120; // 2s warning before shark starts
-  if (S.tutorialStep >= 4) S.tutorialActive = false;
+  if (S.tutorialStep === 4) S.sharkDelay = 90; // release shark at shark step
+  if (S.tutorialStep >= 6) { endTutorial(); return; }
+}
+
+function endTutorial() {
+  S.tutorialActive = false;
+  S.gameRunning = false;
+  clearInterval(S.timerInterval);
+  cancelAnimationFrame(S.gameLoop);
+  stopMusic();
+  clearAllPowerupTimeouts();
+  setTimeout(() => {
+    winOverlay.classList.add('hidden');
+    overlay.classList.remove('hidden');
+    S.settings.difficulty = 'normal';
+    saveSettings();
+    refreshDifficultyUI();
+  }, 800);
 }
 
 function updateTutorial() {
@@ -80,26 +96,29 @@ function updateTutorial() {
       if (moving) advanceTutorial();
       break;
     }
-    case 1: if (elapsed >= 3) advanceTutorial(); break;
-    case 2: if (elapsed >= 3) advanceTutorial(); break;
-    case 3: if (elapsed >= 3) advanceTutorial(); break;
+    case 1: if (elapsed >= 6) advanceTutorial(); break;
+    case 2: if (elapsed >= 5) advanceTutorial(); break;
+    case 3: if (elapsed >= 5) advanceTutorial(); break;
+    case 4: if (elapsed >= 5) advanceTutorial(); break;
+    case 5: if (elapsed >= 3) advanceTutorial(); break;
   }
 }
 
 // ─── DIFFICULTY PRESETS ───
 const DIFFICULTY_PRESETS = {
-  easy:   { sharkSpeedBase: -2.4, sharkSpeedPerLevel: 0.12, levelTimeBase: 45, levelTimeMin: 25 },
-  normal: {},
-  hard:   { sharkSpeedBase: -0.9, sharkSpeedPerLevel: 0.28, levelTimeBase: 28, levelTimeMin: 14 },
+  easy:     { sharkSpeedBase: -2.4, sharkSpeedPerLevel: 0.12, levelTimeBase: 45, levelTimeMin: 25 },
+  normal:   {},
+  hard:     { sharkSpeedBase: -0.9, sharkSpeedPerLevel: 0.28, levelTimeBase: 28, levelTimeMin: 14 },
+  tutorial: { sharkSpeedBase: -3.0, sharkSpeedPerLevel: 0.05, levelTimeBase: 120, levelTimeMin: 120, treatBase: 3, treatPerLevel: 0 },
 };
 
 function refreshDifficultyUI() {
-  ['easy', 'normal', 'hard'].forEach(d => {
+  ['easy', 'normal', 'hard', 'tutorial'].forEach(d => {
     document.getElementById(`diff-${d}`)?.classList.toggle('diff-active', d === S.settings.difficulty);
   });
 }
 
-['easy', 'normal', 'hard'].forEach(d => {
+['easy', 'normal', 'hard', 'tutorial'].forEach(d => {
   document.getElementById(`diff-${d}`)?.addEventListener('click', () => {
     S.settings.difficulty = d;
     saveSettings();
@@ -323,12 +342,12 @@ function startLevel() {
   if (S.level > 1) sfxLevelUp();
   S.levelBanner = { text: `LEVEL ${S.level}`, sub: S.level > 1 ? 'LEVEL UP!' : null, startTime: Date.now() };
 
-  if (S.settings.tutorial && S.level === 1) {
+  if (S.settings.difficulty === 'tutorial' && S.level === 1) {
     S.tutorialActive = true;
     S.tutorialStep = 0;
     S.tutorialStepTime = Date.now();
     S.tutorialMoved = false;
-    S.sharkDelay = 99999; // freeze shark until tutorial step 2
+    S.sharkDelay = 99999; // freeze shark until step 4
   } else {
     S.tutorialActive = false;
   }
@@ -349,6 +368,25 @@ function startLevel() {
 }
 
 function endGame(won, msg) {
+  // In tutorial mode: if all treats collected, just respawn them and continue.
+  // Only restart the tutorial if the player actually dies.
+  if (S.settings.difficulty === 'tutorial') {
+    if (won) {
+      for (let i = 0; i < 3; i++) spawnTreat();
+      treatsLeftEl.textContent = S.treats.length;
+      return;
+    }
+    // Died — restart tutorial from beginning
+    S.tutorialActive = false;
+    S.gameRunning = false;
+    clearInterval(S.timerInterval);
+    cancelAnimationFrame(S.gameLoop);
+    clearAllPowerupTimeouts();
+    stopMusic();
+    setTimeout(() => { S.level = 1; S.score = 0; initGame(); }, 800);
+    return;
+  }
+
   if (!won) { stopMusic(); sfxGameOver(); }
   S.gameRunning = false;
   clearInterval(S.timerInterval);
@@ -460,10 +498,12 @@ function updateFish(dt = 1) {
   }
 
   let moveX = 0, moveY = 0;
-  if (S.keys['arrowleft'] || S.keys['a'])  moveX -= 1;
-  if (S.keys['arrowright'] || S.keys['d']) moveX += 1;
-  if (S.keys['arrowup'] || S.keys['w'])    moveY -= 1;
-  if (S.keys['arrowdown'] || S.keys['s'])  moveY += 1;
+  if (!S.inputFrozen) {
+    if (S.keys['arrowleft'] || S.keys['a'])  moveX -= 1;
+    if (S.keys['arrowright'] || S.keys['d']) moveX += 1;
+    if (S.keys['arrowup'] || S.keys['w'])    moveY -= 1;
+    if (S.keys['arrowdown'] || S.keys['s'])  moveY += 1;
+  }
 
   if (moveX !== 0 || moveY !== 0) {
     if (moveX === S.lastMoveDir.x && moveY === S.lastMoveDir.y) {
@@ -781,11 +821,12 @@ function updateShark() {
   S.shark.x = Math.max(20, Math.min(W - 20, S.shark.x));
   S.shark.y = Math.max(20, Math.min(H - 20, S.shark.y));
 
-  // Shark eats decoy
+  // Shark eats decoy — decoy survives, teleports to new spot
   if (S.decoyActive && S.decoyFish && dist(S.shark, S.decoyFish) < 25) {
     spawnParticles(S.decoyFish.x, S.decoyFish.y, '#ffaa44', 12);
     S.scorePopups.push({ x: S.decoyFish.x, y: S.decoyFish.y - 14, pts: 'CHOMP!', life: 0.8, decay: 0.03 });
-    deactivateDecoy();
+    S.decoyFish.x = Math.max(40, Math.min(W - 40, S.fish.x + rand(-120, 120)));
+    S.decoyFish.y = Math.max(40, Math.min(H - 40, S.fish.y + rand(-80, 80)));
   }
 
   // Collision with fish
@@ -935,6 +976,7 @@ function loop(timestamp) {
   drawClaudeOverlay();
   drawIceOverlay();
   drawHourglassOverlay();
+  drawGhostIndicator();
   drawCrazyOverlay();
   drawPowerupTimerBars();
   drawScorePopups();

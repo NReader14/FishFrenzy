@@ -597,25 +597,210 @@ export const ACCESSORY_TABS = [
 // Flat list for backward-compat lookups (old skins with single `accessory` key)
 export const ACCESSORY_LIST = ACCESSORY_TABS.flatMap(t => t.items);
 
+// ─── Fish body drawing functions ──────────────────────────────
+// Each function draws a complete fish body (body, tail, eye, dorsal) on ctx2.
+// ctx2 is already translated/scaled/rotated — draw at (0,0) facing right.
+
+function drawStandardBody(ctx2, c1, c2, c3, phase) {
+  ctx2.fillStyle = c1;
+  ctx2.fillRect(-14, -8, 28, 16);
+  ctx2.fillRect(-10, -10, 20, 2);
+  ctx2.fillRect(-10, 8, 20, 2);
+  ctx2.fillStyle = c2;
+  ctx2.fillRect(-10, 2, 18, 4);
+  ctx2.fillStyle = c3;
+  ctx2.fillRect(-10, -10, 20, 3);
+  const tw = Math.round(Math.sin(phase) * 4);
+  ctx2.fillStyle = c1;
+  ctx2.fillRect(-22, -6 + tw, 8, 4);
+  ctx2.fillRect(-22, 2 + tw, 8, 4);
+  ctx2.fillRect(-26, -8 + tw, 4, 4);
+  ctx2.fillRect(-26, 4 + tw, 4, 4);
+  ctx2.fillStyle = '#fff';
+  ctx2.fillRect(6, -6, 8, 8);
+  ctx2.fillStyle = '#111';
+  ctx2.fillRect(10, -4, 4, 4);
+  ctx2.fillStyle = '#fff';
+  ctx2.fillRect(10, -4, 2, 2);
+  ctx2.fillStyle = c3;
+  ctx2.fillRect(-2, -14, 8, 4);
+  ctx2.fillRect(0, -12, 4, 2);
+}
+
+function drawAnglerBody(ctx2, c1, c2, c3, phase) {
+  const tw = Math.round(Math.sin(phase) * 4);
+  // Taller, chunkier body for the angler fish
+  ctx2.fillStyle = c1;
+  ctx2.fillRect(-14, -10, 28, 20);
+  ctx2.fillRect(-10, -12, 20, 2);
+  ctx2.fillRect(-10, 10, 20, 2);
+  // Belly
+  ctx2.fillStyle = c2;
+  ctx2.fillRect(-10, 2, 18, 6);
+  // Top
+  ctx2.fillStyle = c3;
+  ctx2.fillRect(-10, -12, 20, 3);
+  // Tail (slightly spread for chunkier body)
+  ctx2.fillStyle = c1;
+  ctx2.fillRect(-22, -7 + tw, 8, 4);
+  ctx2.fillRect(-22, 3 + tw, 8, 4);
+  ctx2.fillRect(-26, -9 + tw, 4, 4);
+  ctx2.fillRect(-26, 5 + tw, 4, 4);
+  // Open mouth overlay on head (right side)
+  ctx2.fillStyle = '#080404';
+  ctx2.fillRect(10, -2, 8, 8);
+  // Lower jaw
+  ctx2.fillStyle = c1;
+  ctx2.fillRect(10, 6, 8, 4);
+  // Teeth
+  ctx2.fillStyle = '#eeeebb';
+  ctx2.fillRect(11, -2, 2, 3);
+  ctx2.fillRect(14, -2, 2, 3);
+  ctx2.fillRect(11, 5, 2, 3);
+  ctx2.fillRect(14, 5, 2, 3);
+  // Red beady eye (replaces standard eye)
+  ctx2.fillStyle = '#fff';
+  ctx2.fillRect(6, -6, 7, 7);
+  ctx2.fillStyle = '#ff2200';
+  ctx2.fillRect(9, -5, 3, 3);
+  ctx2.fillStyle = '#fff';
+  ctx2.fillRect(9, -5, 1, 1);
+  // Lure stalk from dorsal area
+  ctx2.fillStyle = c3;
+  ctx2.fillRect(4, -18, 2, 8);
+  // Lure orb
+  ctx2.fillStyle = '#88ff22';
+  ctx2.fillRect(2, -23, 6, 5);
+  ctx2.fillStyle = '#ccff88';
+  ctx2.fillRect(3, -23, 3, 2);
+  // Spiky dorsal fin
+  ctx2.fillStyle = c3;
+  ctx2.fillRect(-2, -14, 5, 4);
+  ctx2.fillRect(-1, -16, 3, 2);
+}
+
+function drawGoldfishBody(ctx2, c1, c2, c3, phase) {
+  const tw = Math.round(Math.sin(phase) * 4);
+  // Rounder body
+  ctx2.fillStyle = c1;
+  ctx2.fillRect(-11, -9, 22, 18);
+  ctx2.fillRect(-7, -11, 14, 3);
+  ctx2.fillRect(-7, 9, 14, 3);
+  ctx2.fillRect(-13, -6, 3, 12);
+  // Belly
+  ctx2.fillStyle = c2;
+  ctx2.fillRect(-8, 2, 15, 6);
+  // Top
+  ctx2.fillStyle = c3;
+  ctx2.fillRect(-7, -11, 14, 3);
+  // Fan tail
+  ctx2.fillStyle = c1;
+  ctx2.fillRect(-20, -10 + tw, 8, 3);
+  ctx2.fillRect(-24, -13 + tw, 4, 3);
+  ctx2.fillRect(-27, -15 + tw, 4, 2);
+  ctx2.fillRect(-20, -2 + tw, 8, 4);
+  ctx2.fillRect(-20, 6 + tw, 8, 3);
+  ctx2.fillRect(-24, 8 + tw, 4, 3);
+  ctx2.fillRect(-27, 10 + tw, 4, 2);
+  // Flowing bottom fin
+  ctx2.fillStyle = c3;
+  ctx2.fillRect(-6, 9, 12, 3);
+  ctx2.fillRect(-4, 12, 8, 2);
+  // Big round eye
+  ctx2.fillStyle = '#fff';
+  ctx2.fillRect(5, -8, 9, 9);
+  ctx2.fillStyle = '#111';
+  ctx2.fillRect(8, -6, 5, 5);
+  ctx2.fillStyle = '#fff';
+  ctx2.fillRect(8, -6, 2, 2);
+  // Tall dorsal fin
+  ctx2.fillStyle = c3;
+  ctx2.fillRect(-3, -14, 9, 3);
+  ctx2.fillRect(-1, -17, 7, 3);
+  ctx2.fillRect(1, -19, 5, 2);
+  ctx2.fillRect(3, -21, 3, 2);
+}
+
+function drawClownfishBody(ctx2, c1, c2, c3, phase) {
+  const tw = Math.round(Math.sin(phase) * 4);
+  // Base body
+  ctx2.fillStyle = c1;
+  ctx2.fillRect(-14, -8, 28, 16);
+  ctx2.fillRect(-10, -10, 20, 2);
+  ctx2.fillRect(-10, 8, 20, 2);
+  // Belly
+  ctx2.fillStyle = c2;
+  ctx2.fillRect(-10, 2, 18, 4);
+  // Top
+  ctx2.fillStyle = c3;
+  ctx2.fillRect(-10, -10, 20, 3);
+  // White vertical stripe markings
+  ctx2.fillStyle = '#ffffff';
+  ctx2.fillRect(-2, -10, 4, 20);
+  ctx2.fillRect(6, -10, 3, 18);
+  // Black outlines on stripes
+  ctx2.fillStyle = '#222222';
+  ctx2.fillRect(-2, -10, 1, 20);
+  ctx2.fillRect(1, -10, 1, 20);
+  ctx2.fillRect(6, -10, 1, 18);
+  ctx2.fillRect(8, -10, 1, 18);
+  // Tail
+  ctx2.fillStyle = c1;
+  ctx2.fillRect(-22, -6 + tw, 8, 4);
+  ctx2.fillRect(-22, 2 + tw, 8, 4);
+  ctx2.fillRect(-26, -8 + tw, 4, 4);
+  ctx2.fillRect(-26, 4 + tw, 4, 4);
+  // Eye (shifted right of stripe)
+  ctx2.fillStyle = '#fff';
+  ctx2.fillRect(10, -6, 7, 7);
+  ctx2.fillStyle = '#111';
+  ctx2.fillRect(13, -4, 4, 4);
+  ctx2.fillStyle = '#fff';
+  ctx2.fillRect(13, -4, 2, 2);
+  // Dorsal fin
+  ctx2.fillStyle = c3;
+  ctx2.fillRect(-2, -14, 8, 4);
+  ctx2.fillRect(0, -12, 4, 2);
+}
+
+// Per-type, per-category offsets applied before drawing accessories.
+// Each fishType has hat/mask/outfit sub-offsets {x, y}.
+export const FISH_TYPE_EXTRAS_OFFSET = {
+  standard:  { hat: {x:0,y:0},  mask: {x:0,y:0},  outfit: {x:0,y:0}  },
+  angler:    { hat: {x:0,y:-2}, mask: {x:0,y:0},  outfit: {x:0,y:1}  },
+  goldfish:  { hat: {x:0,y:-2}, mask: {x:0,y:-2}, outfit: {x:0,y:0}  },
+  clownfish: { hat: {x:0,y:0},  mask: {x:0,y:0},  outfit: {x:0,y:0}  },
+};
+
+// Dispatch to the correct body drawing function.
+export function drawFishBody(ctx2, c1, c2, c3, phase, fishType = 'standard') {
+  switch (fishType) {
+    case 'angler':    return drawAnglerBody(ctx2, c1, c2, c3, phase);
+    case 'goldfish':  return drawGoldfishBody(ctx2, c1, c2, c3, phase);
+    case 'clownfish': return drawClownfishBody(ctx2, c1, c2, c3, phase);
+    default:          return drawStandardBody(ctx2, c1, c2, c3, phase);
+  }
+}
+
 // Appends a custom skin to SKINS and returns its index.
-// Supports new format { hat, mask, outfit } and old format { accessory }.
+// Supports new format { hat, mask, outfit } (per-category) and old format { accessory }.
 export function addCustomSkinToList(skinData) {
-  const fns = [];
+  const skin = { name: skinData.name, c1: skinData.c1, c2: skinData.c2, c3: skinData.c3, custom: true };
+  if (skinData.fishType && skinData.fishType !== 'standard') skin.fishType = skinData.fishType;
   if (skinData.hat !== undefined || skinData.mask !== undefined || skinData.outfit !== undefined) {
+    // Per-category format — store each fn separately for individual offset application
     for (const key of ['hat', 'mask', 'outfit']) {
       const val = skinData[key] || 'none';
       if (val !== 'none') {
         const item = ACCESSORY_LIST.find(a => a.key === val);
-        if (item?.fn) fns.push(item.fn);
+        if (item?.fn) skin[`${key}Fn`] = item.fn;
       }
     }
   } else if (skinData.accessory && skinData.accessory !== 'none') {
+    // Legacy single-accessory format
     const item = ACCESSORY_LIST.find(a => a.key === skinData.accessory);
-    if (item?.fn) fns.push(item.fn);
+    if (item?.fn) skin.extras = item.fn;
   }
-  const skin = { name: skinData.name, c1: skinData.c1, c2: skinData.c2, c3: skinData.c3, custom: true };
-  if (fns.length === 1) skin.extras = fns[0];
-  else if (fns.length > 1) skin.extras = (c) => fns.forEach(f => f(c));
   const existingIdx = SKINS.findIndex(s => s.name === skin.name && s.custom);
   if (existingIdx !== -1) { SKINS[existingIdx] = skin; return existingIdx; }
   SKINS.push(skin);
@@ -672,6 +857,23 @@ export const SKINS = [
     c1: '#445566', c2: '#667788', c3: '#223344',
     extras: drawSkeleton,
   },
+
+  // ── Fish type skins ──
+  {
+    name: 'Angler',
+    c1: '#1a2a3a', c2: '#2a4a5a', c3: '#0a1525',
+    fishType: 'angler',
+  },
+  {
+    name: 'Goldfish',
+    c1: '#ff8822', c2: '#ffd070', c3: '#cc5500',
+    fishType: 'goldfish',
+  },
+  {
+    name: 'Clownfish',
+    c1: '#ff5500', c2: '#ffaa22', c3: '#cc3300',
+    fishType: 'clownfish',
+  },
 ];
 
 // ─── Mini preview renderer ─────────────────────────────────────
@@ -687,43 +889,31 @@ export function drawSkinPreview(ctx2, skin, w, h, time = 0) {
   ctx2.translate(w / 2 + 4, h / 2 + (isPreview ? 18 : 8));
   ctx2.scale(sc, sc);
 
-  // Body
-  ctx2.fillStyle = c1;
-  ctx2.fillRect(-14, -8, 28, 16);
-  ctx2.fillRect(-10,-10, 20,  2);
-  ctx2.fillRect(-10,  8, 20,  2);
+  const phase = isPreview ? time * 0.003 : 0;
+  const fishType = skin.fishType || 'standard';
+  drawFishBody(ctx2, c1, c2, c3, phase, fishType);
 
-  // Belly stripe
-  ctx2.fillStyle = c2;
-  ctx2.fillRect(-10, 2, 18, 4);
+  const typeOff = FISH_TYPE_EXTRAS_OFFSET[fishType] || FISH_TYPE_EXTRAS_OFFSET.standard;
 
-  // Top (darker)
-  ctx2.fillStyle = c3;
-  ctx2.fillRect(-10,-10, 20, 3);
+  // Per-category accessories (custom skins)
+  for (const key of ['hat', 'mask', 'outfit']) {
+    const fn = skin[`${key}Fn`];
+    if (fn) {
+      const off = typeOff[key] || { x: 0, y: 0 };
+      ctx2.save();
+      ctx2.translate(off.x, off.y);
+      fn(ctx2);
+      ctx2.restore();
+    }
+  }
 
-  // Animated tail — wags with a sine wave (only on large preview)
-  const wag = isPreview ? Math.round(Math.sin(time * 0.003) * 3) : 0;
-  ctx2.fillStyle = c1;
-  ctx2.fillRect(-22, -6 + wag, 8, 4);
-  ctx2.fillRect(-22,  2 + wag, 8, 4);
-  ctx2.fillRect(-26, -8 + wag, 4, 4);
-  ctx2.fillRect(-26,  4 + wag, 4, 4);
-
-  // Eye
-  ctx2.fillStyle = '#fff';
-  ctx2.fillRect(6,-6, 8, 8);
-  ctx2.fillStyle = '#111';
-  ctx2.fillRect(10,-4, 4, 4);
-  ctx2.fillStyle = '#fff';
-  ctx2.fillRect(10,-4, 2, 2);
-
-  // Dorsal fin
-  ctx2.fillStyle = c3;
-  ctx2.fillRect(-2,-14, 8, 4);
-  ctx2.fillRect( 0,-12, 4, 2);
-
-  // Character accessories
-  if (skin.extras) skin.extras(ctx2);
+  // Legacy extras (predefined skins like Joker, Ninja, etc.)
+  if (skin.extras) {
+    ctx2.save();
+    ctx2.translate(typeOff.mask.x, typeOff.mask.y);
+    skin.extras(ctx2);
+    ctx2.restore();
+  }
 
   ctx2.restore();
 }

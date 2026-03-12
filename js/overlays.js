@@ -14,7 +14,7 @@ import { playCRTWipe } from './animations.js';
 import {
   fetchHighScores, fetchAllScores, saveHighScore, isFirebaseOnline,
   adminWipeScores, fetchMaintenance, setMaintenance,
-  saveGameConfig, fetchPatchNotes, savePatchNotes, fetchFeedback
+  saveGameConfig, fetchPatchNotes, savePatchNotes, fetchFeedback, deleteFeedback
 } from '../firebase-config.js';
 import { pwConfig, clearTO } from './powerups.js';
 import { setupItemTestEvents } from './admin.js';
@@ -622,19 +622,39 @@ export function setupAdminEvents() {
     const count = document.getElementById('admin-feedback-count');
     if (!list) return;
     list.textContent = 'LOADING...';
-    const entries = await fetchFeedback(30);
+    const entries = await fetchFeedback(S.adminCredentials.email, S.adminCredentials.password, 30);
     if (!entries.length) { list.textContent = 'NO FEEDBACK YET'; count.textContent = ''; return; }
     count.textContent = `${entries.length} ENTR${entries.length === 1 ? 'Y' : 'IES'}`;
-    list.innerHTML = entries.map(e => {
-      const typeLabel = e.type === 'bug' ? '🐛' : '💡';
-      const when = e.timestamp?.toDate ? e.timestamp.toDate().toLocaleString() : '—';
-      const msg = (e.message || '').slice(0, 120) + (e.message?.length > 120 ? '…' : '');
-      return `<div style="border-bottom:1px solid #1a2a3a;padding:4px 0;">
-        <span style="color:${e.type === 'bug' ? '#ee5566' : '#44ddff'}">${typeLabel} ${e.type?.toUpperCase()}</span>
-        <span style="color:#445566;margin-left:6px;">${when}</span>
-        <div style="color:#aabbcc;margin-top:2px;">${msg}</div>
-      </div>`;
-    }).join('');
+    const renderList = (data) => {
+      list.innerHTML = data.map(e => {
+        const typeLabel = e.type === 'bug' ? '🐛' : '💡';
+        const when = e.timestamp?.toDate ? e.timestamp.toDate().toLocaleString() : '—';
+        const msg = (e.message || '').slice(0, 120) + (e.message?.length > 120 ? '…' : '');
+        return `<div data-fb-id="${e.id}" style="border-bottom:1px solid #1a2a3a;padding:4px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:6px;">
+          <div>
+            <span style="color:${e.type === 'bug' ? '#ee5566' : '#44ddff'}">${typeLabel} ${e.type?.toUpperCase()}</span>
+            <span style="color:#445566;margin-left:6px;">${when}</span>
+            <div style="color:#aabbcc;margin-top:2px;">${msg}</div>
+          </div>
+          <button data-del-id="${e.id}" style="background:none;border:1px solid #ee5566;color:#ee5566;font-size:7px;padding:2px 5px;cursor:pointer;flex-shrink:0;font-family:inherit;">✕</button>
+        </div>`;
+      }).join('');
+      list.querySelectorAll('[data-del-id]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-del-id');
+          btn.disabled = true;
+          btn.textContent = '…';
+          try {
+            await deleteFeedback(S.adminCredentials.email, S.adminCredentials.password, id);
+            list.querySelector(`[data-fb-id="${id}"]`)?.remove();
+            const remaining = list.querySelectorAll('[data-fb-id]').length;
+            count.textContent = remaining ? `${remaining} ENTR${remaining === 1 ? 'Y' : 'IES'}` : '';
+            if (!remaining) list.textContent = 'NO FEEDBACK YET';
+          } catch { btn.disabled = false; btn.textContent = '✕'; }
+        });
+      });
+    };
+    renderList(entries);
   });
 
   // Close admin panel

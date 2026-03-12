@@ -32,7 +32,7 @@ function buildName() {
   return [t, m, n].filter(Boolean).join(' ');
 }
 
-const state = { c1: '#ff8833', c2: '#ffaa55', c3: '#cc5500', hat: 'none', mask: 'none', outfit: 'none', nameTitle: '', nameMiddle: '', nameFirst: '' };
+const state = { c1: '#ff8833', c2: '#ffaa55', c3: '#cc5500', hat: 'none', mask: 'none', outfit: 'none', nameTitle: '', nameMiddle: '', nameFirst: '', fishType: 'standard' };
 
 // ─── Public API ────────────────────────────────────────────────
 
@@ -47,7 +47,7 @@ export function openFishDraw() {
   const ov = document.getElementById('fishdraw-overlay');
   ov?.classList.remove('hidden');
   // Reset state
-  Object.assign(state, { c1: '#ff8833', c2: '#ffaa55', c3: '#cc5500', hat: 'none', mask: 'none', outfit: 'none', nameTitle: '', nameMiddle: '', nameFirst: NAME_FIRSTS[0] });
+  Object.assign(state, { c1: '#ff8833', c2: '#ffaa55', c3: '#cc5500', hat: 'none', mask: 'none', outfit: 'none', nameTitle: '', nameMiddle: '', nameFirst: NAME_FIRSTS[0], fishType: 'standard' });
   syncColourInputs();
   switchTab('hat');
   refreshAllAccPreviews();
@@ -69,6 +69,13 @@ function buildOverlay(ov) {
     <div class="fishdraw-title">DESIGN YOUR FISH</div>
     <div class="fishdraw-preview-wrap">
       <canvas id="fishdraw-preview" width="240" height="150"></canvas>
+    </div>
+    <div class="fishdraw-section-label">BODY TYPE</div>
+    <div class="fd-type-row">
+      <button class="fd-type-btn selected" data-type="standard">🐟 STANDARD</button>
+      <button class="fd-type-btn" data-type="angler">😈 ANGLER</button>
+      <button class="fd-type-btn" data-type="goldfish">🟠 GOLDFISH</button>
+      <button class="fd-type-btn" data-type="clownfish">🤡 CLOWNFISH</button>
     </div>
     <div class="fishdraw-section-label">COLOURS</div>
     <div class="fishdraw-colours">
@@ -132,6 +139,25 @@ function buildOverlay(ov) {
 
   ov.querySelectorAll('.fd-tab').forEach(btn => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+
+  const TYPE_DEFAULTS = {
+    standard:  { c1: '#ff8833', c2: '#ffaa55', c3: '#cc5500' },
+    angler:    { c1: '#1a2a3a', c2: '#2a4a5a', c3: '#0a1525' },
+    goldfish:  { c1: '#ff8822', c2: '#ffd070', c3: '#cc5500' },
+    clownfish: { c1: '#ff5500', c2: '#ffaa22', c3: '#cc3300' },
+  };
+
+  ov.querySelectorAll('.fd-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.fishType = btn.dataset.type;
+      ov.querySelectorAll('.fd-type-btn').forEach(b => b.classList.toggle('selected', b === btn));
+      const defaults = TYPE_DEFAULTS[state.fishType];
+      if (defaults) { Object.assign(state, defaults); syncColourInputs(); }
+      updatePreview();
+      clearTimeout(accRefreshTimer);
+      accRefreshTimer = setTimeout(refreshAllAccPreviews, 80);
+    });
   });
 
   document.getElementById('fd-save-btn')?.addEventListener('click', saveSkin);
@@ -239,7 +265,7 @@ let _previewRaf = null;
 function updatePreview() {
   const cvs = document.getElementById('fishdraw-preview');
   if (!cvs) return;
-  drawSkinPreview(cvs.getContext('2d'), { c1: state.c1, c2: state.c2, c3: state.c3, extras: getExtrasFn() }, 240, 150, performance.now());
+  drawSkinPreview(cvs.getContext('2d'), { c1: state.c1, c2: state.c2, c3: state.c3, extras: getExtrasFn(), fishType: state.fishType }, 240, 150, performance.now());
 }
 
 function startPreviewAnimation() {
@@ -292,8 +318,9 @@ async function saveSkin() {
   if (btn) btn.textContent = 'SAVING...';
   try {
     const fullName = buildName();
-    await saveCustomSkin({ name: fullName, c1: state.c1, c2: state.c2, c3: state.c3, hat: state.hat, mask: state.mask, outfit: state.outfit });
-    const idx = addCustomSkinToList({ name: fullName, c1: state.c1, c2: state.c2, c3: state.c3, hat: state.hat, mask: state.mask, outfit: state.outfit });
+    const skinPayload = { name: fullName, c1: state.c1, c2: state.c2, c3: state.c3, hat: state.hat, mask: state.mask, outfit: state.outfit, fishType: state.fishType };
+    await saveCustomSkin(skinPayload);
+    const idx = addCustomSkinToList(skinPayload);
     window.dispatchEvent(new CustomEvent('fishSkinSaved', { detail: { idx } }));
     if (btn) btn.textContent = 'SAVED!';
     setTimeout(() => {

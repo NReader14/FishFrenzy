@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import S from './state.js';
-import { SKINS } from './skins.js';
+import { SKINS, drawFishBody, FISH_TYPE_EXTRAS_OFFSET } from './skins.js';
 import { ctx } from './dom.js';
 import { W, H, rand, dist,
   FRENZY_DURATION, ICE_DURATION, HOURGLASS_DURATION, GOOP_DURATION,
@@ -55,48 +55,19 @@ export function drawWater() {
 }
 
 // ─── PIXEL FISH (reusable) ───
-export function drawPixelFish(x, y, dir, angle, phase, c1, c2, c3) {
+export function drawPixelFish(x, y, dir, angle, phase, c1, c2, c3, fishType = 'standard') {
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(dir, 1);
   ctx.rotate(angle || 0);
-
-  ctx.fillStyle = c1;
-  ctx.fillRect(-14, -8, 28, 16);
-  ctx.fillRect(-10, -10, 20, 2);
-  ctx.fillRect(-10, 8, 20, 2);
-
-  ctx.fillStyle = c2;
-  ctx.fillRect(-10, 2, 18, 4);
-
-  ctx.fillStyle = c3;
-  ctx.fillRect(-10, -10, 20, 3);
-
-  const tw = Math.round(Math.sin(phase) * 4);
-  ctx.fillStyle = c1;
-  ctx.fillRect(-22, -6 + tw, 8, 4);
-  ctx.fillRect(-22, 2 + tw, 8, 4);
-  ctx.fillRect(-26, -8 + tw, 4, 4);
-  ctx.fillRect(-26, 4 + tw, 4, 4);
-
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(6, -6, 8, 8);
-  ctx.fillStyle = '#111';
-  ctx.fillRect(10, -4, 4, 4);
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(10, -4, 2, 2);
-
-  ctx.fillStyle = c3;
-  ctx.fillRect(-2, -14, 8, 4);
-  ctx.fillRect(0, -12, 4, 2);
-
+  drawFishBody(ctx, c1, c2, c3, phase, fishType);
   ctx.restore();
 }
 
 // ─── PLAYER FISH ───
 export function drawFish() {
   // During body swap, fish is drawn as an angry red predator
-  let c1, c2, c3;
+  let c1, c2, c3, fishType = 'standard';
   if (S.bodySwapActive) {
     c1 = '#cc2222'; c2 = '#ee4444'; c3 = '#aa0000';
   } else {
@@ -104,17 +75,38 @@ export function drawFish() {
     c1 = S.frenzyActive ? '#ffaa22' : skin.c1;
     c2 = S.frenzyActive ? '#ffcc44' : skin.c2;
     c3 = S.frenzyActive ? '#ee7700' : skin.c3;
+    fishType = skin.fishType || 'standard';
   }
-  drawPixelFish(S.fish.x, S.fish.y, S.fish.dir, S.fish.angle, S.fish.tailPhase, c1, c2, c3);
+  drawPixelFish(S.fish.x, S.fish.y, S.fish.dir, S.fish.angle, S.fish.tailPhase, c1, c2, c3, fishType);
 
   // Draw skin accessories (glasses, crown, etc.) on top of base fish
   if (!S.bodySwapActive) {
     const skin = SKINS[S.settings.skin ?? 0] || SKINS[0];
+    const typeOff = FISH_TYPE_EXTRAS_OFFSET[fishType] || FISH_TYPE_EXTRAS_OFFSET.standard;
+
+    // Per-category accessories (custom skins)
+    for (const key of ['hat', 'mask', 'outfit']) {
+      const fn = skin[`${key}Fn`];
+      if (fn) {
+        const off = typeOff[key] || { x: 0, y: 0 };
+        ctx.save();
+        ctx.translate(S.fish.x, S.fish.y);
+        ctx.scale(S.fish.dir, 1);
+        ctx.rotate(S.fish.angle || 0);
+        ctx.translate(off.x, off.y);
+        fn(ctx);
+        ctx.restore();
+      }
+    }
+
+    // Legacy extras (predefined skins like Joker, Ninja, etc.)
     if (skin.extras) {
+      const off = typeOff.mask || { x: 0, y: 0 };
       ctx.save();
       ctx.translate(S.fish.x, S.fish.y);
       ctx.scale(S.fish.dir, 1);
       ctx.rotate(S.fish.angle || 0);
+      ctx.translate(off.x, off.y);
       skin.extras(ctx);
       ctx.restore();
     }
@@ -661,10 +653,34 @@ export function drawIceOverlay() {
 
 export function drawHourglassOverlay() {
   if (!S.hourglassActive) return;
-  ctx.globalAlpha = 0.03 + Math.sin(Date.now() * 0.003) * 0.02;
+  const t = Date.now();
+  // Screen tint
+  ctx.globalAlpha = 0.05 + Math.sin(t * 0.003) * 0.03;
   ctx.fillStyle = '#ffdd44';
   ctx.fillRect(0, 0, W, H);
+  // Golden pulsing border
+  ctx.globalAlpha = 0.35 + Math.sin(t * 0.005) * 0.2;
+  ctx.strokeStyle = '#ffdd44';
+  ctx.lineWidth = 7;
+  ctx.strokeRect(4, 4, W - 8, H - 8);
   ctx.globalAlpha = 1;
+}
+
+export function drawGhostIndicator() {
+  if (!S.ghostActive || !S.shark) return;
+  const t = Date.now();
+  const alpha = 0.25 + Math.sin(t * 0.006) * 0.12;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.font = '30px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('👻', S.shark.x, S.shark.y - 8);
+  ctx.font = '6px "Press Start 2P"';
+  ctx.fillStyle = '#aaaaff';
+  ctx.globalAlpha = alpha * 0.9;
+  ctx.fillText('STUNNED', S.shark.x, S.shark.y - 38);
+  ctx.restore();
 }
 
 export function drawCrazyOverlay() {
@@ -1165,11 +1181,14 @@ export function drawHellAnim() {
 }
 
 // ─── TUTORIAL HINTS ───
+// dur: seconds this step lasts (null = wait for input, never fade out)
 const TUTORIAL_HINTS = [
-  { title: 'MOVE',    body: 'ARROW KEYS / WASD TO SWIM  \u2022  TAP & DRAG ON MOBILE' },
-  { title: 'COLLECT', body: 'GRAB ALL TREATS BEFORE THE TIMER RUNS OUT' },
-  { title: 'DANGER!', body: 'THE SHARK IS STARTING TO MOVE \u2014 IT WILL CHASE YOU!' },
-  { title: 'DODGE!',  body: "AVOID THE SHARK OR IT'S GAME OVER. GOOD LUCK!" },
+  { title: 'WELCOME!',      body: 'ARROW KEYS / WASD TO SWIM  \u2022  TAP & DRAG ON MOBILE',         dur: null },
+  { title: 'COLLECT',       body: 'EAT ALL THE TREATS BEFORE THE TIMER RUNS OUT!',                    dur: 6    },
+  { title: 'POWER-UPS!',    body: 'GLOWING ORBS GIVE BOOSTS \u2014 FRENZY MAGNET SHIELD & MORE!',    dur: 5    },
+  { title: 'DANGER ITEMS',  body: 'RED ORBS HURT YOU \u2014 POISON HOOK & GOOP \u2014 AVOID THEM!',  dur: 5    },
+  { title: 'THE SHARK!',    body: "IT'S CHASING YOU \u2014 DODGE IT OR IT'S GAME OVER!",              dur: 5    },
+  { title: 'ALL DONE!',     body: 'YOU ARE READY TO PLAY. HEADING BACK TO MENU...',                   dur: 3    },
 ];
 
 export function drawTutorialHints() {
@@ -1178,13 +1197,13 @@ export function drawTutorialHints() {
   if (!hint) return;
 
   const elapsed = (Date.now() - S.tutorialStepTime) / 1000;
-  const stepDuration = 3.0;
+  const stepDuration = hint.dur ?? 999;
   const fadeIn = Math.min(1, elapsed / 0.3);
-  const fadeOut = S.tutorialStep === 0 ? 1 : Math.max(0, 1 - (elapsed - (stepDuration - 0.4)) / 0.4);
+  const fadeOut = hint.dur === null ? 1 : Math.max(0, 1 - (elapsed - (stepDuration - 0.4)) / 0.4);
   const alpha = fadeIn * (elapsed < stepDuration - 0.4 ? 1 : fadeOut);
   if (alpha <= 0) return;
 
-  const bw = 400, bh = 58, bx = W / 2 - bw / 2, by = H - bh - 14;
+  const bw = 480, bh = 58, bx = W / 2 - bw / 2, by = H - bh - 14;
   const stepDots = TUTORIAL_HINTS.map((_, i) => i === S.tutorialStep ? '\u25cf' : '\u25cb').join('  ');
 
   ctx.save();

@@ -28,7 +28,7 @@ export const RARITY = {
   5: { name: 'Mythical',  spawnMul: 0.08,  life: 2000 },
   6: { name: 'Legendary', spawnMul: 0.025, life: 1800 },
 };
-export const CRAZY_ITEM_LIFETIME  = 900;
+export const CRAZY_ITEM_LIFETIME  = 2500;
 export const CLAUDE_ITEM_LIFETIME = 1200;
 export const MAX_FIELD_ITEMS     = 3;
 
