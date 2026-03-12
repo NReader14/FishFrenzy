@@ -2,6 +2,33 @@
    EFFECTS — CRT wipe transition, wipe notification popup
    ═══════════════════════════════════════════════════════ */
 
+/* ─── EASTER EGG — School of fish ─── */
+/* Wrapper handles horizontal swim, sits behind overlay content */
+.easter-fish {
+  position: absolute;
+  pointer-events: none;
+  z-index: -1;
+  line-height: 1;
+  user-select: none;
+}
+/* Inner span handles bob only — flip is a static transform on the outer wrapper */
+.easter-fish-inner {
+  display: inline-block;
+  animation: easter-bob var(--bob-dur) ease-in-out infinite alternate;
+}
+@keyframes easter-swim-right {
+  from { left: -60px; }
+  to   { left: calc(100% + 60px); }
+}
+@keyframes easter-swim-left {
+  from { right: -60px; }
+  to   { right: calc(100% + 60px); }
+}
+@keyframes easter-bob {
+  from { transform: translateY(0px); }
+  to   { transform: translateY(var(--bob-amt)); }
+}
+
 /* ─── CRT TV WIPE TRANSITION ─── */
 .crt-wipe {
   position: absolute;

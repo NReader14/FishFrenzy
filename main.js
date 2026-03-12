@@ -8,7 +8,7 @@ import {
   FRENZY_SPEED_BOOST, SHARK_START_DELAY, COMBO_WINDOW,
   rand, dist
 } from './js/constants.js';
-import { gameVars, GAME_VAR_DEFAULTS } from './js/game-vars.js';
+import { gameVars, GAME_VAR_DEFAULTS, firebaseGameVars } from './js/game-vars.js';
 import {
   ctx, overlay, winOverlay, scoreboardOverlay,
   rulesOverlay, adminOverlay, scoreEl, timerEl, timerBar,
@@ -214,9 +214,12 @@ async function initGame() {
   S.score = 0;
   S.pbNotified = false;
 
-  // Apply difficulty
+  // Apply difficulty, then re-apply Firebase values so they always win
   Object.assign(gameVars, GAME_VAR_DEFAULTS);
   Object.assign(gameVars, DIFFICULTY_PRESETS[S.settings.difficulty] || {});
+  // Re-fetch from Firebase and apply on top (refreshes any admin changes)
+  await loadRarities();
+  if (Object.keys(firebaseGameVars).length) Object.assign(gameVars, firebaseGameVars);
 
   try {
     const scores = await fetchHighScores();
@@ -958,6 +961,56 @@ rulesBackBtn.addEventListener('click', () => {
   rulesOverlay.classList.add('hidden');
   overlay.classList.remove('hidden');
 });
+
+// ─── EASTER EGG — School of fish on home screen ─────────────────────────────
+(function scheduleSchool() {
+  const wait = 18000 + Math.random() * 22000; // 18–40 s between schools
+  setTimeout(() => {
+    const menuOv = document.getElementById('overlay');
+    if (!menuOv?.classList.contains('hidden')) {
+      const goRight = Math.random() < 0.5;
+      const count   = 4 + Math.floor(Math.random() * 6);
+      const yPct    = 12 + Math.random() * 68;
+      const emojis  = ['🐟','🐠','🐡'];
+      const baseDur = 3500 + Math.random() * 2000;
+      // 🐟 emoji faces LEFT by default — flip it when swimming right
+      const flip = goRight ? 'scaleX(-1)' : 'scaleX(1)';
+
+      for (let i = 0; i < count; i++) {
+        const swimDur  = baseDur + Math.random() * 400;
+        const swimDely = i * 90 + Math.random() * 40;
+        const bobDur   = 600 + Math.random() * 500;
+        const bobAmt   = (4 + Math.random() * 6).toFixed(1) + 'px';
+        const size     = 13 + Math.random() * 10;
+        const offY     = (Math.random() - 0.5) * 36;
+        const emoji    = emojis[Math.floor(Math.random() * emojis.length)];
+
+        // Outer wrapper: swim (left/right property) + static flip (transform)
+        const wrap = document.createElement('span');
+        wrap.className = 'easter-fish';
+        wrap.style.cssText = [
+          `top: calc(${yPct}% + ${offY}px)`,
+          `font-size: ${size}px`,
+          `transform: ${flip}`,
+          goRight ? 'left: -60px' : 'right: -60px',
+          `animation: ${goRight ? 'easter-swim-right' : 'easter-swim-left'} ${swimDur}ms linear ${swimDely}ms forwards`,
+        ].join(';');
+
+        // Inner span: bob only (translateY, no conflict with outer flip)
+        const inner = document.createElement('span');
+        inner.className = 'easter-fish-inner';
+        inner.textContent = emoji;
+        inner.style.setProperty('--bob-dur', bobDur + 'ms');
+        inner.style.setProperty('--bob-amt', bobAmt);
+
+        wrap.appendChild(inner);
+        menuOv.appendChild(wrap);
+        setTimeout(() => wrap.remove(), swimDur + swimDely + 200);
+      }
+    }
+    scheduleSchool();
+  }, wait);
+})();
 
 // ─── PATCH NOTES ────────────────────────────────────────────────────────────
 document.getElementById('patch-notes-btn')?.addEventListener('click', async () => {

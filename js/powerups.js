@@ -17,7 +17,7 @@ import {
   W, H, rand, dist
 } from './constants.js';
 import { fetchGameConfig } from '../firebase-config.js';
-import { gameVars } from './game-vars.js';
+import { gameVars, firebaseGameVars } from './game-vars.js';
 import { sfxPowerup, setMusicTempo, startCardMusic } from './audio.js';
 import { SKINS } from './skins.js';
 
@@ -667,7 +667,10 @@ export async function loadRarities() {
   const vars = config?.gameVars;
   if (vars) {
     for (const [key, val] of Object.entries(vars)) {
-      if (key in gameVars && typeof val === 'number') gameVars[key] = val;
+      if (key in gameVars && typeof val === 'number') {
+        gameVars[key] = val;
+        firebaseGameVars[key] = val; // persist so initGame() re-applies after difficulty reset
+      }
     }
     console.log("[Config] Game vars loaded from Firebase:", vars);
   }

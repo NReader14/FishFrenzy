@@ -332,12 +332,21 @@ let _fishWhisperTimer = null;
 
 function whisperFish() {
   if (!_musicActive) return;
-  if (!window.speechSynthesis) return;
+  const ss = window.speechSynthesis;
+  if (!ss) return;
+  // Clear any stuck queue (Chrome bug)
+  ss.cancel();
   const u = new SpeechSynthesisUtterance('fish');
-  u.volume = 0.08;
-  u.rate   = 0.7;
-  u.pitch  = 0.4;
-  window.speechSynthesis.speak(u);
+  u.volume = 1.0;
+  u.rate   = 0.6;
+  u.pitch  = 0.3;
+  // Pick a voice if available — prefer a soft English one
+  const voices = ss.getVoices();
+  const pick = voices.find(v => /en/i.test(v.lang) && /female|zira|samantha|karen/i.test(v.name))
+            || voices.find(v => /en/i.test(v.lang))
+            || voices[0];
+  if (pick) u.voice = pick;
+  ss.speak(u);
 }
 
 function runScheduler() {
@@ -383,7 +392,17 @@ export function startMusic() {
   _dStep = 0;
   _nextTime = ctx().currentTime + 0.08;
   runScheduler();
-  _fishWhisperTimer = setInterval(whisperFish, 60000);
+  // Ensure voices are loaded (Chrome loads them async) then start whisper loop
+  const startWhispers = () => {
+    _fishWhisperTimer = setInterval(whisperFish, 60000);
+  };
+  if (window.speechSynthesis) {
+    if (window.speechSynthesis.getVoices().length) {
+      startWhispers();
+    } else {
+      window.speechSynthesis.addEventListener('voiceschanged', startWhispers, { once: true });
+    }
+  }
 }
 
 export function stopMusic() {

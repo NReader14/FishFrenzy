@@ -35,3 +35,6 @@ export const GAME_VAR_META = {
 };
 
 export const GAME_VAR_DEFAULTS = { ...gameVars };
+
+// Firebase-loaded overrides — populated by loadRarities(), persists across resets
+export const firebaseGameVars = {};

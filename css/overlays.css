@@ -70,6 +70,32 @@
   margin-bottom: 14px;
 }
 
+/* Make the 3 secondary menu buttons uniform and narrower than START */
+.menu-buttons .btn-secondary {
+  width: 170px;
+  font-size: 10px;
+  padding: 12px 24px;
+  text-align: center;
+}
+
+/* START button — wider than the secondary buttons */
+#start-btn {
+  width: 200px;
+  animation: start-btn-pulse 6s ease-in-out infinite;
+}
+@keyframes start-btn-pulse {
+  0%, 55%, 100% {
+    box-shadow: 0 0 16px rgba(68,221,255,.15), inset 0 0 16px rgba(68,221,255,.05);
+    border-color: #44ddff;
+    color: #44ddff;
+  }
+  65%, 85% {
+    box-shadow: 0 0 40px rgba(68,221,255,.55), inset 0 0 24px rgba(68,221,255,.18);
+    border-color: #aaf0ff;
+    color: #aaf0ff;
+  }
+}
+
 .welcome-reopen-btn {
   position: absolute;
   top: 10px;
