@@ -48,7 +48,7 @@ import {
 import { initControls } from './js/controls.js';
 import { initSettings, saveSettings } from './js/settings.js';
 import { initCursor } from './js/cursor.js';
-import { initAudio, startMusic, stopMusic, sfxLevelUp, sfxGameOver, sfxSharkBite, sfxMenuClick, startCardMusic, stopCardMusic } from './js/audio.js';
+import { initAudio, startMusic, stopMusic, sfxLevelUp, sfxGameOver, sfxSharkBite, sfxMenuClick, startCardMusic, stopCardMusic, setMusicTempo } from './js/audio.js';
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -267,6 +267,7 @@ function spawnTreat() {
 }
 
 function startLevel() {
+  setMusicTempo(1.0);
   S.maxTime = Math.max(gameVars.levelTimeMin, gameVars.levelTimeBase - S.level);
   S.timeLeft = S.maxTime;
   timerEl.textContent = S.timeLeft;

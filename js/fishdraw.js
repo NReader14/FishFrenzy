@@ -27,9 +27,15 @@ const NAME_FIRSTS = [
 ];
 
 // hat / mask / outfit are independent slots
+
+// Reads the current DOM column order to build the name
 function buildName() {
-  const t = state.nameTitle, m = state.nameMiddle, n = state.nameFirst;
-  return [t, m, n].filter(Boolean).join(' ');
+  const row = document.getElementById('fd-name-row');
+  if (!row) return [state.nameTitle, state.nameMiddle, state.nameFirst].filter(Boolean).join(' ');
+  return Array.from(row.children)
+    .map(col => state[col.dataset.stateKey])
+    .filter(Boolean)
+    .join(' ');
 }
 
 const state = { c1: '#ff8833', c2: '#ffaa55', c3: '#cc5500', hat: 'none', mask: 'none', outfit: 'none', nameTitle: '', nameMiddle: '', nameFirst: '', fishType: 'standard' };
@@ -101,18 +107,18 @@ function buildOverlay(ov) {
     <div id="fd-panel-hat"    class="fishdraw-acc-grid"></div>
     <div id="fd-panel-mask"   class="fishdraw-acc-grid hidden"></div>
     <div id="fd-panel-outfit" class="fishdraw-acc-grid hidden"></div>
-    <div class="fishdraw-section-label">PICK A NAME</div>
-    <div class="fd-name-row">
-      <div class="fd-name-col">
-        <div class="fd-name-col-label">TITLE</div>
+    <div class="fishdraw-section-label">PICK A NAME <span class="fd-name-hint">drag to reorder</span></div>
+    <div class="fd-name-row" id="fd-name-row">
+      <div class="fd-name-col" draggable="true" data-state-key="nameTitle">
+        <div class="fd-name-col-label">⠿ TITLE</div>
         <select id="fd-name-title" class="fd-name-select"></select>
       </div>
-      <div class="fd-name-col">
-        <div class="fd-name-col-label">MIDDLE</div>
+      <div class="fd-name-col" draggable="true" data-state-key="nameMiddle">
+        <div class="fd-name-col-label">⠿ MIDDLE</div>
         <select id="fd-name-middle" class="fd-name-select"></select>
       </div>
-      <div class="fd-name-col">
-        <div class="fd-name-col-label">NAME</div>
+      <div class="fd-name-col" draggable="true" data-state-key="nameFirst">
+        <div class="fd-name-col-label">⠿ NAME</div>
         <select id="fd-name-first" class="fd-name-select"></select>
       </div>
     </div>
@@ -179,8 +185,6 @@ function switchTab(tabKey) {
 
 function buildAllAccGrids() {
   ACCESSORY_TABS.forEach(tab => {
-    const stateKey = tab.label.toLowerCase().replace('s', '').replace('hats','hat').replace('masks','mask').replace('outfits','outfit');
-    // derive the state slot key from tab index
     const slotKey = ['hat', 'mask', 'outfit'][ACCESSORY_TABS.indexOf(tab)];
     const grid = document.getElementById(`fd-panel-${slotKey}`);
     if (!grid) return;
@@ -239,6 +243,45 @@ function buildNameDropdown() {
   populateSelect('fd-name-middle', NAME_MIDDLES, 'nameMiddle');
   populateSelect('fd-name-first',  NAME_FIRSTS,  'nameFirst');
   updateNamePreview();
+  setupNameDrag();
+}
+
+function setupNameDrag() {
+  const row = document.getElementById('fd-name-row');
+  if (!row) return;
+  let dragged = null;
+
+  row.addEventListener('dragstart', e => {
+    dragged = e.target.closest('.fd-name-col');
+    if (!dragged) return;
+    dragged.classList.add('fd-name-dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+
+  row.addEventListener('dragend', () => {
+    if (dragged) dragged.classList.remove('fd-name-dragging');
+    row.querySelectorAll('.fd-name-col').forEach(c => c.classList.remove('fd-name-over'));
+    dragged = null;
+  });
+
+  row.addEventListener('dragover', e => {
+    e.preventDefault();
+    const target = e.target.closest('.fd-name-col');
+    if (!target || target === dragged) return;
+    row.querySelectorAll('.fd-name-col').forEach(c => c.classList.remove('fd-name-over'));
+    target.classList.add('fd-name-over');
+    // Swap in DOM based on pointer position relative to target midpoint
+    const rect = target.getBoundingClientRect();
+    const after = e.clientX > rect.left + rect.width / 2;
+    row.insertBefore(dragged, after ? target.nextSibling : target);
+    updateNamePreview();
+  });
+
+  row.addEventListener('drop', e => {
+    e.preventDefault();
+    row.querySelectorAll('.fd-name-col').forEach(c => c.classList.remove('fd-name-over'));
+    updateNamePreview();
+  });
 }
 
 // ─── Preview ───────────────────────────────────────────────────
