@@ -609,13 +609,25 @@ export function setupAdminEvents() {
   // Patch notes editor — load from Firebase when panel opens
   fetchPatchNotes().then(notes => {
     const ta = document.getElementById('admin-patch-notes-ta');
-    if (ta) ta.value = notes || '';
+    if (!ta) return;
+    try {
+      const parsed = JSON.parse(notes || '[]');
+      ta.value = JSON.stringify(parsed, null, 2);
+    } catch (_) {
+      ta.value = notes || '';
+    }
   });
 
   document.getElementById('admin-save-patch-btn')?.addEventListener('click', async () => {
     const ta = document.getElementById('admin-patch-notes-ta');
     const statusEl = document.getElementById('admin-patch-status');
     if (!ta || !S.adminCredentials) return;
+    // Validate JSON before saving
+    try { JSON.parse(ta.value); } catch (_) {
+      if (statusEl) { statusEl.textContent = '✗ INVALID JSON'; statusEl.style.color = '#ee5566'; }
+      setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 3000);
+      return;
+    }
     if (statusEl) statusEl.textContent = 'SAVING...';
     try {
       await savePatchNotes(ta.value, S.adminCredentials.email, S.adminCredentials.password);

@@ -1083,20 +1083,32 @@ document.getElementById('patch-notes-btn')?.addEventListener('click', async () =
   overlay.classList.add('hidden');
   const patchOv = document.getElementById('patch-notes-overlay');
   patchOv?.classList.remove('hidden');
-  // If admin has saved custom notes to Firebase, render them
+  // Load patch notes from Firebase (source of truth)
   try {
     const saved = await fetchPatchNotes();
     if (saved) {
       const container = patchOv?.querySelector('.patch-notes-container');
       if (container) {
-        container.innerHTML = '<div class="patch-notes-title">PATCH NOTES</div>' +
-          saved.split('\n\n').map(block => {
-            const lines = block.split('\n');
-            const header = lines[0] || '';
-            const items = lines.slice(1).filter(l => l.startsWith('- ')).map(l =>
-              `<li>${l.slice(2)}</li>`).join('');
-            return `<div class="patch-note"><div class="patch-note-version">${header}</div><ul class="patch-note-list">${items}</ul></div>`;
-          }).join('');
+        let notes;
+        try { notes = JSON.parse(saved); } catch (_) { notes = null; }
+        if (Array.isArray(notes)) {
+          container.innerHTML = '<div class="patch-notes-title">📋 PATCH NOTES</div>' +
+            notes.map(n => `
+              <div class="patch-note${n.thanks ? ' patch-note-thanks' : ''}">
+                <div class="patch-note-version">${n.emoji || ''} ${n.v} — ${n.title}</div>
+                <div class="patch-note-date">${n.date || ''}</div>
+                <ul class="patch-note-list">${(n.items || []).map(i => `<li>${i}</li>`).join('')}</ul>
+              </div>`).join('');
+        } else {
+          // Legacy plain-text fallback
+          container.innerHTML = '<div class="patch-notes-title">📋 PATCH NOTES</div>' +
+            saved.split('\n\n').map(block => {
+              const lines = block.split('\n');
+              const items = lines.slice(1).filter(l => l.startsWith('• ')).map(l =>
+                `<li>${l.slice(2)}</li>`).join('');
+              return `<div class="patch-note"><div class="patch-note-version">${lines[0]}</div><ul class="patch-note-list">${items}</ul></div>`;
+            }).join('');
+        }
       }
     }
   } catch (_) { /* fall back to static HTML */ }
