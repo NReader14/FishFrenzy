@@ -106,6 +106,7 @@ const S = {
     sfx: true,
     musicVolume: 70,
     sfxVolume: 80,
+    track: 'chiptune',
   },
 
   // Tutorial

@@ -4,7 +4,7 @@
 
 import S from './state.js';
 import { SKINS, drawSkinPreview, addCustomSkinToList } from './skins.js';
-import { startMusic, stopMusic, initAudio, setMusicVolume, setSfxVolume } from './audio.js';
+import { startMusic, stopMusic, initAudio, setMusicVolume, setSfxVolume, TRACKS } from './audio.js';
 import { openFishDraw, initFishDraw } from './fishdraw.js';
 import { fetchCustomSkins } from '../firebase-config.js';
 
@@ -24,6 +24,8 @@ function load() {
       if (typeof saved.sfx         === 'boolean') S.settings.sfx         = saved.sfx;
       if (typeof saved.musicVolume === 'number')  S.settings.musicVolume = saved.musicVolume;
       if (typeof saved.sfxVolume   === 'number')  S.settings.sfxVolume   = saved.sfxVolume;
+      if (typeof saved.track === 'string' && TRACKS.some(t => t.id === saved.track))
+        S.settings.track = saved.track;
     }
   } catch (_) {}
 }
@@ -54,7 +56,36 @@ function refreshUI() {
   const sp = document.getElementById('sfx-vol-pct');
   if (mp) mp.textContent = S.settings.musicVolume + '%';
   if (sp) sp.textContent = S.settings.sfxVolume + '%';
+  refreshTrackPicker();
   refreshSkinPicker();
+}
+
+// ─── Track Picker ────────────────────────────────────────────
+
+function buildTrackPicker() {
+  const picker = document.getElementById('track-picker');
+  if (!picker || picker.querySelector('.track-btn')) return;
+  TRACKS.forEach(track => {
+    const btn = document.createElement('button');
+    btn.className = 'track-btn';
+    btn.dataset.trackId = track.id;
+    btn.textContent = track.label;
+    btn.addEventListener('click', () => {
+      S.settings.track = track.id;
+      save();
+      refreshTrackPicker();
+      if (S.settings.music) { stopMusic(); startMusic(); }
+    });
+    picker.appendChild(btn);
+  });
+}
+
+function refreshTrackPicker() {
+  document.querySelectorAll('#track-picker .track-btn').forEach(btn => {
+    const active = btn.dataset.trackId === (S.settings.track ?? 'chiptune');
+    btn.style.borderColor = active ? '#44ee88' : '';
+    btn.style.color       = active ? '#44ee88' : '';
+  });
 }
 
 // ─── Skin Picker ─────────────────────────────────────────────
@@ -153,6 +184,7 @@ export function initSettings() {
     refreshSkinPicker();
   });
 
+  buildTrackPicker();
   buildSkinPicker();
 
   document.getElementById('settings-btn')?.addEventListener('click', () => {

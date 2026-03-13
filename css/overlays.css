@@ -664,6 +664,31 @@
   min-width: 36px;
 }
 
+/* ─── TRACK PICKER ─── */
+.track-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.track-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  padding: 7px 10px;
+  border: 1px solid #2a4a6a;
+  background: rgba(10,30,50,0.6);
+  color: #88aabb;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.track-btn:hover {
+  border-color: #557799;
+  color: #cce;
+}
+
 /* ─── SKIN PICKER ─── */
 .skin-grid {
   display: grid;

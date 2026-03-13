@@ -1,0 +1,21 @@
+HOW TO ADD MUSIC TRACKS
+=======================
+
+1. Drop your MP3 file into this folder (e.g. "chill.mp3")
+
+2. Open js/audio.js and find the TRACKS array near the top of the Public API section.
+   Add a new entry:
+
+     { id: 'chill', label: 'CHILL BEATS', src: 'audio/chill.mp3' },
+
+   - id     : unique identifier (no spaces)
+   - label  : displayed in Settings
+   - src    : path relative to index.html
+
+3. Save — the track will now appear as a button in Settings → MUSIC TRACK.
+
+Notes:
+- Tracks loop automatically.
+- Volume is controlled by the MUSIC slider in Settings.
+- Ice / Goop / Hourglass will slow the MP3 playback rate slightly (same as chiptune).
+- The chiptune track is always available as the first option.
