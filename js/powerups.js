@@ -38,6 +38,9 @@ export function setSpawnTreat(fn) { _spawnTreat = fn; }
 // Tracked timeouts for Claude's typewriter effect (cleared on game end)
 let _claudeTypewriterTOs = [];
 
+// Tracked timeouts for body-swap end countdown (cleared on game end)
+let _bodySwapCountdownTOs = [];
+
 // ─── FRENZY ───
 function activateFrenzy() {
   S.frenzyActive = true;
@@ -506,14 +509,35 @@ export function deactivateBodySwap() {
   S.bodySwapAnim = null;
   S.fish.vx = 0; S.fish.vy = 0;
   S.fish.speed = S.frenzyActive ? gameVars.fishSpeed + FRENZY_SPEED_BOOST : gameVars.fishSpeed;
-  S.shark.speed = S.shark.savedBodySwapSpeed || (0.75 + S.level * 0.2);
+  // Keep shark frozen for 1s so the fish can escape before the chase resumes
+  S.shark.speed = 0;
   stOff('bodyswap', 's-bodyswap');
   spawnParticles(S.fish.x, S.fish.y, '#ff4488', 10);
   spawnParticles(S.shark.x, S.shark.y, '#44ff88', 10);
   S.scorePopups.push({ x: W/2, y: H/2 - 22, pts: '🐟 BACK TO FISH', life: 2.5, decay: 0.014, font: '13px "Press Start 2P"', color: '#44ffaa' });
-  S.inputFrozen = true;
-  setTimeout(() => { S.inputFrozen = false; }, 1200);
   S.bodySwapTO = null;
+
+  // Countdown 3-2-1-GO!, player regains control at GO!, shark releases 1s after
+  S.inputFrozen = true;
+  _bodySwapCountdownTOs.forEach(clearTO);
+  _bodySwapCountdownTOs = [];
+  ['3', '2', '1'].forEach((n, i) => {
+    _bodySwapCountdownTOs.push(setTimeout(() => {
+      if (!S.gameRunning) return;
+      S.scorePopups.push({ x: W/2, y: H/2 + 28, pts: n, life: 1, decay: 0.018, font: '22px "Press Start 2P"', color: '#ffffff' });
+    }, i * 1000));
+  });
+  // GO! — player can move again
+  _bodySwapCountdownTOs.push(setTimeout(() => {
+    if (S.gameRunning) {
+      S.scorePopups.push({ x: W/2, y: H/2 + 28, pts: 'GO!', life: 1, decay: 0.018, font: '18px "Press Start 2P"', color: '#44ffaa' });
+    }
+    S.inputFrozen = false;
+  }, 3000));
+  // Shark releases 1s after GO! — fish gets a head start
+  _bodySwapCountdownTOs.push(setTimeout(() => {
+    S.shark.speed = S.shark.savedBodySwapSpeed || (0.75 + S.level * 0.2);
+  }, 4000));
 }
 
 // ─── THE CLAUDE ───
@@ -811,4 +835,6 @@ export function clearAllPowerupTimeouts() {
    S.magnetTO, S.promptTO, S.promptTO2, S.claudeTO, S.bodySwapTO, S.hellTO].forEach(clearTO);
   _claudeTypewriterTOs.forEach(clearTO);
   _claudeTypewriterTOs = [];
+  _bodySwapCountdownTOs.forEach(clearTO);
+  _bodySwapCountdownTOs = [];
 }
