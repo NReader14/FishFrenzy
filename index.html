@@ -176,6 +176,13 @@
     </div>
     <div class="settings-section">
       <div class="settings-row">
+        <span class="settings-label">SHARK QUIPS</span>
+        <button id="toggle-shark-quips-btn" class="settings-toggle">ON</button>
+      </div>
+      <p class="settings-hint">Shark speech bubbles during gameplay.</p>
+    </div>
+    <div class="settings-section">
+      <div class="settings-row">
         <span class="settings-label">TUTORIAL LEVEL</span>
         <button id="toggle-tutorial-btn" class="settings-toggle">OFF</button>
       </div>
@@ -310,12 +317,13 @@
       <!-- ITEM TEST -->
       <div class="admin-section">
         <div class="admin-section-title">ITEM TEST</div>
-        <div class="admin-row">
-          <select id="item-test-select" class="admin-var-input" style="width:140px;padding:4px 6px;font-size:7px;background:#0a1a2a;color:#ccddee;border:1px solid #44ddff;cursor:pointer;">
-            <option value="">-- SELECT ITEM --</option>
+        <div class="admin-row" style="flex-wrap:wrap;gap:4px;">
+          <select id="item-test-select" class="admin-var-input" style="width:150px;padding:4px 6px;font-size:7px;background:#0a1a2a;color:#ccddee;border:1px solid #44ddff;cursor:pointer;">
+            <option value="">+ ADD ITEM</option>
           </select>
-          <button id="item-test-reset-btn" class="btn-secondary" style="padding:6px 14px;font-size:8px;">RESET</button>
+          <button id="item-test-reset-btn" class="btn-secondary" style="padding:6px 14px;font-size:8px;">CLEAR ALL</button>
         </div>
+        <div id="item-test-tags" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;"></div>
         <div id="item-test-msg" style="font-size:7px;color:#5588aa;margin-top:4px;">ITEM TEST OFF</div>
       </div>
 
@@ -370,6 +378,25 @@
   <div id="patch-notes-overlay" class="game-overlay hidden">
     <div class="patch-notes-container">
       <div class="patch-notes-title">📋 PATCH NOTES</div>
+
+      <div class="patch-note">
+        <div class="patch-note-version">✨ v0.8 — POLISH &amp; SKINS UPDATE</div>
+        <div class="patch-note-date">MAR 2026</div>
+        <ul class="patch-note-list">
+          <li>🐡 New <strong>Pufferfish</strong> body type — round, spiky, and adorable</li>
+          <li>😈 Angler fish redesigned — taller, scarier, glowing lure with curved stalk</li>
+          <li>🎨 Outfit sizing now scales proportionally for every fish body type</li>
+          <li>👒 Skin designer updated — all 5 body types available in customisation</li>
+          <li>💬 Shark quips can now be toggled off in Settings</li>
+          <li>🎵 Music track selector with 10-second preview in Settings</li>
+          <li>📱 Portrait mobile support — game rotates to fill the screen</li>
+          <li>🔄 Body Swap now shows a 3-2-1-GO! countdown; shark pauses after GO! for a head start</li>
+          <li>🧪 Speed power-up interactions fixed — Frenzy, Goop and Body Swap no longer conflict</li>
+          <li>⏩ Music tempo resets correctly at the start of each new level</li>
+          <li>🛠️ Admin item test upgraded — force up to 10 different items simultaneously</li>
+          <li>🐞 Various bug fixes: rainbow child timeouts, magnet stacking, score popup overlap</li>
+        </ul>
+      </div>
 
       <div class="patch-note">
         <div class="patch-note-version">🎮 v0.7 — GAMEPLAY UPDATE</div>

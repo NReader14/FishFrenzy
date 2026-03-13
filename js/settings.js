@@ -26,6 +26,7 @@ function load() {
       if (typeof saved.sfxVolume   === 'number')  S.settings.sfxVolume   = saved.sfxVolume;
       if (typeof saved.track === 'string' && TRACKS.some(t => t.id === saved.track))
         S.settings.track = saved.track;
+      if (typeof saved.sharkQuips === 'boolean') S.settings.sharkQuips = saved.sharkQuips;
     }
   } catch (_) {}
 }
@@ -48,6 +49,7 @@ function refreshUI() {
   updateToggle('toggle-tutorial-btn',   S.settings.tutorial);
   updateToggle('toggle-music-btn',      S.settings.music);
   updateToggle('toggle-sfx-btn',        S.settings.sfx);
+  updateToggle('toggle-shark-quips-btn', S.settings.sharkQuips);
   const mvs = document.getElementById('music-vol-slider');
   const svs = document.getElementById('sfx-vol-slider');
   if (mvs) mvs.value = S.settings.musicVolume;
@@ -245,6 +247,12 @@ export function initSettings() {
     S.settings.sfx = !S.settings.sfx;
     save();
     refreshUI();
+  });
+
+  document.getElementById('toggle-shark-quips-btn')?.addEventListener('click', () => {
+    S.settings.sharkQuips = !S.settings.sharkQuips;
+    updateToggle('toggle-shark-quips-btn', S.settings.sharkQuips);
+    save();
   });
 
   document.getElementById('music-vol-slider')?.addEventListener('input', e => {

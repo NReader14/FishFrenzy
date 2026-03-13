@@ -107,6 +107,7 @@ const S = {
     musicVolume: 70,
     sfxVolume: 80,
     track: 'chiptune',
+    sharkQuips: true,
   },
 
   // Tutorial

@@ -102,12 +102,14 @@ export function drawFish() {
 
     // Legacy extras (predefined skins like Joker, Ninja, etc.)
     if (skin.extras) {
-      const off = typeOff.mask || { x: 0, y: 0 };
+      const extrasKey = skin.extrasType || 'mask';
+      const off = typeOff[extrasKey] || { x: 0, y: 0 };
       ctx.save();
       ctx.translate(S.fish.x, S.fish.y);
       ctx.scale(S.fish.dir, 1);
       ctx.rotate(S.fish.angle || 0);
       ctx.translate(off.x, off.y);
+      if (off.sx !== undefined || off.sy !== undefined) ctx.scale(off.sx ?? 1, off.sy ?? 1);
       skin.extras(ctx);
       ctx.restore();
     }
@@ -340,7 +342,7 @@ export function drawShark() {
   }
 
   // Shark quip speech bubble
-  if (S.shark.quip && S.shark.quip.timer > 0 && !S.shark.hidden) {
+  if (S.settings.sharkQuips && S.shark.quip && S.shark.quip.timer > 0 && !S.shark.hidden) {
     const fade = Math.min(1, S.shark.quip.timer / 20);
     const text = S.shark.quip.text.toUpperCase();
     ctx.save();

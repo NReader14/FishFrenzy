@@ -27,6 +27,13 @@ export function clearTO(t) { if (t) clearTimeout(t); return null; }
 function stOn(key, cls)  { if (st[key]) st[key].classList.add('s-on', cls); }
 function stOff(key, cls) { if (st[key]) st[key].classList.remove('s-on', cls); }
 
+function getCurrentFishSpeed() {
+  let speed = gameVars.fishSpeed;
+  if (S.frenzyActive) speed += FRENZY_SPEED_BOOST;
+  if (S.goopActive)   speed *= 0.5;
+  return speed;
+}
+
 // Forward reference for endGame (set by main.js to avoid circular import)
 let _endGame = null;
 export function setEndGame(fn) { _endGame = fn; }
@@ -52,8 +59,7 @@ function activateFrenzy() {
 
 function deactivateFrenzy() {
   S.frenzyActive = false;
-  // Don't reset speed while goop is still active — goop will restore it
-  if (!S.goopActive) S.fish.speed = gameVars.fishSpeed;
+  S.fish.speed = getCurrentFishSpeed();
   stOff('frenzy', 's-frenzy');
   S.frenzyTO = null;
 }
@@ -410,7 +416,7 @@ function activateGoop() {
   S.goopTO = clearTO(S.goopTO);
   S.goopTO = setTimeout(() => {
     S.goopActive = false;
-    S.fish.speed = S.frenzyActive ? gameVars.fishSpeed + FRENZY_SPEED_BOOST : gameVars.fishSpeed;
+    S.fish.speed = getCurrentFishSpeed();
     stOff('goop', 's-goop');
     S.goopTO = null;
     if (!S.iceActive && !S.hourglassActive) setMusicTempo(1.0);
@@ -503,12 +509,27 @@ function activateBodySwap() {
   S.bodySwapTO = setTimeout(deactivateBodySwap, BODY_SWAP_DURATION);
 }
 
+// Clears all power-up effects collected during a body swap (clean slate on return)
+function _wipeSwapEffects() {
+  if (S.frenzyActive)    { S.frenzyTO    = clearTO(S.frenzyTO);    deactivateFrenzy(); }
+  if (S.iceActive)       { S.iceTO       = clearTO(S.iceTO);       deactivateIce(); }
+  if (S.goopActive)      { S.goopTO = clearTO(S.goopTO); S.goopActive = false; S.fish.speed = gameVars.fishSpeed; stOff('goop', 's-goop'); }
+  if (S.ghostActive)     { S.ghostTO     = clearTO(S.ghostTO);     deactivateGhost(); }
+  if (S.hourglassActive) { S.hourglassTO = clearTO(S.hourglassTO); deactivateHourglass(); }
+  if (S.buddyActive)     { S.buddyTO     = clearTO(S.buddyTO);     deactivateBuddy(); }
+  if (S.decoyActive)     { S.decoyTO     = clearTO(S.decoyTO);     deactivateDecoy(); }
+  if (S.starActive)      { S.starTO      = clearTO(S.starTO);      deactivateStar(); }
+  if (S.shieldActive)    { S.shieldActive = false; stOff('shield', 's-shield'); }
+  if (S.magnetActive)    { S.magnetTO    = clearTO(S.magnetTO);    S.magnetActive = false; stOff('magnet', 's-magnet'); }
+  setMusicTempo(1.0);
+}
+
 export function deactivateBodySwap() {
   if (!S.bodySwapActive) return;
   S.bodySwapActive = false;
   S.bodySwapAnim = null;
   S.fish.vx = 0; S.fish.vy = 0;
-  S.fish.speed = S.frenzyActive ? gameVars.fishSpeed + FRENZY_SPEED_BOOST : gameVars.fishSpeed;
+  S.fish.speed = getCurrentFishSpeed();
   // Keep shark frozen for 1s so the fish can escape before the chase resumes
   S.shark.speed = 0;
   stOff('bodyswap', 's-bodyswap');
@@ -527,8 +548,9 @@ export function deactivateBodySwap() {
       S.scorePopups.push({ x: W/2, y: H/2 + 28, pts: n, life: 1, decay: 0.018, font: '22px "Press Start 2P"', color: '#ffffff' });
     }, i * 1000));
   });
-  // GO! — player can move again
+  // GO! — wipe any effects collected during the swap, then return control
   _bodySwapCountdownTOs.push(setTimeout(() => {
+    _wipeSwapEffects();
     if (S.gameRunning) {
       S.scorePopups.push({ x: W/2, y: H/2 + 28, pts: 'GO!', life: 1, decay: 0.018, font: '18px "Press Start 2P"', color: '#44ffaa' });
     }
@@ -769,13 +791,15 @@ function spawnPW(type) {
 export function trySpawnPowerups() {
   if (S.gamePaused) return;
 
-  // Item test: force a single item type to always be on the field
-  if (S.forcedItem && pwConfig[S.forcedItem]) {
+  // Item test: force one copy of each selected type on the field
+  if (S.forcedItems && S.forcedItems.size > 0) {
+    // Remove items not in the forced set
     for (const k in S.pwItems) {
-      if (k !== S.forcedItem) S.pwItems[k] = null;
+      if (!S.forcedItems.has(k)) S.pwItems[k] = null;
     }
-    if (!S.pwItems[S.forcedItem]) {
-      S.pwItems[S.forcedItem] = spawnPW(S.forcedItem);
+    // Ensure each forced type has one item
+    for (const type of S.forcedItems) {
+      if (pwConfig[type] && !S.pwItems[type]) S.pwItems[type] = spawnPW(type);
     }
     return;
   }
@@ -817,10 +841,15 @@ export function updatePWItems() {
       continue;
     }
 
-    if (dist(item, S.fish) < 26) {
-      spawnParticles(item.x, item.y, pwConfig[k].glow, 12);
-      sfxPowerup();
-      pwConfig[k].fn();
+    // During body swap the shark is the player — only the shark can collect items
+    const collector = S.bodySwapActive ? S.shark : S.fish;
+    if (dist(item, collector) < 26) {
+      const cfg = pwConfig[item.type] || pwConfig[k];
+      if (cfg) {
+        spawnParticles(item.x, item.y, cfg.glow, 12);
+        sfxPowerup();
+        cfg.fn();
+      }
       S.pwItems[k] = null;
       continue;
     }

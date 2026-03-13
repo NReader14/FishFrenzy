@@ -93,7 +93,7 @@ function drawJokerFace(c) {
 function drawClownNose(c) {
   // Red ball nose
   c.fillStyle = '#ff2222';
-  c.fillRect(7,-3, 5, 5);
+  c.fillRect(13,-1, 5, 5);
   // Colourful dots on body
   c.fillStyle = '#ff44ee';
   c.fillRect(-6,-5, 4, 4);
@@ -629,54 +629,81 @@ function drawStandardBody(ctx2, c1, c2, c3, phase) {
 
 function drawAnglerBody(ctx2, c1, c2, c3, phase) {
   const tw = Math.round(Math.sin(phase) * 4);
-  // Taller, chunkier body for the angler fish
+  // TALL scary angler — body: -14 to +16 total height (30px vs standard 20px)
   ctx2.fillStyle = c1;
-  ctx2.fillRect(-14, -10, 28, 20);
-  ctx2.fillRect(-10, -12, 20, 2);
-  ctx2.fillRect(-10, 10, 20, 2);
-  // Belly
+  ctx2.fillRect(-14, -12, 28, 26);   // main body -12..+14
+  ctx2.fillRect(-10, -14, 20, 2);    // top bevel
+  ctx2.fillRect(-10,  14, 20, 2);    // bottom bevel
+  // Swollen belly
   ctx2.fillStyle = c2;
-  ctx2.fillRect(-10, 2, 18, 6);
-  // Top
+  ctx2.fillRect(-10, 2, 18, 8);
+  // Dark top ridge
   ctx2.fillStyle = c3;
-  ctx2.fillRect(-10, -12, 20, 3);
-  // Tail (slightly spread for chunkier body)
+  ctx2.fillRect(-10, -14, 20, 3);
+  // Wide spread tail
   ctx2.fillStyle = c1;
-  ctx2.fillRect(-22, -7 + tw, 8, 4);
-  ctx2.fillRect(-22, 3 + tw, 8, 4);
-  ctx2.fillRect(-26, -9 + tw, 4, 4);
-  ctx2.fillRect(-26, 5 + tw, 4, 4);
-  // Open mouth overlay on head (right side)
-  ctx2.fillStyle = '#080404';
-  ctx2.fillRect(10, -2, 8, 8);
-  // Lower jaw
+  ctx2.fillRect(-22, -9 + tw, 8, 4);
+  ctx2.fillRect(-22,  5 + tw, 8, 4);
+  ctx2.fillRect(-26, -11 + tw, 4, 4);
+  ctx2.fillRect(-26,   7 + tw, 4, 4);
+  // Gaping maw
+  ctx2.fillStyle = '#060202';
+  ctx2.fillRect(10, -3, 8, 11);
+  // Lower jaw protrudes
   ctx2.fillStyle = c1;
-  ctx2.fillRect(10, 6, 8, 4);
-  // Teeth
+  ctx2.fillRect(8, 8, 10, 4);
+  // Teeth — three rows
   ctx2.fillStyle = '#eeeebb';
-  ctx2.fillRect(11, -2, 2, 3);
-  ctx2.fillRect(14, -2, 2, 3);
-  ctx2.fillRect(11, 5, 2, 3);
-  ctx2.fillRect(14, 5, 2, 3);
-  // Red beady eye (replaces standard eye)
+  ctx2.fillRect(11, -3, 2, 4);
+  ctx2.fillRect(14, -3, 2, 4);
+  ctx2.fillRect(17, -3, 2, 4);
+  ctx2.fillRect(11,  7, 2, 4);
+  ctx2.fillRect(14,  7, 2, 4);
+  ctx2.fillRect(17,  7, 2, 4);
+  // Large red predator eye
   ctx2.fillStyle = '#fff';
-  ctx2.fillRect(6, -6, 7, 7);
-  ctx2.fillStyle = '#ff2200';
-  ctx2.fillRect(9, -5, 3, 3);
+  ctx2.fillRect(4, -8, 8, 8);
+  ctx2.fillStyle = '#ff1100';
+  ctx2.fillRect(7, -7, 4, 4);
+  ctx2.fillStyle = '#000';
+  ctx2.fillRect(8, -6, 2, 2);
   ctx2.fillStyle = '#fff';
-  ctx2.fillRect(9, -5, 1, 1);
-  // Lure stalk from dorsal area
+  ctx2.fillRect(7, -7, 1, 1);
+  // Curved lure stalk (smooth arc forward toward mouth)
   ctx2.fillStyle = c3;
-  ctx2.fillRect(4, -18, 2, 8);
-  // Lure orb
+  ctx2.fillRect(3, -17, 2, 4);   // base
+  ctx2.fillRect(4, -21, 2, 3);   // eases right
+  ctx2.fillRect(5, -24, 2, 3);   // continues
+  ctx2.fillRect(7, -27, 2, 3);   // sweeps right
+  ctx2.fillRect(9, -29, 2, 2);   // tip
+  // Outer glow halo
+  ctx2.fillStyle = '#ddffd0';
+  ctx2.fillRect(8, -34, 9, 9);
+  // Mid glow
+  ctx2.fillStyle = '#aaffaa';
+  ctx2.fillRect(9, -33, 7, 7);
+  // Orb (smaller)
   ctx2.fillStyle = '#88ff22';
-  ctx2.fillRect(2, -23, 6, 5);
+  ctx2.fillRect(10, -32, 5, 5);
   ctx2.fillStyle = '#ccff88';
-  ctx2.fillRect(3, -23, 3, 2);
-  // Spiky dorsal fin
+  ctx2.fillRect(11, -32, 2, 2);
+  ctx2.fillStyle = '#44aa00';
+  ctx2.fillRect(10, -28, 5, 1);
+  // Glow sparks
+  ctx2.fillStyle = '#aaffaa';
+  ctx2.fillRect(7, -35, 2, 2);
+  ctx2.fillRect(16, -35, 2, 2);
+  ctx2.fillRect(17, -30, 2, 2);
+  ctx2.fillRect(7, -27, 2, 2);
+  // Tall spiky dorsal fin
   ctx2.fillStyle = c3;
-  ctx2.fillRect(-2, -14, 5, 4);
-  ctx2.fillRect(-1, -16, 3, 2);
+  ctx2.fillRect(-3, -16, 5, 4);
+  ctx2.fillRect(-2, -19, 3, 3);
+  ctx2.fillRect(-1, -21, 2, 2);
+  // Bottom trailing fin
+  ctx2.fillStyle = c3;
+  ctx2.fillRect(-4, 14, 10, 3);
+  ctx2.fillRect(-2, 17, 6, 2);
 }
 
 function drawGoldfishBody(ctx2, c1, c2, c3, phase) {
@@ -763,19 +790,68 @@ function drawClownfishBody(ctx2, c1, c2, c3, phase) {
   ctx2.fillRect(0, -12, 4, 2);
 }
 
+function drawPufferfishBody(ctx2, c1, c2, c3, phase) {
+  const tw = Math.round(Math.sin(phase) * 3);
+  // Round layered body
+  ctx2.fillStyle = c1;
+  ctx2.fillRect(-10, -9, 22, 18);   // main body
+  ctx2.fillRect(-12, -6, 24, 12);   // wider middle
+  ctx2.fillRect(-11, -8, 22, 16);   // blend
+  // Belly
+  ctx2.fillStyle = c2;
+  ctx2.fillRect(-9, 1, 18, 7);
+  // Top ridge
+  ctx2.fillStyle = c3;
+  ctx2.fillRect(-8, -9, 16, 2);
+  // Spikes — top
+  ctx2.fillStyle = c3;
+  ctx2.fillRect(-6, -13, 2, 4);
+  ctx2.fillRect(-1, -14, 2, 5);
+  ctx2.fillRect(4,  -13, 2, 4);
+  // Spikes — bottom
+  ctx2.fillRect(-6, 9, 2, 4);
+  ctx2.fillRect(-1, 9, 2, 5);
+  ctx2.fillRect(4,  9, 2, 4);
+  // Spikes — back
+  ctx2.fillRect(-15, -4, 4, 2);
+  ctx2.fillRect(-15,  2, 4, 2);
+  // Tail
+  ctx2.fillStyle = c1;
+  ctx2.fillRect(-20, -5 + tw, 8, 4);
+  ctx2.fillRect(-20,  1 + tw, 8, 4);
+  ctx2.fillRect(-24, -7 + tw, 4, 3);
+  ctx2.fillRect(-24,  4 + tw, 4, 3);
+  // Big round eye
+  ctx2.fillStyle = '#fff';
+  ctx2.fillRect(5, -8, 9, 9);
+  ctx2.fillStyle = '#111';
+  ctx2.fillRect(8, -6, 5, 5);
+  ctx2.fillStyle = '#fff';
+  ctx2.fillRect(8, -6, 2, 2);
+  // Pursed mouth
+  ctx2.fillStyle = '#111';
+  ctx2.fillRect(9,  3, 4, 2);
+  ctx2.fillRect(10, 2, 2, 4);
+  // Small dorsal fin
+  ctx2.fillStyle = c3;
+  ctx2.fillRect(-2, -11, 4, 2);
+  ctx2.fillRect(-1, -13, 2, 2);
+}
+
 // Per-type, per-category transforms applied before drawing accessories.
 // x/y = translation offset; sx/sy = scale (default 1).
-// Angler body is 4px taller (y:-10..+10 vs standard y:-8..+8):
-//   hats  → shift up 2px to sit flush above the taller top
-//   masks → eye is at the same absolute y position, no shift needed
-//   outfits → scale vertically 1.25× so they fill the full taller body
+// Angler body top: -14, eye at y:-8..0, belly extends to +16
+//   hats   → shift up 4px so they clear the tall top bevel
+//   masks  → shift up 2px to align with the higher eye position
+//   outfits → scale vertically 1.875× (30px body / 16px outfit range) + y:1 to align tops
 // Goldfish body top is 1px higher than standard → hats shift up 1px
 // Clownfish eye is 4px further right due to white stripe → masks shift right 4px
 export const FISH_TYPE_EXTRAS_OFFSET = {
-  standard:  { hat: {x:0,y:0},          mask: {x:0,y:0},          outfit: {x:0,y:0}            },
-  angler:    { hat: {x:0,y:-2},         mask: {x:0,y:0},          outfit: {x:0,y:0,sx:1,sy:1.25} },
-  goldfish:  { hat: {x:0,y:-1},         mask: {x:0,y:-2},         outfit: {x:0,y:0}            },
-  clownfish: { hat: {x:0,y:0},          mask: {x:4,y:0},          outfit: {x:0,y:0}            },
+  standard:   { hat: {x:0,y:0},   mask: {x:0,y:0},   outfit: {x:0,y:0}                  },
+  angler:     { hat: {x:0,y:-4},  mask: {x:0,y:-2},  outfit: {x:0,y:1,sx:1,sy:1.875}    },
+  goldfish:   { hat: {x:0,y:-1},  mask: {x:0,y:-2},  outfit: {x:0,y:1,sx:1,sy:1.44}     },
+  clownfish:  { hat: {x:0,y:0},   mask: {x:4,y:0},   outfit: {x:0,y:0,sx:1,sy:1.25}     },
+  pufferfish: { hat: {x:0,y:-2},  mask: {x:0,y:0},   outfit: {x:0,y:0,sx:0.85,sy:1.125} },
 };
 
 // Dispatch to the correct body drawing function.
@@ -783,8 +859,9 @@ export function drawFishBody(ctx2, c1, c2, c3, phase, fishType = 'standard') {
   switch (fishType) {
     case 'angler':    return drawAnglerBody(ctx2, c1, c2, c3, phase);
     case 'goldfish':  return drawGoldfishBody(ctx2, c1, c2, c3, phase);
-    case 'clownfish': return drawClownfishBody(ctx2, c1, c2, c3, phase);
-    default:          return drawStandardBody(ctx2, c1, c2, c3, phase);
+    case 'clownfish':  return drawClownfishBody(ctx2, c1, c2, c3, phase);
+    case 'pufferfish': return drawPufferfishBody(ctx2, c1, c2, c3, phase);
+    default:           return drawStandardBody(ctx2, c1, c2, c3, phase);
   }
 }
 
@@ -861,7 +938,7 @@ export const SKINS = [
   {
     name: 'Skeleton',
     c1: '#445566', c2: '#667788', c3: '#223344',
-    extras: drawSkeleton,
+    extras: drawSkeleton, extrasType: 'outfit',
   },
 
   // ── Fish type skins ──
@@ -879,6 +956,11 @@ export const SKINS = [
     name: 'Clownfish',
     c1: '#ff5500', c2: '#ffaa22', c3: '#cc3300',
     fishType: 'clownfish',
+  },
+  {
+    name: 'Pufferfish',
+    c1: '#ddaa44', c2: '#ffee88', c3: '#aa7722',
+    fishType: 'pufferfish',
   },
 ];
 
@@ -916,9 +998,11 @@ export function drawSkinPreview(ctx2, skin, w, h, time = 0) {
 
   // Legacy extras (predefined skins like Joker, Ninja, etc.)
   if (skin.extras) {
-    const off = typeOff.mask || { x: 0, y: 0 };
+    const extrasKey = skin.extrasType || 'mask';
+    const off = typeOff[extrasKey] || { x: 0, y: 0 };
     ctx2.save();
     ctx2.translate(off.x, off.y);
+    if (off.sx !== undefined || off.sy !== undefined) ctx2.scale(off.sx ?? 1, off.sy ?? 1);
     skin.extras(ctx2);
     ctx2.restore();
   }

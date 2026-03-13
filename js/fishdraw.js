@@ -82,6 +82,7 @@ function buildOverlay(ov) {
       <button class="fd-type-btn" data-type="angler">😈 ANGLER</button>
       <button class="fd-type-btn" data-type="goldfish">🟠 GOLDFISH</button>
       <button class="fd-type-btn" data-type="clownfish">🤡 CLOWNFISH</button>
+      <button class="fd-type-btn" data-type="pufferfish">🐡 PUFFERFISH</button>
     </div>
     <div class="fishdraw-section-label">COLOURS</div>
     <div class="fishdraw-colours">
@@ -151,7 +152,8 @@ function buildOverlay(ov) {
     standard:  { c1: '#ff8833', c2: '#ffaa55', c3: '#cc5500' },
     angler:    { c1: '#1a2a3a', c2: '#2a4a5a', c3: '#0a1525' },
     goldfish:  { c1: '#ff8822', c2: '#ffd070', c3: '#cc5500' },
-    clownfish: { c1: '#ff5500', c2: '#ffaa22', c3: '#cc3300' },
+    clownfish:  { c1: '#ff5500', c2: '#ffaa22', c3: '#cc3300' },
+    pufferfish: { c1: '#ddaa44', c2: '#ffee88', c3: '#aa7722' },
   };
 
   ov.querySelectorAll('.fd-type-btn').forEach(btn => {
@@ -308,7 +310,14 @@ let _previewRaf = null;
 function updatePreview() {
   const cvs = document.getElementById('fishdraw-preview');
   if (!cvs) return;
-  drawSkinPreview(cvs.getContext('2d'), { c1: state.c1, c2: state.c2, c3: state.c3, extras: getExtrasFn(), fishType: state.fishType }, 240, 150, performance.now());
+  const getSlotFn = (tabIdx, key) => key !== 'none' ? ACCESSORY_TABS[tabIdx].items.find(a => a.key === key)?.fn || null : null;
+  drawSkinPreview(cvs.getContext('2d'), {
+    c1: state.c1, c2: state.c2, c3: state.c3,
+    fishType: state.fishType,
+    hatFn:    getSlotFn(0, state.hat),
+    maskFn:   getSlotFn(1, state.mask),
+    outfitFn: getSlotFn(2, state.outfit),
+  }, 240, 150, performance.now());
 }
 
 function startPreviewAnimation() {

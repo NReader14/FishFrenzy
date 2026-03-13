@@ -5,6 +5,7 @@
 import S from './state.js';
 import { canvas, overlay, winOverlay, endScreenOverlay, startBtn } from './dom.js';
 import { W, H } from './constants.js';
+import { portraitRotated } from './mobile-scale.js';
 
 // ─── Card helpers ────────────────────────────────────────────────
 
@@ -225,18 +226,23 @@ function initJoystick() {
 
     const r = getRadius();
     const deadzone = r * 0.25;
-    const dx = t.clientX - startX;
-    const dy = t.clientY - startY;
+    const rawDx = t.clientX - startX;
+    const rawDy = t.clientY - startY;
 
-    const mag = Math.hypot(dx, dy);
-    const clampedDx = mag > r ? (dx / mag) * r : dx;
-    const clampedDy = mag > r ? (dy / mag) * r : dy;
+    const mag = Math.hypot(rawDx, rawDy);
+    const clampedDx = mag > r ? (rawDx / mag) * r : rawDx;
+    const clampedDy = mag > r ? (rawDy / mag) * r : rawDy;
     thumb.style.transform = `translate(calc(-50% + ${clampedDx}px), calc(-50% + ${clampedDy}px))`;
 
-    S.keys['arrowleft']  = dx < -deadzone;
-    S.keys['arrowright'] = dx >  deadzone;
-    S.keys['arrowup']    = dy < -deadzone;
-    S.keys['arrowdown']  = dy >  deadzone;
+    // When game is rotated -90deg in portrait, remap physical swipe → game direction:
+    // physical right (+dx) = game down, physical down (+dy) = game left
+    const gdx = portraitRotated ?  rawDy : rawDx;
+    const gdy = portraitRotated ? -rawDx : rawDy;
+
+    S.keys['arrowleft']  = gdx < -deadzone;
+    S.keys['arrowright'] = gdx >  deadzone;
+    S.keys['arrowup']    = gdy < -deadzone;
+    S.keys['arrowdown']  = gdy >  deadzone;
   }, { passive: false });
 
   document.addEventListener('touchend', e => {
