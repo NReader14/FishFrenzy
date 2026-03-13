@@ -46,7 +46,7 @@ import {
   verifyAdminCredentials, fetchPatchNotes
 } from './firebase-config.js';
 import { initControls } from './js/controls.js';
-import { initSettings, saveSettings } from './js/settings.js';
+import { initSettings, saveSettings, cancelTrackPreview } from './js/settings.js';
 import { initCursor } from './js/cursor.js';
 import { initAudio, startMusic, stopMusic, sfxLevelUp, sfxGameOver, sfxSharkBite, sfxMenuClick, startCardMusic, stopCardMusic, setMusicTempo } from './js/audio.js';
 
@@ -249,6 +249,7 @@ async function initGame() {
   }
 
   startLevel();
+  cancelTrackPreview();
   startMusic();
 }
 

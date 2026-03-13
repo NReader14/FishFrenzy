@@ -62,6 +62,12 @@ function refreshUI() {
 
 // ─── Track Picker ────────────────────────────────────────────
 
+let _previewTimer = null;
+
+export function cancelTrackPreview() {
+  if (_previewTimer) { clearTimeout(_previewTimer); _previewTimer = null; }
+}
+
 function buildTrackPicker() {
   const picker = document.getElementById('track-picker');
   if (!picker || picker.querySelector('.track-btn')) return;
@@ -74,7 +80,14 @@ function buildTrackPicker() {
       S.settings.track = track.id;
       save();
       refreshTrackPicker();
-      if (S.settings.music) { stopMusic(); startMusic(); }
+      if (!S.settings.music) return;
+      stopMusic();
+      startMusic();
+      if (!S.gameRunning) {
+        // 10-second preview then stop
+        cancelTrackPreview();
+        _previewTimer = setTimeout(() => { stopMusic(); _previewTimer = null; }, 10000);
+      }
     });
     picker.appendChild(btn);
   });
