@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import S from './state.js';
+import { SKINS } from './skins.js';
 import {
   nameEntryOverlay, endScreenOverlay, overlay, scoreboardOverlay,
   scoreboardContent, loadingOverlay, loadingMessage, adminError,
@@ -256,7 +257,15 @@ export function showNameEntry(finalScore, finalLevel, msg) {
     document.removeEventListener('keydown', onKey);
     nameEntryOverlay.classList.add('hidden');
     showLoading('SAVING SCORE...');
-    const idx = await saveHighScore(name, finalScore, finalLevel);
+    const activeSkin = SKINS[S.settings.skin ?? 0] || SKINS[0];
+    const skinSnapshot = {
+      c1: activeSkin.c1, c2: activeSkin.c2, c3: activeSkin.c3,
+      fishType:  activeSkin.fishType  || 'standard',
+      hatKey:    activeSkin.hatKey    || 'none',
+      maskKey:   activeSkin.maskKey   || 'none',
+      outfitKey: activeSkin.outfitKey || 'none',
+    };
+    const idx = await saveHighScore(name, finalScore, finalLevel, skinSnapshot);
     hideLoading();
     const scores = await fetchHighScores();
     const hiEl = document.getElementById('global-hi-score');

@@ -24,7 +24,7 @@ import {
 import {
   pwConfig, loadRarities, trySpawnPowerups, updatePWItems,
   clearAllPowerupTimeouts, clearTO, useShield,
-  overlapsExisting, setEndGame, setSpawnTreat
+  overlapsExisting, setEndGame
 } from './js/powerups.js';
 import {
   drawWater, drawFish, drawBuddy, drawDecoy, drawShark,
@@ -50,6 +50,7 @@ import { initSettings, saveSettings, cancelTrackPreview } from './js/settings.js
 import { initCursor } from './js/cursor.js';
 import { initAudio, startMusic, stopMusic, sfxLevelUp, sfxGameOver, sfxSharkBite, sfxMenuClick, startCardMusic, stopCardMusic, setMusicTempo } from './js/audio.js';
 import { initMobileScale } from './js/mobile-scale.js';
+import { initHallOfFame, stopHallOfFameAnim } from './js/hall-of-fame.js';
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -59,7 +60,6 @@ import { initMobileScale } from './js/mobile-scale.js';
 // ═══════════════════════════════════════════════════════════════
 
 setEndGame(endGame);
-setSpawnTreat(spawnTreat);
 setInitGame(initGame);
 
 // ─── TUTORIAL ───
@@ -170,13 +170,14 @@ function refreshDifficultyUI() {
     showWelcomeOverlay();
   }
 
-  // Show global high score in top bar
+  // Show global high score in top bar + Hall of Fame banner
   try {
     const scores = await fetchHighScores();
     const best = scores.length > 0 ? scores[0].score : null;
     const el = document.getElementById('global-hi-score');
     if (el) el.textContent = best !== null ? best.toLocaleString() : '---';
     S.globalHighScore = best ?? 0;
+    initHallOfFame(scores);
   } catch (_) {}
 })();
 
@@ -309,7 +310,7 @@ function startLevel() {
   for (const k in S.pwItems) S.pwItems[k] = null;
   S.frenzyActive = S.iceActive = S.shieldActive = S.magnetActive = false;
   S.ghostActive = S.hourglassActive = S.buddyActive = S.bombActive = false;
-  S.crazyActive = S.timerFrozen = false;
+  S.crazyActive = S.timerFrozen = false; S.crazyMultiplier = 1;
   S.decoyActive = S.starActive = S.hookActive = S.goopActive = false;
   S.rainbowActive = false;
   S.promptActive = false; S.promptWandering = false; S.promptWanderTimer = 0;
@@ -415,7 +416,7 @@ function endGame(won, msg) {
 
   clearAllPowerupTimeouts();
   S.frenzyActive = S.iceActive = S.ghostActive = S.hourglassActive = false;
-  S.buddyActive = S.bombActive = S.crazyActive = S.timerFrozen = false;
+  S.buddyActive = S.bombActive = S.crazyActive = S.timerFrozen = false; S.crazyMultiplier = 1;
   S.decoyActive = S.starActive = S.hookActive = S.goopActive = false;
   S.rainbowActive = false;
   S.promptActive = false; S.promptWandering = false;
@@ -1011,6 +1012,7 @@ document.getElementById('welcome-reopen-btn')?.addEventListener('click', () => {
 });
 
 startBtn.addEventListener('click', () => {
+  stopHallOfFameAnim();
   initAudio();
   sfxMenuClick();
   overlay.classList.add('hidden');

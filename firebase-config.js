@@ -112,7 +112,14 @@ export async function fetchHighScores() {
         id: docSnap.id,
         name: data.name || "???",
         score: data.score || 0,
-        level: data.level || 1
+        level: data.level || 1,
+        skin: data.skinC1 ? {
+          c1: data.skinC1, c2: data.skinC2, c3: data.skinC3,
+          fishType: data.skinFishType || 'standard',
+          hatKey:    data.skinHat    || 'none',
+          maskKey:   data.skinMask   || 'none',
+          outfitKey: data.skinOutfit || 'none',
+        } : null,
       });
     });
 
@@ -126,7 +133,7 @@ export async function fetchHighScores() {
   }
 }
 
-export async function saveHighScore(name, sc, lv) {
+export async function saveHighScore(name, sc, lv, skinSnapshot = null) {
   const cleanName = String(name).toUpperCase().slice(0, MAX_NAME_LENGTH);
   const cleanScore = Math.min(Math.max(0, Math.floor(Number(sc))), MAX_SCORE_VALUE);
   const cleanLevel = Math.max(1, Math.floor(Number(lv)));
@@ -149,12 +156,22 @@ export async function saveHighScore(name, sc, lv) {
       }
     }
 
-    await setDoc(docRef, {
+    const payload = {
       name: cleanName,
       score: cleanScore,
       level: cleanLevel,
       timestamp: serverTimestamp()
-    });
+    };
+    if (skinSnapshot) {
+      payload.skinC1       = skinSnapshot.c1       || '#4488ff';
+      payload.skinC2       = skinSnapshot.c2       || '#2244aa';
+      payload.skinC3       = skinSnapshot.c3       || '#66aaff';
+      payload.skinFishType = skinSnapshot.fishType || 'standard';
+      payload.skinHat      = skinSnapshot.hatKey   || 'none';
+      payload.skinMask     = skinSnapshot.maskKey  || 'none';
+      payload.skinOutfit   = skinSnapshot.outfitKey|| 'none';
+    }
+    await setDoc(docRef, payload);
 
     console.log("[Firebase] Score saved:", cleanName, cleanScore);
     isOnline = true;

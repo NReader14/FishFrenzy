@@ -32,7 +32,7 @@
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: #223 #0a0a16;
-  padding: 16px 8px;
+  padding: 8px 8px;
 }
 
 .game-overlay::-webkit-scrollbar { width: 4px; }
@@ -44,37 +44,174 @@
 
 /* ─── MAIN MENU ─── */
 #overlay h1 {
-  font-size: 28px;
+  font-size: 22px;
   color: #44ddff;
   text-shadow: 0 0 20px rgba(68,221,255,.5), 3px 3px 0 #113355;
-  margin-bottom: 10px;
+  margin-bottom: 4px;
   letter-spacing: 2px;
   text-align: center;
-  line-height: 1.6;
+  line-height: 1.4;
 }
 
 #overlay .subtitle {
   color: #5588aa;
   font-size: 7px;
-  margin-bottom: 24px;
+  margin-bottom: 8px;
   text-align: center;
-  line-height: 2.4;
+  line-height: 2;
   letter-spacing: .5px;
 }
 
+/* ─── HALL OF FAME ─────────────────────────────────────────────────────────── */
+.hall-of-fame {
+  width: 100%;
+  background: linear-gradient(135deg, rgba(0, 18, 38, 0.95) 0%, rgba(0, 8, 20, 0.95) 100%);
+  border: 1px solid #1e5a7a;
+  border-top: 2px solid #ffcc44;
+  border-radius: 4px;
+  padding: 5px 10px 5px 6px;
+  margin: 0 0 10px;
+  box-shadow: 0 0 30px rgba(255, 204, 68, 0.08), 0 0 60px rgba(68, 221, 255, 0.06), inset 0 0 40px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hof-header {
+  display: none;
+}
+
+.hof-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  background: rgba(255, 204, 68, 0.04);
+  border: 1px solid rgba(255, 204, 68, 0.15);
+  border-radius: 3px;
+  padding: 4px 8px 4px 4px;
+}
+
+#hof-fish-canvas {
+  width: 72px;
+  height: 54px;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+  outline: 2px solid #ffcc44;
+  outline-offset: 3px;
+  border-radius: 2px;
+  animation: hof-fish-border 2s ease-in-out infinite;
+}
+
+@keyframes hof-fish-border {
+  0%   { outline-color: #ffcc44; box-shadow: 0 0 6px rgba(255, 204, 68, 0.4),  0 0 12px rgba(255, 204, 68, 0.2); filter: drop-shadow(0 0 4px rgba(255, 204, 68, 0.5)); }
+  25%  { outline-color: #ff8844; box-shadow: 0 0 10px rgba(255, 136, 68, 0.6), 0 0 20px rgba(255, 136, 68, 0.3); filter: drop-shadow(0 0 6px rgba(255, 136, 68, 0.6)); }
+  50%  { outline-color: #44ddff; box-shadow: 0 0 14px rgba(68, 221, 255, 0.7), 0 0 28px rgba(68, 221, 255, 0.3); filter: drop-shadow(0 0 8px rgba(68, 221, 255, 0.7)); }
+  75%  { outline-color: #ff44cc; box-shadow: 0 0 10px rgba(255, 68, 204, 0.6), 0 0 20px rgba(255, 68, 204, 0.3); filter: drop-shadow(0 0 6px rgba(255, 68, 204, 0.6)); }
+  100% { outline-color: #ffcc44; box-shadow: 0 0 6px rgba(255, 204, 68, 0.4),  0 0 12px rgba(255, 204, 68, 0.2); filter: drop-shadow(0 0 4px rgba(255, 204, 68, 0.5)); }
+}
+
+.hof-top-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hof-crown {
+  font-size: 7px;
+  color: #ffcc44;
+  letter-spacing: 2px;
+  animation: hof-crown-pulse 2s ease-in-out infinite;
+}
+
+@keyframes hof-crown-pulse {
+  0%, 100% { text-shadow: 0 0 6px rgba(255, 204, 68, 0.3); opacity: 0.85; }
+  50%       { text-shadow: 0 0 20px rgba(255, 204, 68, 1), 0 0 40px rgba(255, 170, 0, 0.5); opacity: 1; }
+}
+
+.hof-top-name {
+  font-size: 18px;
+  color: #ffffff;
+  letter-spacing: 6px;
+  line-height: 1;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.hof-top-score {
+  font-size: 20px;
+  color: #44ddff;
+  text-shadow: 0 0 16px rgba(68, 221, 255, 0.9), 0 0 30px rgba(68, 200, 255, 0.4);
+  letter-spacing: 2px;
+  line-height: 1;
+  animation: hof-score-pulse 3s ease-in-out infinite;
+}
+
+@keyframes hof-score-pulse {
+  0%, 100% { text-shadow: 0 0 10px rgba(68, 221, 255, 0.5); }
+  50%       { text-shadow: 0 0 22px rgba(68, 221, 255, 1), 0 0 44px rgba(68, 200, 255, 0.5); }
+}
+
+.hof-top-level {
+  font-size: 7px;
+  color: #44ddff;
+  opacity: 0.5;
+  letter-spacing: 2px;
+}
+
+.hof-runners {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  padding-left: 10px;
+  border-left: 1px solid #0e2a40;
+  flex: 1;
+}
+
+.hof-runner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hof-runner-rank {
+  font-size: 6px;
+  color: #3a6a88;
+  width: 12px;
+}
+
+.hof-runner-name {
+  font-size: 7px;
+  color: #aabbcc;
+  letter-spacing: 2px;
+  width: 26px;
+}
+
+.hof-runner-score {
+  font-size: 7px;
+  color: #44ddff;
+  flex: 1;
+}
+
+.hof-runner-level {
+  font-size: 6px;
+  color: #3a6a88;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
 .menu-buttons {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 7px;
   align-items: center;
-  margin-bottom: 14px;
+  margin-bottom: 8px;
 }
 
 /* Make the 3 secondary menu buttons uniform and narrower than START */
 .menu-buttons .btn-secondary {
   width: 170px;
-  font-size: 10px;
-  padding: 12px 24px;
+  font-size: 9px;
+  padding: 8px 24px;
   text-align: center;
 }
 
@@ -161,15 +298,15 @@
 .controls-hint {
   color: #334455;
   font-size: 7px;
-  margin-top: 10px;
+  margin-top: 4px;
   letter-spacing: 1px;
 }
 
 .insert-coin {
   color: #446688;
-  font-size: 14px;
+  font-size: 12px;
   letter-spacing: 4px;
-  margin-top: 24px;
+  margin-top: 8px;
   animation: coin-blink 1.5s step-end infinite;
   text-shadow: 0 0 12px rgba(68,102,136,.4);
 }
@@ -184,7 +321,7 @@
 .difficulty-row {
   display: flex;
   gap: 8px;
-  margin-bottom: 18px;
+  margin-bottom: 10px;
 }
 
 .diff-btn {
@@ -209,7 +346,7 @@
 .diff-btn.diff-hard.diff-active     { border-color: #ff5566; color: #ff5566; box-shadow: 0 0 8px rgba(255,85,102,.25); }
 .diff-btn.diff-tutorial.diff-active { border-color: #ffcc44; color: #ffcc44; box-shadow: 0 0 8px rgba(255,204,68,.25); }
 
-.difficulty-row-tutorial { margin-top: 2px; margin-bottom: 14px; }
+.difficulty-row-tutorial { margin-top: 0; margin-bottom: 8px; }
 
 
 /* ─── WELCOME OVERLAY ─── */

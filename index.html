@@ -81,6 +81,21 @@
     <button id="welcome-reopen-btn" class="welcome-reopen-btn" title="Show welcome notice">🐟</button>
     <h1>FISH FRENZY</h1>
     <p class="subtitle">EAT ALL TREATS &middot; ESCAPE THE SHARK</p>
+
+    <!-- HALL OF FAME -->
+    <div id="hall-of-fame" class="hall-of-fame hidden">
+      <div class="hof-top">
+        <canvas id="hof-fish-canvas" width="200" height="150"></canvas>
+        <div class="hof-top-info">
+          <div class="hof-crown">👑 #1 CHAMPION</div>
+          <div class="hof-top-name" id="hof-top-name">---</div>
+          <div class="hof-top-score" id="hof-top-score">0</div>
+          <div class="hof-top-level" id="hof-top-level">LVL 1</div>
+        </div>
+      </div>
+      <div class="hof-runners" id="hof-runners"></div>
+    </div>
+
     <div class="difficulty-row">
       <button id="diff-easy" class="diff-btn diff-easy">EASY</button>
       <button id="diff-normal" class="diff-btn diff-normal">NORMAL</button>

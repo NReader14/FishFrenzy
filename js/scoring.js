@@ -44,7 +44,8 @@ export function collectTreat(t) {
   const starMul = S.starActive ? 2 : 1;
   const smartMul = S.settings.smartShark ? 1.25 : 1;
   const diffMul = S.settings.difficulty === 'easy' ? 0.75 : S.settings.difficulty === 'hard' ? 1.5 : 1;
-  const pts = Math.round(basePts * cm * (S.bodySwapActive ? 2 : 1) * starMul * smartMul * diffMul);
+  const crazyMul = S.crazyMultiplier || 1;
+  const pts = Math.round(basePts * cm * (S.bodySwapActive ? 2 : 1) * starMul * smartMul * diffMul * crazyMul);
 
   if (S.hellActive) {
     // Hell: collecting treats drains score

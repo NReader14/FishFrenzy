@@ -884,6 +884,10 @@ export function addCustomSkinToList(skinData) {
     const item = ACCESSORY_LIST.find(a => a.key === skinData.accessory);
     if (item?.fn) skin.extras = item.fn;
   }
+  // Store keys so we can snapshot the skin when saving a score
+  skin.hatKey    = skinData.hat    || 'none';
+  skin.maskKey   = skinData.mask   || 'none';
+  skin.outfitKey = skinData.outfit || 'none';
   const existingIdx = SKINS.findIndex(s => s.name === skin.name && s.custom);
   if (existingIdx !== -1) { SKINS[existingIdx] = skin; return existingIdx; }
   SKINS.push(skin);

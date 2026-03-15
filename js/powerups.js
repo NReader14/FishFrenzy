@@ -39,8 +39,6 @@ let _endGame = null;
 export function setEndGame(fn) { _endGame = fn; }
 
 // Forward reference for spawnTreat
-let _spawnTreat = null;
-export function setSpawnTreat(fn) { _spawnTreat = fn; }
 
 // Tracked timeouts for Claude's typewriter effect (cleared on game end)
 let _claudeTypewriterTOs = [];
@@ -62,6 +60,18 @@ function deactivateFrenzy() {
   S.fish.speed = getCurrentFishSpeed();
   stOff('frenzy', 's-frenzy');
   S.frenzyTO = null;
+}
+
+// Compute what the shark speed should be given currently active effects.
+// Used by all deactivation functions to avoid savedSpeed cross-contamination.
+function restoreSharkSpeed() {
+  if (S.bodySwapActive || S.hourglassActive || S.promptActive) {
+    S.shark.speed = 0;
+  } else if (S.iceActive) {
+    S.shark.speed = (0.75 + S.level * 0.2) * 0.25;
+  } else {
+    S.shark.speed = 0.75 + S.level * 0.2;
+  }
 }
 
 // ─── ICE ───
@@ -88,7 +98,7 @@ function activateIce() {
 
 function deactivateIce() {
   S.iceActive = false;
-  S.shark.speed = S.shark.savedSpeed || (0.75 + S.level * 0.2);
+  restoreSharkSpeed();
   stOff('ice', 's-ice');
   S.iceTO = null;
   if (!S.goopActive && !S.hourglassActive) setMusicTempo(1.0);
@@ -160,8 +170,7 @@ function activateHourglass() {
 function deactivateHourglass() {
   S.hourglassActive = false;
   S.timerFrozen = false;
-  S.shark.speed = S.shark.savedSpeed2 || (0.75 + S.level * 0.2);
-  if (S.iceActive) S.shark.speed *= 0.25;
+  restoreSharkSpeed();
   timerBar.classList.remove('frozen');
   stOff('time', 's-time');
   S.hourglassTO = null;
@@ -227,16 +236,32 @@ function activateCrazy() {
   S.crazyActive = true;
   S.crazyStartTime = Date.now();
   stOn('crazy', 's-crazy');
-  S.scorePopups.push({ x: S.fish.x, y: S.fish.y - 30, pts: 'CHAOS! 5 SECONDS!', life: 2, decay: 0.015 });
   spawnParticles(S.fish.x, S.fish.y, '#ff00aa', 40);
 
-  const toSpawn = Math.min(80, (5 + S.level * 2) * 4);
-  for (let i = 0; i < toSpawn; i++) _spawnTreat();
-  treatsLeftEl.textContent = S.treats.length;
+  // Steal 5–7 seconds from the timer
+  const stolen = 5 + Math.floor(Math.random() * 3); // 5, 6, or 7
+  S.timeLeft = Math.max(1, S.timeLeft - stolen);
+
+  // x20 score multiplier for 5 seconds
+  S.crazyMultiplier = 20;
+
+  S.scorePopups.push({ x: S.fish.x, y: S.fish.y - 36, pts: `🍄 x20 PTS! -${stolen}s`, life: 2.2, decay: 0.012 });
+
+  // Countdown popups: 5 4 3 2 1
+  const { W, H } = { W: 480, H: 720 };
+  [5, 4, 3, 2, 1].forEach((n, i) => {
+    _bodySwapCountdownTOs.push(setTimeout(() => {
+      if (!S.crazyActive) return;
+      S.scorePopups.push({ x: W / 2, y: H / 2 - 20, pts: String(n), life: 0.95, decay: 0.025, col: '#ff00aa' });
+    }, i * 1000));
+  });
 
   S.crazyTO = clearTO(S.crazyTO);
   S.crazyTO = setTimeout(() => {
-    if (S.gameRunning && _endGame) _endGame(false, 'OVERDOSE!');
+    S.crazyActive = false;
+    S.crazyMultiplier = 1;
+    stOff('crazy', 's-crazy');
+    S.scorePopups.push({ x: W / 2, y: H / 2 - 20, pts: 'BACK TO NORMAL', life: 1.5, decay: 0.02 });
   }, CRAZY_DURATION);
 }
 
@@ -440,7 +465,7 @@ function activatePrompt() {
   S.promptTO2 = setTimeout(() => {
     if (!S.promptActive || !S.gameRunning) return;
     S.promptWandering = true;
-    S.shark.speed = S.shark.savedPromptSpeed || (0.75 + S.level * 0.2);
+    restoreSharkSpeed();
     S.promptWanderAngle = Math.random() * Math.PI * 2;
     S.promptWanderTimer = Date.now();
   }, PROMPT_FREEZE_DURATION);
@@ -453,7 +478,7 @@ export function deactivatePrompt() {
   if (!S.promptActive) return;
   S.promptActive = false;
   S.promptWandering = false;
-  S.shark.speed = S.shark.savedPromptSpeed || (0.75 + S.level * 0.2);
+  restoreSharkSpeed();
   stOff('prompt', 's-prompt');
   spawnParticles(S.shark.x, S.shark.y, '#aa66ff', 8);
   S.promptTO = null;
@@ -558,7 +583,7 @@ export function deactivateBodySwap() {
   }, 3000));
   // Shark releases 1s after GO! — fish gets a head start
   _bodySwapCountdownTOs.push(setTimeout(() => {
-    S.shark.speed = S.shark.savedBodySwapSpeed || (0.75 + S.level * 0.2);
+    restoreSharkSpeed();
   }, 4000));
 }
 
