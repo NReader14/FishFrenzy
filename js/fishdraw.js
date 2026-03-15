@@ -23,7 +23,7 @@ const NAME_FIRSTS = [
   '', 'Shark', 'Dave', 'Barry', 'Steve', 'Bob', 'Gerald', 'Karen',
   'Chad', 'Kevin', 'Gary', 'Colin', 'Nigel', 'Derek',
   'Shane', 'Wayne', 'Reg', 'Phil', 'Clive', 'Rodney',
-  'Doris', 'Frank',
+  'Doris', 'Frank', 'Alx',
 ];
 
 // hat / mask / outfit are independent slots
