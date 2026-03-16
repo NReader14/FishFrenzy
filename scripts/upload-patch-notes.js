@@ -1,7 +1,19 @@
 // Run: node scripts/upload-patch-notes.js <email> <password>
-// Edit patchnotes.js to update content, then re-run this script.
+// Or set ADMIN_EMAIL / ADMIN_PASSWORD in .env at the project root.
 import https from 'https';
-import { NOTES } from './patchnotes.js';
+import fs from 'fs';
+import path from 'path';
+import { NOTES } from '../js/patch-notes-data.js';
+
+// Load .env from project root if present
+try {
+  const envPath = path.resolve(process.cwd(), '.env');
+  const lines = fs.readFileSync(envPath, 'utf8').split('\n');
+  for (const line of lines) {
+    const [k, ...v] = line.trim().split('=');
+    if (k && v.length && !process.env[k]) process.env[k] = v.join('=');
+  }
+} catch (_) {}
 
 const API_KEY   = 'AIzaSyBzCQYY27dxfhJS36cFTxiqJsLh-T8hwnE';
 const PROJECT   = 'fishfrenzy-b26b8';

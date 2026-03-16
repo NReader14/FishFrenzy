@@ -27,6 +27,7 @@ function load() {
       if (typeof saved.track === 'string' && TRACKS.some(t => t.id === saved.track))
         S.settings.track = saved.track;
       if (typeof saved.sharkQuips === 'boolean') S.settings.sharkQuips = saved.sharkQuips;
+      if (typeof saved.showAds   === 'boolean') S.settings.showAds    = saved.showAds;
     }
   } catch (_) {}
 }
@@ -50,6 +51,7 @@ function refreshUI() {
   updateToggle('toggle-music-btn',      S.settings.music);
   updateToggle('toggle-sfx-btn',        S.settings.sfx);
   updateToggle('toggle-shark-quips-btn', S.settings.sharkQuips);
+  updateToggle('toggle-ads-btn',         S.settings.showAds ?? true);
   const mvs = document.getElementById('music-vol-slider');
   const svs = document.getElementById('sfx-vol-slider');
   if (mvs) mvs.value = S.settings.musicVolume;
@@ -252,6 +254,12 @@ export function initSettings() {
   document.getElementById('toggle-shark-quips-btn')?.addEventListener('click', () => {
     S.settings.sharkQuips = !S.settings.sharkQuips;
     updateToggle('toggle-shark-quips-btn', S.settings.sharkQuips);
+    save();
+  });
+
+  document.getElementById('toggle-ads-btn')?.addEventListener('click', () => {
+    S.settings.showAds = !(S.settings.showAds ?? true);
+    updateToggle('toggle-ads-btn', S.settings.showAds);
     save();
   });
 

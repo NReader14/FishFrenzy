@@ -3,6 +3,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import S from './js/state.js';
+import { showAd } from './js/ads.js';
+import { NOTES as LOCAL_PATCH_NOTES } from './js/patch-notes-data.js';
 import {
   W, H,
   FRENZY_SPEED_BOOST, SHARK_START_DELAY, COMBO_WINDOW,
@@ -437,10 +439,10 @@ function endGame(won, msg) {
   if (!won) {
     if (msg === "Time's up!") {
       const fx = S.fish.x, fy = S.fish.y;
-      playTimeUpDeath(fx, fy, () => playCRTGameOver(() => showNameEntry(S.score, S.level, msg)));
+      playTimeUpDeath(fx, fy, () => playCRTGameOver(() => showAd().then(() => showNameEntry(S.score, S.level, msg))));
     } else {
       S.chompAnim = { timer: 0, x: S.fish.x, y: S.fish.y };
-      playCRTGameOver(() => showNameEntry(S.score, S.level, msg));
+      playCRTGameOver(() => showAd().then(() => showNameEntry(S.score, S.level, msg)));
     }
   } else {
     winOverlay.classList.remove('hidden');
@@ -1081,39 +1083,35 @@ rulesBackBtn.addEventListener('click', () => {
 })();
 
 // ─── PATCH NOTES ────────────────────────────────────────────────────────────
+function renderNotes(notes, container) {
+  container.innerHTML = '<div class="patch-notes-title">📋 PATCH NOTES</div>' +
+    notes.map(n => `
+      <div class="patch-note${n.thanks ? ' patch-note-thanks' : ''}">
+        <div class="patch-note-version">${n.emoji || ''} ${n.v}${n.title ? ' — ' + n.title : ''}</div>
+        <div class="patch-note-date">${n.date || ''}</div>
+        <ul class="patch-note-list">${(n.items || []).map(i => `<li>${i}</li>`).join('')}</ul>
+      </div>`).join('');
+}
+
 document.getElementById('patch-notes-btn')?.addEventListener('click', async () => {
   overlay.classList.add('hidden');
   const patchOv = document.getElementById('patch-notes-overlay');
   patchOv?.classList.remove('hidden');
-  // Load patch notes from Firebase (source of truth)
+  const container = patchOv?.querySelector('.patch-notes-container');
+  if (!container) return;
+
+  // Show local notes immediately
+  renderNotes(LOCAL_PATCH_NOTES, container);
+
+  // Try Firebase override (admin can push custom notes)
   try {
     const saved = await fetchPatchNotes();
     if (saved) {
-      const container = patchOv?.querySelector('.patch-notes-container');
-      if (container) {
-        let notes;
-        try { notes = JSON.parse(saved); } catch (_) { notes = null; }
-        if (Array.isArray(notes)) {
-          container.innerHTML = '<div class="patch-notes-title">📋 PATCH NOTES</div>' +
-            notes.map(n => `
-              <div class="patch-note${n.thanks ? ' patch-note-thanks' : ''}">
-                <div class="patch-note-version">${n.emoji || ''} ${n.v} — ${n.title}</div>
-                <div class="patch-note-date">${n.date || ''}</div>
-                <ul class="patch-note-list">${(n.items || []).map(i => `<li>${i}</li>`).join('')}</ul>
-              </div>`).join('');
-        } else {
-          // Legacy plain-text fallback
-          container.innerHTML = '<div class="patch-notes-title">📋 PATCH NOTES</div>' +
-            saved.split('\n\n').map(block => {
-              const lines = block.split('\n');
-              const items = lines.slice(1).filter(l => l.startsWith('• ')).map(l =>
-                `<li>${l.slice(2)}</li>`).join('');
-              return `<div class="patch-note"><div class="patch-note-version">${lines[0]}</div><ul class="patch-note-list">${items}</ul></div>`;
-            }).join('');
-        }
-      }
+      let notes;
+      try { notes = JSON.parse(saved); } catch (_) { notes = null; }
+      if (Array.isArray(notes) && notes.length) renderNotes(notes, container);
     }
-  } catch (_) { /* fall back to static HTML */ }
+  } catch (_) { /* keep local notes */ }
 });
 document.getElementById('patch-notes-back-btn')?.addEventListener('click', () => {
   document.getElementById('patch-notes-overlay')?.classList.add('hidden');

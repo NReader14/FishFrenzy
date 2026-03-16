@@ -168,6 +168,7 @@
         <div class="rules-heading">CREATION</div>
         <p class="rules-text" style="margin-bottom:8px;">This program was made by Claude, only prompted by the creator, this game is not representitive of what the owner makes.</p>
       </div>
+      <p class="rules-fine-print">*Fish Frenzy may display AI-generated advertisements between rounds. Ads are fictional and for entertainment purposes only. No sharks were harmed. Fish Oil Plus™, Sharkeaway™, Dr. Fin's Swim Academy, Treat Co.™, Oceanic Therapy™, Mega Goop™, Rainbow Insurance™, Cloud Saves Inc.™, and Buddy Fish Dating™ are not real companies. The Shark is real. Fish Frenzy Ltd accepts no liability for existential dread, decoy fish relationships, or failed shark repellent. Ads can be disabled in Settings. By continuing to play you agree to nothing. This fine print exists for legal reasons. The lawyers are also fish.</p>
     </div>
     <button id="rules-back-btn" class="btn-secondary">BACK</button>
   </div>
@@ -195,6 +196,13 @@
         <button id="toggle-shark-quips-btn" class="settings-toggle">ON</button>
       </div>
       <p class="settings-hint">Shark speech bubbles during gameplay.</p>
+    </div>
+    <div class="settings-section">
+      <div class="settings-row">
+        <span class="settings-label">ADS</span>
+        <button id="toggle-ads-btn" class="settings-toggle">ON</button>
+      </div>
+      <p class="settings-hint">AI-generated ads shown after you die. Purely for entertainment.</p>
     </div>
     <div class="settings-section">
       <div class="settings-row">
@@ -579,5 +587,7 @@
   document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:monospace;color:#44ddff;font-size:14px;text-align:center;padding:20px;">PLEASE UPDATE YOUR BROWSER TO PLAY FISH FRENZY!</div>';
 </script>
 
+  <!-- Ad overlay -->
+  <div id="ad-overlay" class="hidden"></div>
 </body>
 </html>

@@ -7,7 +7,8 @@
       "Bash(grep -n \"newFilesystem.random\\(\\)\\\\|Math.floor\\(Math.random\\\\|Math.ceil\\(Math.random\" /c/Users/Nathan/Downloads/FishFrenzy/js/*.js)",
       "Bash(grep -n \"display: none\\\\|hidden\\\\|opacity: 0\" /c/Users/Nathan/Downloads/FishFrenzy/css/*.css)",
       "Bash(ls c:/Users/Nathan/Downloads/FishFrenzy/*.json c:/Users/Nathan/Downloads/FishFrenzy/.env*)",
-      "Bash(grep -rn \"S\\\\.score\\\\s*[+\\\\-]=\" c:/Users/Nathan/Downloads/FishFrenzy/main.js c:/Users/Nathan/Downloads/FishFrenzy/js/*.js)"
+      "Bash(grep -rn \"S\\\\.score\\\\s*[+\\\\-]=\" c:/Users/Nathan/Downloads/FishFrenzy/main.js c:/Users/Nathan/Downloads/FishFrenzy/js/*.js)",
+      "Bash(ls c:/Users/Nathan/Downloads/FishFrenzy/*.json c:/Users/Nathan/Downloads/FishFrenzy/*.sh c:/Users/Nathan/Downloads/FishFrenzy/*.bat)"
     ]
   }
 }

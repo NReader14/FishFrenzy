@@ -108,6 +108,7 @@ const S = {
     sfxVolume: 80,
     track: 'chiptune',
     sharkQuips: true,
+    showAds: true,
   },
 
   // Tutorial
