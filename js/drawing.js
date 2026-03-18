@@ -5,6 +5,7 @@
 import S from './state.js';
 import { SKINS, drawFishBody, FISH_TYPE_EXTRAS_OFFSET } from './skins.js';
 import { ctx } from './dom.js';
+import { portraitRotated } from './mobile-scale.js';
 import { W, H, rand, dist,
   FRENZY_DURATION, ICE_DURATION, HOURGLASS_DURATION, GOOP_DURATION,
   GHOST_DURATION, BUDDY_DURATION, BOMB_DURATION, CRAZY_DURATION,
@@ -12,6 +13,9 @@ import { W, H, rand, dist,
   PROMPT_WANDER_DURATION, BODY_SWAP_DURATION, HELL_DURATION
 } from './constants.js';
 import { pwConfig } from './powerups.js';
+
+// Mobile: scale up entities in portrait mode
+const mob = () => portraitRotated ? 1.5 : 1.0;
 
 // ─── WATER BACKGROUND ───
 export function drawWater() {
@@ -56,9 +60,10 @@ export function drawWater() {
 
 // ─── PIXEL FISH (reusable) ───
 export function drawPixelFish(x, y, dir, angle, phase, c1, c2, c3, fishType = 'standard') {
+  const m = mob();
   ctx.save();
   ctx.translate(x, y);
-  ctx.scale(dir, 1);
+  ctx.scale(dir * m, m);
   ctx.rotate(angle || 0);
   drawFishBody(ctx, c1, c2, c3, phase, fishType);
   ctx.restore();
@@ -84,6 +89,7 @@ export function drawFish() {
     const skin = SKINS[S.settings.skin ?? 0] || SKINS[0];
     const typeOff = FISH_TYPE_EXTRAS_OFFSET[fishType] || FISH_TYPE_EXTRAS_OFFSET.standard;
 
+    const am = mob();
     // Per-category accessories (custom skins)
     for (const key of ['hat', 'mask', 'outfit']) {
       const fn = skin[`${key}Fn`];
@@ -91,7 +97,7 @@ export function drawFish() {
         const off = typeOff[key] || { x: 0, y: 0 };
         ctx.save();
         ctx.translate(S.fish.x, S.fish.y);
-        ctx.scale(S.fish.dir, 1);
+        ctx.scale(S.fish.dir * am, am);
         ctx.rotate(S.fish.angle || 0);
         ctx.translate(off.x, off.y);
         if (off.sx !== undefined || off.sy !== undefined) ctx.scale(off.sx ?? 1, off.sy ?? 1);
@@ -106,7 +112,7 @@ export function drawFish() {
       const off = typeOff[extrasKey] || { x: 0, y: 0 };
       ctx.save();
       ctx.translate(S.fish.x, S.fish.y);
-      ctx.scale(S.fish.dir, 1);
+      ctx.scale(S.fish.dir * am, am);
       ctx.rotate(S.fish.angle || 0);
       ctx.translate(off.x, off.y);
       if (off.sx !== undefined || off.sy !== undefined) ctx.scale(off.sx ?? 1, off.sy ?? 1);
@@ -246,6 +252,7 @@ export function drawShark() {
   ctx.save();
   ctx.translate(S.shark.x, S.shark.y);
   ctx.rotate(S.shark.angle);
+  const _sm = mob(); ctx.scale(_sm, _sm);
 
   const frozen = S.iceActive || S.hourglassActive;
   if (frozen) ctx.globalAlpha = 0.6;
@@ -431,13 +438,18 @@ export function drawShark() {
 
 // ─── TREATS ───
 export function drawTreats() {
+  const tm = mob();
   for (const t of S.treats) {
     const bob = Math.round(Math.sin(t.bobPhase) * 2);
     t.bobPhase += 0.03;
+    ctx.save();
+    ctx.translate(t.x, t.y + bob);
+    ctx.scale(tm, tm);
     ctx.font = '20px serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(t.type, t.x, t.y + bob);
+    ctx.fillText(t.type, 0, 0);
+    ctx.restore();
   }
 }
 
@@ -455,6 +467,7 @@ export function drawPWItems() {
 
     ctx.save();
     ctx.translate(item.x, item.y + bob);
+    const _pm = mob(); ctx.scale(_pm, _pm);
 
     if (k === 'poison' || k === 'goop') {
       const pulse = 0.3 + Math.sin(Date.now() * 0.01) * 0.2;

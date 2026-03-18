@@ -235,9 +235,9 @@ function initJoystick() {
     thumb.style.transform = `translate(calc(-50% + ${clampedDx}px), calc(-50% + ${clampedDy}px))`;
 
     // When game is rotated -90deg in portrait, remap physical swipe → game direction:
-    // physical right (+dx) = game down, physical down (+dy) = game left
-    const gdx = portraitRotated ?  rawDy : rawDx;
-    const gdy = portraitRotated ? -rawDx : rawDy;
+    // physical up (-dy) = game right, physical right (+dx) = game down
+    const gdx = portraitRotated ? -rawDy : rawDx;
+    const gdy = portraitRotated ?  rawDx : rawDy;
 
     S.keys['arrowleft']  = gdx < -deadzone;
     S.keys['arrowright'] = gdx >  deadzone;

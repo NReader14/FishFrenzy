@@ -30,25 +30,22 @@ el.innerHTML = `
         fill="#44ddff" stroke="rgba(0,20,40,0.35)" stroke-width="0.6" stroke-linejoin="round"/>
 </svg>`;
 
-document.body.appendChild(el);
+// Touch devices (phones/tablets) don't need a custom cursor
+const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
 
-// ─── Mouse tracking ───────────────────────────────────────────
+if (!isTouchDevice) {
+  document.body.appendChild(el);
 
-document.addEventListener('mousemove', e => {
-  el.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
-}, { passive: true });
+  document.addEventListener('mousemove', e => {
+    el.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+  }, { passive: true });
 
-// ─── Visibility ───────────────────────────────────────────────
-
-function updateVisibility() {
-  const show = !S.gameRunning || !!S.cardAnim;
-  el.style.display = show ? 'block' : 'none';
-  document.documentElement.classList.toggle('hide-cursor', show);
+  (function tick() {
+    const show = !S.gameRunning || !!S.cardAnim;
+    el.style.display = show ? 'block' : 'none';
+    document.documentElement.classList.toggle('hide-cursor', show);
+    requestAnimationFrame(tick);
+  })();
 }
-
-(function tick() {
-  updateVisibility();
-  requestAnimationFrame(tick);
-})();
 
 export function initCursor() { /* side-effects run on import */ }

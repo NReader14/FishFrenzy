@@ -26,17 +26,15 @@ export function applyMobileScale() {
   }
 
   // Portrait mobile: rotate -90deg so the landscape game fills the screen.
-  // wrapper CSS width = vh (phone height), canvas inside at 720:480 ratio.
-  const canvasH = vh * (480 / 720);
-  // Rough total wrapper height (HUD ~50px + status bar ~26px + canvas)
-  const wrapperH = canvasH + 76;
-  // After rotating, visual width = wrapperH; scale to fit phone width
-  const scale = Math.min(1, vw / wrapperH);
+  // Scale by vh/720 so the canvas fills the full portrait height.
+  // Small amount clips horizontally (~10%) — acceptable for bigger feel.
+  const CANVAS_W = 720;
+  const scale = vh / CANVAS_W;
 
   wrapper.style.position  = 'fixed';
   wrapper.style.top       = '50%';
   wrapper.style.left      = '50%';
-  wrapper.style.width     = vh + 'px';
+  wrapper.style.width     = CANVAS_W + 'px';
   wrapper.style.maxWidth  = 'none';
   wrapper.style.transform = `translate(-50%, -50%) rotate(-90deg) scale(${scale})`;
   portraitRotated = true;

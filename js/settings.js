@@ -51,7 +51,7 @@ function refreshUI() {
   updateToggle('toggle-music-btn',      S.settings.music);
   updateToggle('toggle-sfx-btn',        S.settings.sfx);
   updateToggle('toggle-shark-quips-btn', S.settings.sharkQuips);
-  updateToggle('toggle-ads-btn',         S.settings.showAds ?? true);
+  updateToggle('toggle-ads-btn',         S.settings.showAds ?? false);
   const mvs = document.getElementById('music-vol-slider');
   const svs = document.getElementById('sfx-vol-slider');
   if (mvs) mvs.value = S.settings.musicVolume;
@@ -258,7 +258,7 @@ export function initSettings() {
   });
 
   document.getElementById('toggle-ads-btn')?.addEventListener('click', () => {
-    S.settings.showAds = !(S.settings.showAds ?? true);
+    S.settings.showAds = !(S.settings.showAds ?? false);
     updateToggle('toggle-ads-btn', S.settings.showAds);
     save();
   });
