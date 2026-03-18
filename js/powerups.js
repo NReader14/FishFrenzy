@@ -65,12 +65,13 @@ function deactivateFrenzy() {
 // Compute what the shark speed should be given currently active effects.
 // Used by all deactivation functions to avoid savedSpeed cross-contamination.
 function restoreSharkSpeed() {
+  const base = (gameVars.fishSpeed + gameVars.sharkSpeedBase) + gameVars.sharkSpeedPerLevel * Math.sqrt(S.level * 2);
   if (S.bodySwapActive || S.hourglassActive || S.promptActive) {
     S.shark.speed = 0;
   } else if (S.iceActive) {
-    S.shark.speed = (0.75 + S.level * 0.2) * 0.25;
+    S.shark.speed = base * 0.25;
   } else {
-    S.shark.speed = 0.75 + S.level * 0.2;
+    S.shark.speed = base;
   }
 }
 
@@ -628,7 +629,7 @@ function activateClaude() {
     spawnParticles(W / 2, H / 2, '#aa66ff', 30);
     spawnParticles(W / 2, H / 2, '#ffcc44', 20);
 
-    S.shark.speed = S.shark.savedClaudeSpeed || (0.75 + S.level * 0.2);
+    S.shark.speed = S.shark.savedClaudeSpeed || ((gameVars.fishSpeed + gameVars.sharkSpeedBase) + gameVars.sharkSpeedPerLevel * Math.sqrt(S.level * 2));
     S.claudeActive = false;
     S.claudeAnim = null;
     stOff('claude', 's-claude');
