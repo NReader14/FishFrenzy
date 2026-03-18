@@ -8,7 +8,12 @@
       "Bash(grep -n \"display: none\\\\|hidden\\\\|opacity: 0\" /c/Users/Nathan/Downloads/FishFrenzy/css/*.css)",
       "Bash(ls c:/Users/Nathan/Downloads/FishFrenzy/*.json c:/Users/Nathan/Downloads/FishFrenzy/.env*)",
       "Bash(grep -rn \"S\\\\.score\\\\s*[+\\\\-]=\" c:/Users/Nathan/Downloads/FishFrenzy/main.js c:/Users/Nathan/Downloads/FishFrenzy/js/*.js)",
-      "Bash(ls c:/Users/Nathan/Downloads/FishFrenzy/*.json c:/Users/Nathan/Downloads/FishFrenzy/*.sh c:/Users/Nathan/Downloads/FishFrenzy/*.bat)"
+      "Bash(ls c:/Users/Nathan/Downloads/FishFrenzy/*.json c:/Users/Nathan/Downloads/FishFrenzy/*.sh c:/Users/Nathan/Downloads/FishFrenzy/*.bat)",
+      "Bash(wc -l /c/Users/Nathan/Downloads/FishFrenzy/js/*.js)",
+      "Bash(grep -r \"export\" /c/Users/Nathan/Downloads/FishFrenzy/js/*.js)",
+      "Bash(grep -r \"import.*from\" /c/Users/Nathan/Downloads/FishFrenzy/js/*.js /c/Users/Nathan/Downloads/FishFrenzy/main.js)",
+      "Bash(grep -n \"export function\\\\|export const\" /c/Users/Nathan/Downloads/FishFrenzy/js/*.js)",
+      "Bash(grep -r \"getElementById\\\\|querySelector\" /c/Users/Nathan/Downloads/FishFrenzy/js/*.js /c/Users/Nathan/Downloads/FishFrenzy/main.js)"
     ]
   }
 }

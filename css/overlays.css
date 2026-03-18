@@ -39,9 +39,6 @@
 .game-overlay::-webkit-scrollbar-track { background: #0a0a16; }
 .game-overlay::-webkit-scrollbar-thumb { background: #223; border-radius: 2px; }
 
-.game-overlay.hidden { display: none; }
-
-
 /* ─── MAIN MENU ─── */
 #overlay h1 {
   font-size: 22px;
@@ -1353,7 +1350,6 @@
   font-family: 'Press Start 2P', monospace;
   animation: ad-bg-in 0.3s ease forwards;
 }
-#ad-overlay.hidden { display: none; }
 @keyframes ad-bg-in {
   from { background: rgba(0,0,0,0); }
   to   { background: rgba(0,0,0,0.92); }

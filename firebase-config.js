@@ -1,7 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
 // FIREBASE CONFIG & OPERATIONS
-// All Firebase interactions are isolated in this file. .
+// All Firebase interactions are isolated in this file.
 // ═══════════════════════════════════════════════════════════════
+const DEBUG = false; // set true to enable verbose Firebase logging
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {
@@ -52,14 +53,14 @@ let isOnline = true;
 export async function initAuth() {
   if (auth.currentUser) {
     currentUser = auth.currentUser;
-    console.log("[Firebase] Existing session:", currentUser.uid);
+    DEBUG && console.log("[Firebase] Existing session:", currentUser.uid);
     return currentUser;
   }
 
   try {
     const result = await signInAnonymously(auth);
     currentUser = result.user;
-    console.log("[Firebase] Anonymous auth successful");
+    DEBUG && console.log("[Firebase] Anonymous auth successful");
     return currentUser;
   } catch (err) {
     console.warn("[Firebase] Anonymous auth failed:", err.message);
@@ -150,7 +151,7 @@ export async function saveHighScore(name, sc, lv, skinSnapshot = null) {
     if (existing.exists()) {
       const existingScore = existing.data().score || 0;
       if (cleanScore <= existingScore) {
-        console.log("[Firebase] Existing score is higher, not updating.");
+        DEBUG && console.log("[Firebase] Existing score is higher, not updating.");
         const scores = await fetchHighScores();
         return scores.findIndex(s => s.name === cleanName);
       }
@@ -173,7 +174,7 @@ export async function saveHighScore(name, sc, lv, skinSnapshot = null) {
     }
     await setDoc(docRef, payload);
 
-    console.log("[Firebase] Score saved:", cleanName, cleanScore);
+    DEBUG && console.log("[Firebase] Score saved:", cleanName, cleanScore);
     isOnline = true;
 
     const scores = await fetchHighScores();
@@ -191,7 +192,7 @@ export async function saveHighScore(name, sc, lv, skinSnapshot = null) {
 export async function adminWipeScores(email, password) {
   try {
     const adminCred = await signInWithEmailAndPassword(auth, email, password);
-    console.log("[Firebase] Admin login successful, UID:", adminCred.user.uid);
+    DEBUG && console.log("[Firebase] Admin login successful, UID:", adminCred.user.uid);
 
     const snapshot = await getDocs(collection(db, SCORES_COLLECTION));
 
@@ -201,7 +202,7 @@ export async function adminWipeScores(email, password) {
     });
     await Promise.all(deletePromises);
 
-    console.log("[Firebase] All scores wiped by admin.");
+    DEBUG && console.log("[Firebase] All scores wiped by admin.");
 
     await signOut(auth);
     currentUser = null;

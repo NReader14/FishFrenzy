@@ -5,18 +5,17 @@
 
 export const NOTES = [
   {
-    v: 'v0.9', emoji: '📺', title: 'ADS UPDATE', date: 'MAR 2026',
+    v: 'v1.0', emoji: '🎉', title: 'FULL RELEASE', date: 'MAR 2026',
     items: [
       '📺 AI-generated ads now appear after you die — purely for entertainment',
-      '🎮 Each ad has its own interactive mini-game (tap, swipe, shake, spin...)',
       '🖱️ The SKIP button flees your cursor for 20 seconds. Good luck.',
-      '🔗 Clicking outside the ad opens a new tab. Just like real life.',
       '⚙️ Ads can be toggled off in Settings if you\'re no fun',
       '🏆 Hall of Fame banner on the main menu — top score with animated fish',
       '🐟 Skin data now saved with scores — your fish appears on the leaderboard',
       '💰 Score cap raised to 1,000,000 — ALX we see you',
       '🐛 Rainbow power-up no longer permanently slows the shark after ending',
       '⚡ Shark speed interactions fully reworked — no more stacking bugs',
+      '🧹 Major codebase cleanup — dead code removed, debug logs gated, status badges added for Double, Wave and Poison',
     ]
   },
   {

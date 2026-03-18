@@ -89,7 +89,6 @@ function activateIce() {
     S.iceTO = setTimeout(deactivateIce, ICE_DURATION);
     return;
   }
-  S.shark.savedSpeed = S.shark.speed;
   S.shark.speed *= 0.25;
   stOn('ice', 's-ice');
   S.iceTO = clearTO(S.iceTO);
@@ -157,7 +156,6 @@ function activateHourglass() {
   S.hourglassActive = true;
   S.timerFrozen = true;
   S.hourglassStartTime = Date.now();
-  S.shark.savedSpeed2 = S.shark.speed;
   S.shark.speed = 0;
   setMusicTempo(1.8);
   timerBar.classList.add('frozen');
@@ -333,6 +331,8 @@ function activateDouble() {
   treatsLeftEl.textContent = S.treats.length;
   spawnParticles(S.fish.x, S.fish.y, '#44ddff', 16);
   S.scorePopups.push({ x: S.fish.x, y: S.fish.y - 20, pts: 'DOUBLE!', life: 1.2, decay: 0.025 });
+  stOn('double', 's-double');
+  setTimeout(() => stOff('double', 's-double'), 2000);
 }
 
 // ─── WAVE ───
@@ -352,6 +352,8 @@ function activateWave() {
   }
   S.scorePopups.push({ x: W / 2, y: H / 2, pts: 'WAVE!', life: 1, decay: 0.03 });
   spawnParticles(target.x, target.y, '#4488ff', 20);
+  stOn('wave', 's-wave');
+  setTimeout(() => stOff('wave', 's-wave'), 1500);
 }
 
 // ─── POISON ───
@@ -362,7 +364,9 @@ function activatePoison() {
   spawnParticles(S.fish.x, S.fish.y, '#44ff00', 16);
   S.scorePopups.push({ x: S.fish.x, y: S.fish.y - 20, pts: '-3 SEC!', life: 1.5, decay: 0.02 });
   timerBar.classList.add('danger');
+  stOn('poison', 's-poison');
   setTimeout(() => { if (S.timeLeft > 10) timerBar.classList.remove('danger'); }, 500);
+  setTimeout(() => stOff('poison', 's-poison'), 1500);
   if (S.timeLeft <= 0 && _endGame) _endGame(false, "Poisoned!");
 }
 
@@ -454,7 +458,6 @@ function activatePrompt() {
   S.promptActive = true;
   S.promptStartTime = Date.now();
   S.promptWandering = false;
-  S.shark.savedPromptSpeed = S.shark.speed;
   S.shark.speed = 0;
   stOn('prompt', 's-prompt');
   spawnParticles(S.shark.x, S.shark.y, '#aa66ff', 16);
@@ -520,7 +523,6 @@ function activateBodySwap() {
   // Zero out fish velocity so AI starts fresh
   S.fish.vx = 0; S.fish.vy = 0;
   // Boost shark speed for agility
-  S.shark.savedBodySwapSpeed = S.shark.speed;
   S.shark.speed = S.fish.speed + 1;
   stOn('bodyswap', 's-bodyswap');
   spawnParticles(S.fish.x, S.fish.y, '#ff4488', 20);
@@ -757,7 +759,6 @@ export async function loadRarities() {
         pwConfig[key].rarity = rarity;
       }
     }
-    console.log("[Config] Rarities loaded from Firebase:", rarities);
   }
   const vars = config?.gameVars;
   if (vars) {
@@ -767,7 +768,6 @@ export async function loadRarities() {
         firebaseGameVars[key] = val; // persist so initGame() re-applies after difficulty reset
       }
     }
-    console.log("[Config] Game vars loaded from Firebase:", vars);
   }
 }
 

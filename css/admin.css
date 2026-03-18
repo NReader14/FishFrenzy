@@ -64,8 +64,6 @@
   margin: 4px 0;
 }
 
-.admin-error.hidden { display: none; }
-
 .admin-btn-row {
   display: flex;
   gap: 12px;

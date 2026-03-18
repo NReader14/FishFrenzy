@@ -291,7 +291,7 @@ function startLevel() {
   const sharkSpeed = (gameVars.fishSpeed + gameVars.sharkSpeedBase) + gameVars.sharkSpeedPerLevel * Math.sqrt(S.level * 2);
   S.shark = {
     x: rand(60, W - 60), y: rand(60, H - 60),
-    speed: sharkSpeed, savedSpeed: sharkSpeed, savedSpeed2: sharkSpeed,
+    speed: sharkSpeed,
     angle: 0, tailPhase: 0, chaseTimer: 0, hidden: false, quip: null
   };
   _sharkQuipTimer = Math.round(gameVars.sharkQuipInterval * 60 * (0.5 + Math.random()));
