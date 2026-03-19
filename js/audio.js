@@ -505,17 +505,18 @@ function runScheduler() {
 export const TRACKS = [
   { id: 'chiptune', label: 'CHIPTUNE' },
   { id: 'megafish', label: 'MEGA FISH' },
-  { id: 'abyss', label: 'ABYSS', src: 'audio/Abyss.mp3' },
-  { id: 'brklntrap', label: 'BROOKLYN TRAP', src: 'audio/Brooklyn (Trap Reorchestration) (Remix).mp3' },
-  { id: 'brklyn', label: 'BROOKLYN', src: 'audio/Brooklyn.mp3' },
-  { id: 'const', label: 'CONSTELLATIONS', src: 'audio/Constellation.mp3' },
-  { id: 'genzlf', label: 'GEN Z LOFI', src: 'audio/Generation Z (Lofi Version).mp3' },
-  { id: 'genz', label: 'GEN Z', src: 'audio/Generation Z.mp3' },
-  { id: 'black', label: 'JST BLACK NOTES', src: 'audio/Just The Black Note.mp3' },
-  { id: 'pristine', label: 'PRISTINE', src: 'audio/Pristine.mp3' },
-  { id: 'ylowhrt', label: 'YELLOW HEART', src: 'audio/The Yellow Heart.mp3' },
-  { id: 'resignlf', label: 'RESIGN LOFI', src: 'audio/Will You Resign (Lofi Remix).mp3' },
-  { id: 'resign', label: 'RESIGN', src: 'audio/Will You Resign.mp3'}
+  { id: 'abyss', label: 'ABYSS', src: 'audio/a3f9c2d1.mp3' },
+  { id: 'brklntrap', label: 'BROOKLYN TRAP', src: 'audio/b7e4f810.mp3' },
+  { id: 'brklyn', label: 'BROOKLYN', src: 'audio/c2d5a390.mp3' },
+  { id: 'const', label: 'CONSTELLATIONS', src: 'audio/d8f1b247.mp3' },
+  { id: 'dotd', label: 'DAY OF THE DEAD', src: 'audio/e4c9a062.mp3' },
+  { id: 'genzlf', label: 'GEN Z LOFI', src: 'audio/f3b7e519.mp3' },
+  { id: 'genz', label: 'GEN Z', src: 'audio/a9d4c823.mp3' },
+  { id: 'black', label: 'JST BLACK NOTES', src: 'audio/b5f2e741.mp3' },
+  { id: 'pristine', label: 'PRISTINE', src: 'audio/c8a3d906.mp3' },
+  { id: 'ylowhrt', label: 'YELLOW HEART', src: 'audio/d1f7b452.mp3' },
+  { id: 'resignlf', label: 'RESIGN LOFI', src: 'audio/e6c2a817.mp3' },
+  { id: 'resign', label: 'RESIGN', src: 'audio/f4b9d035.mp3' },
   
   
   // Add MP3 tracks below — drop files in the audio/ folder and add entries here:
