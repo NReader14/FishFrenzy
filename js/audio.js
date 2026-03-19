@@ -525,7 +525,6 @@ export const TRACKS = [
 
 // ─── MP3 player ───────────────────────────────────────────────
 let _mpAudio  = null; // HTMLAudioElement for MP3 tracks
-let _mpSource = null; // MediaElementSourceNode (created once per element)
 
 // Pool of pre-created Audio elements (metadata preloaded for instant duration/seek)
 const _pool = new Map();
@@ -549,7 +548,7 @@ function _currentTrack() {
 function _startMp3(src) {
   const c = ctx();
   if (!_mpAudio || _mpAudio._src !== src) {
-    if (_mpAudio) { _mpAudio.pause(); _mpSource = null; }
+    if (_mpAudio) { _mpAudio.pause(); }
     _mpAudio = _pool.get(src) ?? new Audio(src);
     _mpAudio._src = src;
     _mpAudio.loop = true;
@@ -558,14 +557,13 @@ function _startMp3(src) {
       _mpAudio._waNode = c.createMediaElementSource(_mpAudio);
       _mpAudio._waNode.connect(_musicBus);
     }
-    _mpSource = _mpAudio._waNode;
   }
   _mpAudio.playbackRate = _tempoMult;
   _mpAudio.play().catch(() => {});
 }
 
-function _stopMp3() {
-  if (_mpAudio) { _mpAudio.pause(); _mpAudio.currentTime = 0; }
+function _stopMp3(resetPos = false) {
+  if (_mpAudio) { _mpAudio.pause(); if (resetPos) _mpAudio.currentTime = 0; }
 }
 
 // ─── Public API ───────────────────────────────────────────────

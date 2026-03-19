@@ -596,6 +596,7 @@ function activateClaude() {
   S.claudeAnim = { startTime: Date.now(), text: '', textTarget: "I'LL HELP YOU WITH THAT.", totalDuration: 0 };
   S.shark.savedClaudeSpeed = S.shark.speed;
   S.shark.speed = 0;
+  S.gamePaused = true;
   stOn('claude', 's-claude');
 
   // Typewriter effect — tracked so they can be cancelled on game end
@@ -630,6 +631,7 @@ function activateClaude() {
     spawnParticles(W / 2, H / 2, '#ffcc44', 20);
 
     S.shark.speed = S.shark.savedClaudeSpeed || ((gameVars.fishSpeed + gameVars.sharkSpeedBase) + gameVars.sharkSpeedPerLevel * Math.sqrt(S.level * 2));
+    S.gamePaused = false;
     S.claudeActive = false;
     S.claudeAnim = null;
     stOff('claude', 's-claude');
