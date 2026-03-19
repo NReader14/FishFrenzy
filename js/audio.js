@@ -501,9 +501,23 @@ function runScheduler() {
 //! ─── Track list ───────────────────────────────────────────────
 //! Add MP3 tracks here — drop the file in the audio/ folder then add an entry:
 //! { id: 'my_track', label: 'MY TRACK', src: 'audio/my_track.mp3' }
+//! ★ Shoutout to KRe$cendo — produced a good chunk of the MP3 tracks below ★
 export const TRACKS = [
-  { id: 'chiptune',  label: 'CHIPTUNE' },
-  { id: 'megafish',  label: 'MEGA FISH' },
+  { id: 'chiptune', label: 'CHIPTUNE' },
+  { id: 'megafish', label: 'MEGA FISH' },
+  { id: 'abyss', label: 'ABYSS', src: 'audio/Abyss.mp3' },
+  { id: 'brklntrap', label: 'BROOKLYN TRAP', src: 'audio/Brooklyn (Trap Reorchestration) (Remix).mp3' },
+  { id: 'brklyn', label: 'BROOKLYN', src: 'audio/Brooklyn.mp3' },
+  { id: 'const', label: 'CONSTELLATIONS', src: 'audio/Constellation.mp3' },
+  { id: 'genzlf', label: 'GEN Z LOFI', src: 'audio/Generation Z (Lofi Version).mp3' },
+  { id: 'genz', label: 'GEN Z', src: 'audio/Generation Z.mp3' },
+  { id: 'black', label: 'JST BLACK NOTES', src: 'audio/Just The Black Note.mp3' },
+  { id: 'pristine', label: 'PRISTINE', src: 'audio/Pristine.mp3' },
+  { id: 'ylowhrt', label: 'YELLOW HEART', src: 'audio/The Yellow Heart.mp3' },
+  { id: 'resignlf', label: 'RESIGN LOFI', src: 'audio/Will You Resign (Lofi Remix).mp3' },
+  { id: 'resign', label: 'RESIGN', src: 'audio/Will You Resign.mp3'}
+  
+  
   // Add MP3 tracks below — drop files in the audio/ folder and add entries here:
   // { id: 'my_track', label: 'MY TRACK', src: 'audio/my_track.mp3' },
 ];
@@ -593,6 +607,14 @@ export function setMusicVolume() {
 
 export function setSfxVolume() {
   if (_sfxBus) _sfxBus.gain.value = _sfxGain();
+}
+
+// Seek the current MP3 track to its midpoint (used for settings preview)
+export function seekMusicToMiddle() {
+  if (!_mpAudio) return;
+  const doSeek = () => { _mpAudio.currentTime = Math.max(0, _mpAudio.duration / 2 - 5); };
+  if (_mpAudio.duration) doSeek();
+  else _mpAudio.addEventListener('loadedmetadata', doSeek, { once: true });
 }
 
 // Call once on first user interaction to unlock AudioContext

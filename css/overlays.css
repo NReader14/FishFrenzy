@@ -704,7 +704,7 @@
 }
 
 .settings-section {
-  width: 320px;
+  width: 500px;
   margin-bottom: 14px;
 }
 
@@ -815,21 +815,44 @@
   margin-bottom: 4px;
 }
 
+/* game-code tracks = blue, MP3 tracks = gold */
 .track-btn {
   font-family: 'Press Start 2P', monospace;
   font-size: 7px;
   padding: 7px 10px;
-  border: 1px solid #2a4a6a;
-  background: rgba(10,30,50,0.6);
-  color: #88aabb;
+  border: 1px solid #2a5a9a;
+  background: rgba(10,20,50,0.6);
+  color: #77aaee;
   cursor: pointer;
   border-radius: 3px;
   transition: border-color 0.15s, color 0.15s;
 }
 
 .track-btn:hover {
-  border-color: #557799;
-  color: #cce;
+  border-color: #5599dd;
+  color: #aaddff;
+}
+
+.track-btn.track-mp3 {
+  border-color: #7a5a20;
+  background: rgba(40,25,5,0.6);
+  color: #e8b84b;
+}
+
+.track-btn.track-mp3:hover {
+  border-color: #ccaa44;
+  color: #ffe080;
+}
+
+.track-kredcendo {
+  margin-top: 6px;
+  color: #c8a040;
+  font-size: 7px;
+}
+
+.track-kredcendo span {
+  color: #ffe080;
+  letter-spacing: 1px;
 }
 
 /* ─── SKIN PICKER ─── */

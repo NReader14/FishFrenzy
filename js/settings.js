@@ -4,7 +4,7 @@
 
 import S from './state.js';
 import { SKINS, drawSkinPreview, addCustomSkinToList } from './skins.js';
-import { startMusic, stopMusic, initAudio, setMusicVolume, setSfxVolume, TRACKS } from './audio.js';
+import { startMusic, stopMusic, initAudio, setMusicVolume, setSfxVolume, seekMusicToMiddle, TRACKS } from './audio.js';
 import { openFishDraw, initFishDraw } from './fishdraw.js';
 import { fetchCustomSkins } from '../firebase-config.js';
 
@@ -77,7 +77,7 @@ function buildTrackPicker() {
   if (!picker || picker.querySelector('.track-btn')) return;
   TRACKS.forEach(track => {
     const btn = document.createElement('button');
-    btn.className = 'track-btn';
+    btn.className = 'track-btn' + (track.src ? ' track-mp3' : '');
     btn.dataset.trackId = track.id;
     btn.textContent = track.label;
     btn.addEventListener('click', () => {
@@ -88,8 +88,9 @@ function buildTrackPicker() {
       stopMusic();
       startMusic();
       if (!S.gameRunning) {
-        // 10-second preview then stop
+        // 5-second preview from middle of track then stop
         cancelTrackPreview();
+        seekMusicToMiddle();
         _previewTimer = setTimeout(() => { stopMusic(); _previewTimer = null; }, 10000);
       }
     });
