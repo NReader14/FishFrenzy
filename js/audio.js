@@ -527,6 +527,20 @@ export const TRACKS = [
 let _mpAudio  = null; // HTMLAudioElement for MP3 tracks
 let _mpSource = null; // MediaElementSourceNode (created once per element)
 
+// Pool of pre-created Audio elements (metadata preloaded for instant duration/seek)
+const _pool = new Map();
+
+function _preloadMetadata() {
+  for (const t of TRACKS) {
+    if (!t.src || _pool.has(t.src)) continue;
+    const a = new Audio(t.src);
+    a.preload = 'metadata';
+    a.crossOrigin = 'anonymous';
+    a.loop = true;
+    _pool.set(t.src, a);
+  }
+}
+
 function _currentTrack() {
   const id = S.settings?.track ?? 'chiptune';
   return TRACKS.find(t => t.id === id) ?? TRACKS[0];
@@ -536,12 +550,15 @@ function _startMp3(src) {
   const c = ctx();
   if (!_mpAudio || _mpAudio._src !== src) {
     if (_mpAudio) { _mpAudio.pause(); _mpSource = null; }
-    _mpAudio = new Audio(src);
+    _mpAudio = _pool.get(src) ?? new Audio(src);
     _mpAudio._src = src;
     _mpAudio.loop = true;
     _mpAudio.crossOrigin = 'anonymous';
-    _mpSource = c.createMediaElementSource(_mpAudio);
-    _mpSource.connect(_musicBus);
+    if (!_mpAudio._waNode) {
+      _mpAudio._waNode = c.createMediaElementSource(_mpAudio);
+      _mpAudio._waNode.connect(_musicBus);
+    }
+    _mpSource = _mpAudio._waNode;
   }
   _mpAudio.playbackRate = _tempoMult;
   _mpAudio.play().catch(() => {});
@@ -624,4 +641,5 @@ export function initAudio() {
   ctx();
   setMusicVolume();
   setSfxVolume();
+  _preloadMetadata();
 }
