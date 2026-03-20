@@ -111,7 +111,14 @@
       <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
         <button id="start-btn" class="btn-primary">START</button>
         <p id="score-multiplier-hint" style="display:none;margin:0;font-size:7px;letter-spacing:0.08em;"></p>
-        <p id="anon-hint" style="margin:0;font-size:6px;color:#556;letter-spacing:0.05em;">SIGN IN TO SYNC ACHIEVEMENTS ACROSS DEVICES</p>
+        <div id="auth-status" class="auth-status">
+          <button id="signin-btn" class="btn-auth-cta">★ SIGN IN TO SAVE PROGRESS</button>
+          <div id="signed-in-status" class="signed-in-status hidden">
+            <span class="auth-icon">●</span>
+            <span id="auth-display-name" class="auth-name"></span>
+            <button id="signout-btn" class="btn-auth-signout">SIGN OUT</button>
+          </div>
+        </div>
       </div>
       <div class="menu-btn-grid">
         <button id="rules-btn" class="btn-secondary">RULES</button>
@@ -119,15 +126,6 @@
         <button id="settings-btn" class="btn-secondary">SETTINGS</button>
         <button id="feedback-btn" class="btn-secondary">FEEDBACK</button>
         <button id="achievements-btn" class="btn-secondary menu-btn-wide">ACHIEVEMENTS</button>
-      </div>
-    </div>
-    <div id="auth-status" class="auth-status">
-      <button id="signin-btn" class="btn-auth">SIGN IN</button>
-      <div id="signed-in-status" class="signed-in-status hidden">
-        <span class="auth-icon">●</span>
-        <span style="color:#5588aa;font-size:6px;">SIGNED IN AS</span>
-        <span id="auth-display-name" class="auth-name"></span>
-        <button id="signout-btn" class="btn-auth-signout">SIGN OUT</button>
       </div>
     </div>
     <p class="controls-hint">ARROW KEYS / WASD TO SWIM</p>

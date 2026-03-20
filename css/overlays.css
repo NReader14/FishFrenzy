@@ -982,28 +982,31 @@
 
 /* ─── AUTH STATUS BAR ─── */
 .auth-status {
-  margin: 4px 0 2px;
-  min-height: 22px;
+  margin: 3px 0 0;
+  min-height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.btn-auth {
+/* CTA button shown when signed out */
+.btn-auth-cta {
   background: none;
-  border: 1px solid #335566;
-  color: #5588aa;
+  border: 1px solid #aa8800;
+  color: #ffcc00;
   font-family: 'Press Start 2P', monospace;
   font-size: 6px;
-  padding: 4px 10px;
+  padding: 5px 12px;
   cursor: pointer;
   letter-spacing: 0.08em;
-  transition: border-color 0.15s, color 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+  box-shadow: 0 0 6px rgba(255,200,0,0.2);
 }
 
-.btn-auth:hover {
-  border-color: #44ddff;
-  color: #44ddff;
+.btn-auth-cta:hover {
+  background: rgba(255,200,0,0.08);
+  border-color: #ffcc00;
+  box-shadow: 0 0 10px rgba(255,200,0,0.4);
 }
 
 .signed-in-status {
@@ -1025,7 +1028,7 @@
 
 .auth-name {
   color: #44ddff;
-  max-width: 140px;
+  max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
