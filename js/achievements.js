@@ -239,14 +239,26 @@ export async function syncAchievementsFromCloud(uid) {
   }
 }
 
-// ─── Toast notification ───────────────────────────────────────
+// ─── Toast queue ──────────────────────────────────────────────
+
+let _toastQueue = [];
+let _toastBusy  = false;
 
 function _toast(id) {
+  _toastQueue.push(id);
+  if (!_toastBusy) _nextToast();
+}
+
+function _nextToast() {
+  if (_toastQueue.length === 0) { _toastBusy = false; return; }
+  _toastBusy = true;
+
+  const id  = _toastQueue.shift();
   const def = ACHIEVEMENTS.find(a => a.id === id);
-  if (!def) return;
+  if (!def) { _nextToast(); return; }
 
   const container = document.getElementById('achievement-toasts');
-  if (!container) return;
+  if (!container) { _nextToast(); return; }
 
   const el = document.createElement('div');
   el.className = 'achievement-toast';
@@ -257,9 +269,8 @@ function _toast(id) {
     </div>`;
   container.appendChild(el);
 
-  // Animate out after 3.5s then remove
-  setTimeout(() => el.classList.add('ach-toast-out'), 3200);
-  setTimeout(() => el.remove(), 3700);
+  setTimeout(() => el.classList.add('ach-toast-out'), 2800);
+  setTimeout(() => { el.remove(); _nextToast(); }, 3200);
 }
 
 // ─── Unlock helper ────────────────────────────────────────────
@@ -562,15 +573,49 @@ export function onTrackChanged(trackId) {
 
 export function getUnlocked() { return _unlocked; }
 export function getUnlockedCount() { return _unlocked.size; }
+export function getNonSecretCount() { return ACHIEVEMENTS.filter(a => a.tier !== 'secret').length; }
+export function getStats() { return _stats; }
 export function onDeathCard() { unlock('death_card'); }
+
+// Progress definitions for locked numeric achievements
+const _PROGRESS = {
+  treat_hoarder:    { val: () => _stats.totalTreats,          max: 500 },
+  treat_2000:       { val: () => _stats.totalTreats,          max: 2000 },
+  survivor:         { val: () => _stats.gamesPlayed,          max: 20 },
+  marathon:         { val: () => Math.floor(_stats.totalPlayMs / 60000), max: 30, suffix: 'min' },
+  marathon_2h:      { val: () => Math.floor(_stats.totalPlayMs / 60000), max: 120, suffix: 'min' },
+  power_mad:        { val: () => _stats.totalPowerups,        max: 50 },
+  power_mad_100:    { val: () => _stats.totalPowerups,        max: 100 },
+  combo_king:       { val: () => _stats.combo5Count,          max: 10 },
+  overachiever:     { val: () => _unlocked.size,              max: 25 },
+  overachiever_50:  { val: () => _unlocked.size,              max: 50 },
+  fashionista:      { val: () => _stats.skinsUsed.size,       max: 5 },
+  music_explorer:   { val: () => _stats.tracksUsed.size,      max: 5 },
+  med_all_powerups: { val: () => _stats.allPowerupTypes.size, max: 10 },
+  sh_hell_x10:      { val: () => _stats.totalHellSurvivals,   max: 3 },
+};
 
 function _achCard(a, extraClass = '') {
   const got = _unlocked.has(a.id);
   const lockedText = a.hint || 'Keep playing to unlock!';
+
+  let progressHtml = '';
+  if (!got && _PROGRESS[a.id]) {
+    const p   = _PROGRESS[a.id];
+    const cur = Math.min(p.val(), p.max);
+    const pct = Math.round((cur / p.max) * 100);
+    const label = p.suffix ? `${cur}${p.suffix} / ${p.max}${p.suffix}` : `${cur} / ${p.max}`;
+    progressHtml = `<div class="ach-progress-wrap">
+      <div class="ach-progress-bar" style="width:${pct}%"></div>
+      <span class="ach-progress-label">${label}</span>
+    </div>`;
+  }
+
   return `<div class="ach-card ${extraClass} ${got ? 'ach-unlocked' : 'ach-locked'}" title="${got ? a.desc : lockedText}">
     <div class="ach-icon">${got ? a.icon : '?'}</div>
     <div class="ach-name">${got ? a.name : '???'}</div>
     <div class="ach-desc">${got ? a.desc : lockedText}</div>
+    ${progressHtml}
   </div>`;
 }
 
@@ -651,5 +696,49 @@ export function buildAchievementsHTML() {
   }
   html += '</div>';
 
+  return html;
+}
+
+// ─── Stats page ───────────────────────────────────────────────
+
+export function buildStatsHTML() {
+  const s = _stats;
+  const totalMs = s.totalPlayMs;
+  const hours   = Math.floor(totalMs / 3600000);
+  const mins    = Math.floor((totalMs % 3600000) / 60000);
+  const secs    = Math.floor((totalMs % 60000) / 1000);
+  const timeStr = hours > 0
+    ? `${hours}h ${mins}m`
+    : mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+
+  const nonSecret = getNonSecretCount();
+  const unlocked  = [..._unlocked].filter(id => {
+    const a = ACHIEVEMENTS.find(x => x.id === id);
+    return a && a.tier !== 'secret';
+  }).length;
+  const secrets = ACHIEVEMENTS.filter(a => a.tier === 'secret' && _unlocked.has(a.id)).length;
+
+  const statRows = [
+    ['🎮', 'GAMES PLAYED',        s.gamesPlayed.toLocaleString()],
+    ['⏱',  'TIME PLAYED',         timeStr],
+    ['🪱',  'TREATS EATEN',        s.totalTreats.toLocaleString()],
+    ['✨',  'POWERUPS COLLECTED',  s.totalPowerups.toLocaleString()],
+    ['⚡',  'X5 COMBOS',           s.combo5Count.toLocaleString()],
+    ['👹',  'HELL SURVIVALS',      s.totalHellSurvivals.toLocaleString()],
+    ['🎭',  'SKINS TRIED',         s.skinsUsed.size + ' / 7'],
+    ['🎵',  'TRACKS HEARD',        s.tracksUsed.size],
+    ['🕹',  'POWERUP TYPES FOUND', s.allPowerupTypes.size + ' / 16'],
+    ['🏅',  'ACHIEVEMENTS',        `${unlocked} / ${nonSecret}${secrets > 0 ? ` + ${secrets} 🔮` : ''}`],
+  ];
+
+  let html = '<div class="stats-grid">';
+  for (const [icon, label, val] of statRows) {
+    html += `<div class="stats-row">
+      <span class="stats-icon">${icon}</span>
+      <span class="stats-label">${label}</span>
+      <span class="stats-val">${val}</span>
+    </div>`;
+  }
+  html += '</div>';
   return html;
 }

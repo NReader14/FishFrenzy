@@ -6,6 +6,24 @@ import S from './state.js';
 import { ctx } from './dom.js';
 import { rand, W, H } from './constants.js';
 
+const FRENZY_COLORS = ['#ff4400', '#ff7700', '#ffcc00', '#ff88ff', '#ff2266'];
+
+export function spawnFrenzyTrail(x, y) {
+  // Spawn 2 small sparkles drifting backward from fish position
+  for (let i = 0; i < 2; i++) {
+    S.particles.push({
+      x: x + rand(-5, 5),
+      y: y + rand(-5, 5),
+      vx: rand(-0.8, 0.8),
+      vy: rand(-0.8, 0.8),
+      life: rand(0.6, 1.0),
+      decay: rand(0.05, 0.10),
+      r: rand(2, 4),
+      color: FRENZY_COLORS[Math.floor(Math.random() * FRENZY_COLORS.length)],
+    });
+  }
+}
+
 export function spawnParticles(x, y, color, count) {
   for (let i = 0; i < (count || 6); i++) {
     S.particles.push({

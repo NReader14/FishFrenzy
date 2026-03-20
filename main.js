@@ -18,7 +18,7 @@ import {
   scoreboardBtn, closeScoreboardBtn, adminEmailInput,
   adminPasswordInput, adminLoginBtn, st
 } from './js/dom.js';
-import { spawnParticles, updateParticles, drawParticles, drawScorePopups } from './js/particles.js';
+import { spawnParticles, spawnFrenzyTrail, updateParticles, drawParticles, drawScorePopups } from './js/particles.js';
 import {
   playCRTWipe, playCRTGameOver, drawChomp, playTimeUpDeath,
   updateSwapAnim, drawSwapEffect, updateHookAnim, drawHookLine
@@ -54,7 +54,7 @@ import {
   initAchievements, onGameStart as achGameStart, onLevelStart as achLevelStart,
   onLevelComplete as achLevelComplete, onGameOver as achGameOver,
   onSharkDistanceFrame, onDeathCard as achDeathCard, onDeathWithCombo as achDeathWithCombo,
-  buildAchievementsHTML
+  buildAchievementsHTML, buildStatsHTML
 } from './js/achievements.js';
 import { initCursor } from './js/cursor.js';
 import { initAudio, startMusic, stopMusic, sfxLevelUp, sfxGameOver, sfxSharkBite, sfxMenuClick, stopCardMusic, setMusicTempo } from './js/audio.js';
@@ -983,6 +983,7 @@ function loop(timestamp) {
     updateTreats();
     if (S.shark && S.fish) onSharkDistanceFrame(dist(S.shark, S.fish));
     updateParticles();
+    if (S.frenzyActive && S.fish) spawnFrenzyTrail(S.fish.x, S.fish.y);
     trySpawnPowerups();
     updatePWItems();
   }
@@ -1151,12 +1152,40 @@ document.getElementById('achievements-back-btn')?.addEventListener('click', () =
   overlay.classList.remove('hidden');
 });
 
+document.getElementById('stats-btn')?.addEventListener('click', () => {
+  overlay.classList.add('hidden');
+  const statsOv = document.getElementById('stats-overlay');
+  const statsContent = document.getElementById('stats-content');
+  if (statsContent) statsContent.innerHTML = buildStatsHTML();
+  statsOv?.classList.remove('hidden');
+});
+document.getElementById('stats-back-btn')?.addEventListener('click', () => {
+  document.getElementById('stats-overlay')?.classList.add('hidden');
+  overlay.classList.remove('hidden');
+});
+
+// Patch notes new-version badge
+(function() {
+  const SEEN_KEY = 'fishFrenzyLastPatchSeen';
+  const latest = LOCAL_PATCH_NOTES[0]?.v;
+  const seen   = localStorage.getItem(SEEN_KEY);
+  const btn    = document.getElementById('patch-notes-btn');
+  if (btn && latest && seen !== latest) {
+    btn.classList.add('patch-notes-new');
+  }
+})();
+
 document.getElementById('patch-notes-btn')?.addEventListener('click', () => {
   overlay.classList.add('hidden');
   const patchOv = document.getElementById('patch-notes-overlay');
   patchOv?.classList.remove('hidden');
   const container = patchOv?.querySelector('.patch-notes-container');
   if (!container) return;
+
+  // Dismiss the new-version badge
+  const latest = LOCAL_PATCH_NOTES[0]?.v;
+  if (latest) localStorage.setItem('fishFrenzyLastPatchSeen', latest);
+  document.getElementById('patch-notes-btn')?.classList.remove('patch-notes-new');
 
   renderNotes(LOCAL_PATCH_NOTES, container);
 });

@@ -202,7 +202,7 @@ export async function fetchAllScores(max = 100) {
     const scores = [];
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
-      scores.push({ id: docSnap.id, name: data.name || "???", score: data.score || 0, level: data.level || 1 });
+      scores.push({ id: docSnap.id, name: data.name || "???", score: data.score || 0, level: data.level || 1, difficulty: data.difficulty || null });
     });
     isOnline = true;
     return scores;
@@ -238,6 +238,7 @@ export async function fetchHighScores() {
           maskKey:   data.skinMask   || 'none',
           outfitKey: data.skinOutfit || 'none',
         } : null,
+        difficulty: data.difficulty || null,
       });
     });
 
@@ -294,6 +295,7 @@ export async function saveHighScore(name, sc, lv, skinSnapshot = null) {
       payload.skinMask     = skinSnapshot.maskKey  || 'none';
       payload.skinOutfit   = skinSnapshot.outfitKey|| 'none';
     }
+    if (skinSnapshot?.difficulty) payload.difficulty = skinSnapshot.difficulty;
     await setDoc(docRef, payload);
 
     DEBUG && console.log("[Firebase] Score saved:", cleanName, cleanScore);

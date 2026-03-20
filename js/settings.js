@@ -330,6 +330,27 @@ export function initSettings() {
     if (p) p.textContent = S.settings.sfxVolume + '%';
   });
 
+  // Reset to defaults
+  document.getElementById('reset-defaults-btn')?.addEventListener('click', () => {
+    if (!confirm('Reset ALL settings to defaults?')) return;
+    S.settings.mysteryBlocks = false;
+    S.settings.smartShark    = false;
+    S.settings.difficulty    = 'normal';
+    S.settings.tutorial      = false;
+    S.settings.music         = true;
+    S.settings.sfx           = true;
+    S.settings.musicVolume   = 70;
+    S.settings.sfxVolume     = 80;
+    S.settings.sharkQuips    = true;
+    S.settings.fastTreats    = false;
+    S.settings.showAds       = false;
+    save();
+    refreshUI();
+    setMusicVolume();
+    setSfxVolume();
+    window.dispatchEvent(new Event('settingsMultiplierChanged'));
+  });
+
   // Admin button (inside settings) — opens admin panel
   adminBtn?.addEventListener('click', () => {
     settingsOv.classList.add('hidden');

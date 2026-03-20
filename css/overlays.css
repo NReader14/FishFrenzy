@@ -602,6 +602,28 @@
 .scoreboard-tab:hover { border-color: #aaa; color: #ccc; }
 .scoreboard-tab-active { border-color: #ffdd44 !important; color: #ffdd44 !important; }
 
+/* ─── DIFFICULTY FILTER ROW ─── */
+.lb-filter-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.lb-filter-btn {
+  padding: 4px 10px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  letter-spacing: 0.5px;
+  background: transparent;
+  border: 1px solid #334455;
+  color: #5588aa;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: border-color .12s, color .12s;
+}
+.lb-filter-btn:hover { border-color: #5588aa; color: #88bbdd; }
+.lb-filter-active { border-color: #44ddff !important; color: #44ddff !important; }
+
 .scoreboard-title {
   font-size: 16px;
   color: #ffdd44;
@@ -1551,6 +1573,28 @@
 }
 .btn-patch-notes:hover { color: #44ddff; }
 
+.btn-patch-notes.patch-notes-new {
+  color: #ffcc44;
+  position: relative;
+}
+.btn-patch-notes.patch-notes-new::after {
+  content: '★ NEW';
+  font-family: 'Press Start 2P', monospace;
+  font-size: 5px;
+  color: #ffcc44;
+  background: rgba(255,200,0,0.15);
+  border: 1px solid #aa8800;
+  border-radius: 2px;
+  padding: 1px 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+  animation: patch-badge-pulse 1.5s ease-in-out infinite;
+}
+@keyframes patch-badge-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
 /* ─── PATCH NOTES overlay ─── */
 #patch-notes-overlay {
   justify-content: flex-start;
@@ -1778,6 +1822,36 @@
   color: #5588aa;
 }
 
+/* ─── ACHIEVEMENT PROGRESS BAR ─── */
+.ach-progress-wrap {
+  position: relative;
+  margin-top: 5px;
+  height: 6px;
+  background: #0a1a2a;
+  border: 1px solid #1a3a5a;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.ach-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #1a4a88, #44aaff);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+  min-width: 2px;
+}
+.ach-progress-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 4px;
+  color: #aaddff;
+  white-space: nowrap;
+  text-shadow: 0 0 3px #000;
+  pointer-events: none;
+}
+
 /* ─── ACHIEVEMENT TOASTS ─── */
 .achievement-toasts {
   position: absolute;
@@ -1839,6 +1913,47 @@
   font-size: 7px;
   color: #44ddff;
   letter-spacing: 0.5px;
+}
+
+/* ─── STATS PAGE ─── */
+.stats-grid {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  background: rgba(4, 20, 40, 0.7);
+  border: 1px solid #1a3a5a;
+  border-radius: 3px;
+  padding: 7px 10px;
+}
+
+.stats-icon {
+  font-size: 14px;
+  text-align: center;
+}
+
+.stats-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  color: #5588aa;
+  letter-spacing: 0.4px;
+}
+
+.stats-val {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: #44ddff;
+  text-align: right;
+  white-space: nowrap;
 }
 
 /* ─── Section headers ─── */

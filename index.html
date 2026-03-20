@@ -126,6 +126,7 @@
         <button id="settings-btn" class="btn-secondary">SETTINGS</button>
         <button id="feedback-btn" class="btn-secondary">FEEDBACK</button>
         <button id="achievements-btn" class="btn-secondary menu-btn-wide">ACHIEVEMENTS</button>
+        <button id="stats-btn" class="btn-secondary menu-btn-wide">MY STATS</button>
       </div>
     </div>
     <p class="controls-hint">ARROW KEYS / WASD TO SWIM</p>
@@ -243,6 +244,7 @@
       </div>
     </div>
     <button id="admin-panel-btn" class="btn-secondary hidden" style="border-color:#44ddff;color:#44ddff;margin-bottom:8px;">ADMIN</button>
+    <button id="reset-defaults-btn" class="btn-secondary" style="border-color:#ee8844;color:#ee8844;margin-bottom:8px;">RESET TO DEFAULTS</button>
     <button id="settings-back-btn" class="btn-secondary">BACK</button>
   </div>
 
@@ -465,6 +467,13 @@
 
   <!-- ACHIEVEMENT TOAST CONTAINER -->
   <div id="achievement-toasts" class="achievement-toasts"></div>
+
+  <!-- STATS OVERLAY -->
+  <div id="stats-overlay" class="game-overlay hidden">
+    <div class="settings-title">📊 YOUR STATS</div>
+    <div id="stats-content"></div>
+    <button id="stats-back-btn" class="btn-secondary" style="margin-top:16px;">BACK</button>
+  </div>
 
   <!-- ═══════════════════════════════════════════════════════════════ -->
   <!-- PATCH NOTES OVERLAY                                           -->

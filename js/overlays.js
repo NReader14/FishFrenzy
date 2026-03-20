@@ -22,7 +22,7 @@ import { pwConfig, clearTO } from './powerups.js';
 import { setupItemTestEvents } from './admin.js';
 import { gameVars, GAME_VAR_META, GAME_VAR_DEFAULTS, firebaseGameVars } from './game-vars.js';
 import { saveSettings } from './settings.js';
-import { getUnlockedCount } from './achievements.js';
+import { getUnlockedCount, getNonSecretCount } from './achievements.js';
 import { saveAchievementBoard } from '../firebase-config.js';
 
 // Forward references (set by main.js)
@@ -87,26 +87,41 @@ export async function showFullLeaderboard() {
   el.classList.remove('hidden');
   scoreboardOverlay.classList.add('hidden');
 
-  let scores;
-  try { scores = await fetchAllScores(100); }
+  let allScores;
+  try { allScores = await fetchAllScores(200); }
   catch (_) {
     el.innerHTML = '<p class="loading-text">FAILED TO LOAD — CHECK CONNECTION</p>';
     return;
   }
 
-  const tableHtml = buildScoreboardHtml(scores);
-  el.innerHTML = `
-    <div class="scoreboard-title">ALL SCORES</div>
-    <div class="full-lb-count">${scores.length} ENTR${scores.length === 1 ? 'Y' : 'IES'}</div>
-    <div class="full-lb-scroll">${tableHtml}</div>
-    <div class="scoreboard-actions">
-      <button id="full-lb-back-btn" class="btn-secondary">BACK</button>
-    </div>`;
+  let activeFilter = 'all';
+  const DIFFS = ['all', 'easy', 'normal', 'hard'];
+  const DIFF_LABELS = { all: 'ALL', easy: 'EASY', normal: 'NORMAL', hard: 'HARD' };
 
-  document.getElementById('full-lb-back-btn').addEventListener('click', () => {
-    el.classList.add('hidden');
-    scoreboardOverlay.classList.remove('hidden');
-  });
+  function render() {
+    const scores = activeFilter === 'all'
+      ? allScores
+      : allScores.filter(s => (s.difficulty || 'normal') === activeFilter);
+    const filterBtns = DIFFS.map(d =>
+      `<button class="lb-filter-btn${d === activeFilter ? ' lb-filter-active' : ''}" data-diff="${d}">${DIFF_LABELS[d]}</button>`
+    ).join('');
+    el.innerHTML = `
+      <div class="scoreboard-title">ALL SCORES</div>
+      <div class="lb-filter-row">${filterBtns}</div>
+      <div class="full-lb-count">${scores.length} ENTR${scores.length === 1 ? 'Y' : 'IES'}</div>
+      <div class="full-lb-scroll">${buildScoreboardHtml(scores)}</div>
+      <div class="scoreboard-actions">
+        <button id="full-lb-back-btn" class="btn-secondary">BACK</button>
+      </div>`;
+    el.querySelectorAll('.lb-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => { activeFilter = btn.dataset.diff; render(); });
+    });
+    document.getElementById('full-lb-back-btn').addEventListener('click', () => {
+      el.classList.add('hidden');
+      scoreboardOverlay.classList.remove('hidden');
+    });
+  }
+  render();
 }
 
 export async function showScoreboard(highlightIdx = -1) {
@@ -123,20 +138,37 @@ export async function showScoreboard(highlightIdx = -1) {
   if (tabScoresBtn) tabScoresBtn.classList.add('scoreboard-tab-active');
   if (tabAchBtn) tabAchBtn.classList.remove('scoreboard-tab-active');
 
-  let scores;
-  try { scores = await fetchHighScores(); }
+  let allScores;
+  try { allScores = await fetchHighScores(); }
   catch (_) {
     scoreboardContent.innerHTML = '<p class="loading-text">FAILED TO LOAD — CHECK CONNECTION</p>';
     return;
   }
-  if (highlightIdx === -1 && S.lastPlayerName) {
-    const found = scores.findIndex(s => s.name === S.lastPlayerName);
-    if (found !== -1) highlightIdx = found;
+
+  let activeDiff = 'all';
+  const DIFFS = ['all', 'easy', 'normal', 'hard'];
+  const DIFF_LABELS = { all: 'ALL', easy: 'EASY', normal: 'NORMAL', hard: 'HARD' };
+
+  function renderScores() {
+    const scores = activeDiff === 'all'
+      ? allScores
+      : allScores.filter(s => (s.difficulty || 'normal') === activeDiff);
+    let hi = highlightIdx;
+    if (hi === -1 && S.lastPlayerName) {
+      const found = scores.findIndex(s => s.name === S.lastPlayerName);
+      if (found !== -1) hi = found;
+    }
+    const filterBtns = DIFFS.map(d =>
+      `<button class="lb-filter-btn${d === activeDiff ? ' lb-filter-active' : ''}" data-diff="${d}">${DIFF_LABELS[d]}</button>`
+    ).join('');
+    scoreboardContent.innerHTML = `<div class="lb-filter-row">${filterBtns}</div>`
+      + buildScoreboardHtml(scores, hi)
+      + (!isFirebaseOnline() ? '<p class="no-scores" style="color:#cc8844;">⚠ OFFLINE — SHOWING CACHED SCORES</p>' : '');
+    scoreboardContent.querySelectorAll('.lb-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => { activeDiff = btn.dataset.diff; renderScores(); });
+    });
   }
-  scoreboardContent.innerHTML = buildScoreboardHtml(scores, highlightIdx);
-  if (!isFirebaseOnline()) {
-    scoreboardContent.innerHTML += '<p class="no-scores" style="color:#cc8844;">⚠ OFFLINE — SHOWING CACHED SCORES</p>';
-  }
+  renderScores();
 
   // Tab switching
   if (tabScoresBtn) {
@@ -171,7 +203,7 @@ export async function showScoreboard(highlightIdx = -1) {
           html += `<tr class="${cls}">
             <td>${i + 1}</td>
             <td>${l.name || '???'}${isMe ? ' <span class="my-score-tag">YOU</span>' : ''}</td>
-            <td>${l.count} / ${55}</td>
+            <td>${l.count} / ${getNonSecretCount()}</td>
           </tr>`;
         });
         html += '</tbody></table>';
@@ -328,10 +360,11 @@ export function showNameEntry(finalScore, finalLevel, msg) {
     const activeSkin = SKINS[S.settings.skin ?? 0] || SKINS[0];
     const skinSnapshot = {
       c1: activeSkin.c1, c2: activeSkin.c2, c3: activeSkin.c3,
-      fishType:  activeSkin.fishType  || 'standard',
-      hatKey:    activeSkin.hatKey    || 'none',
-      maskKey:   activeSkin.maskKey   || 'none',
-      outfitKey: activeSkin.outfitKey || 'none',
+      fishType:   activeSkin.fishType   || 'standard',
+      hatKey:     activeSkin.hatKey     || 'none',
+      maskKey:    activeSkin.maskKey    || 'none',
+      outfitKey:  activeSkin.outfitKey  || 'none',
+      difficulty: S.settings.difficulty || 'normal',
     };
     const idx = await saveHighScore(name, finalScore, finalLevel, skinSnapshot);
     hideLoading();
