@@ -53,7 +53,8 @@ import { initSettings, saveSettings, cancelTrackPreview } from './js/settings.js
 import {
   initAchievements, onGameStart as achGameStart, onLevelStart as achLevelStart,
   onLevelComplete as achLevelComplete, onGameOver as achGameOver,
-  onSharkDistanceFrame, onDeathCard as achDeathCard, buildAchievementsHTML
+  onSharkDistanceFrame, onDeathCard as achDeathCard, onDeathWithCombo as achDeathWithCombo,
+  buildAchievementsHTML
 } from './js/achievements.js';
 import { initCursor } from './js/cursor.js';
 import { initAudio, startMusic, stopMusic, sfxLevelUp, sfxGameOver, sfxSharkBite, sfxMenuClick, stopCardMusic, setMusicTempo } from './js/audio.js';
@@ -428,6 +429,7 @@ function endGame(won, msg) {
   if (won) {
     achLevelComplete(S.level, S.timeLeft);
   } else {
+    achDeathWithCombo(S.comboCount);
     achGameOver(S.score, S.level);
   }
   if (!won) { stopMusic(); sfxGameOver(); }
