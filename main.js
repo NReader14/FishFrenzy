@@ -407,6 +407,8 @@ function startLevel() {
 }
 
 function endGame(won, msg) {
+  if (!S.gameRunning) return; // guard against double-call from same frame
+
   // In tutorial mode: if all treats collected, just respawn them and continue.
   // Only restart the tutorial if the player actually dies.
   if (S.settings.difficulty === 'tutorial') {
@@ -754,11 +756,11 @@ function updateShark() {
     const hist = S.smartSharkHistory;
     const n    = hist.length;
     const lv   = S.level;
-    const tier = Math.min(3, Math.floor((lv - 1) / 5));        // 0–3
-    const tp   = Math.min(1, ((lv - 1) % 5) / 4);             // 0→1 within tier
+    const tier = Math.min(3, Math.floor((lv - 1) / 4));        // 0–3, now ramps every 4 levels
+    const tp   = Math.min(1, ((lv - 1) % 4) / 3);             // 0→1 within tier
 
     // 1. Velocity — smaller window at higher tiers for faster reaction
-    const velWin = Math.max(3, Math.round(10 - tier * 2 - tp * 1.5));
+    const velWin = Math.max(2, Math.round(8 - tier * 2 - tp));
     const cur    = hist[n - 1];
     const older  = hist[Math.max(0, n - 1 - velWin)];
     const vx = (cur.x - older.x) / velWin;
@@ -776,14 +778,14 @@ function updateShark() {
     }
 
     // 3. Noise — shrinks with tier and within-tier progress
-    const noiseBase  = [28, 12, 4, 0][tier];
-    const noiseScale = noiseBase * (1 - tp * 0.55);
+    const noiseBase  = [18, 7, 2, 0][tier];
+    const noiseScale = noiseBase * (1 - tp * 0.7);
     const nx = (Math.random() - 0.5) * 2 * noiseScale;
     const ny = (Math.random() - 0.5) * 2 * noiseScale;
 
     if (tier === 0) {
       // Tier 0: simple linear look-ahead, short window
-      const lookahead = 10 + tp * 12;
+      const lookahead = 16 + tp * 18;
       targetX = target.x + vx * lookahead + nx;
       targetY = target.y + vy * lookahead + ny;
     } else {
@@ -796,7 +798,7 @@ function updateShark() {
       const a   = vx * vx + vy * vy - spd * spd;
       const b   = 2 * (dx * vx + dy * vy);
       const c   = dx * dx + dy * dy;
-      const maxLook = [0, 45, 70, 100][tier] + tp * 15;
+      const maxLook = [0, 60, 90, 130][tier] + tp * 20;
 
       let t = 0;
       if (Math.abs(a) < 0.01) {
@@ -820,7 +822,7 @@ function updateShark() {
     // 4. Treat-path blocking (tier 2+)
     // Detect which treat the fish is heading toward and cut off the path.
     if (tier >= 2 && S.treats?.length) {
-      const treatBlend = (0.28 + tp * 0.08) + (tier === 3 ? 0.22 : 0);
+      const treatBlend = (0.36 + tp * 0.1) + (tier === 3 ? 0.28 : 0);
       let bestTreat = null, bestScore = -Infinity;
       const speed = Math.hypot(vx, vy) || 0.01;
       for (const tr of S.treats) {
@@ -836,8 +838,8 @@ function updateShark() {
       }
       if (bestTreat) {
         // Aim for a point 35% of the way from fish to the treat
-        const cutX = target.x + (bestTreat.x - target.x) * 0.35;
-        const cutY = target.y + (bestTreat.y - target.y) * 0.35;
+        const cutX = target.x + (bestTreat.x - target.x) * 0.48;
+        const cutY = target.y + (bestTreat.y - target.y) * 0.48;
         targetX = targetX * (1 - treatBlend) + cutX * treatBlend;
         targetY = targetY * (1 - treatBlend) + cutY * treatBlend;
       }

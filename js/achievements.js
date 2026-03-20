@@ -47,7 +47,7 @@ export const ACHIEVEMENTS = [
 
   // ── MEDIUM ──
   { id: 'score_5000',        tier:'medium', icon: '🌟', name: 'FIVE THOUSAND',   desc: 'Score 5,000 points.',                                       hint: 'Score 5,000 points in one game.' },
-  { id: 'score_7500',        tier:'medium', icon: '💥', name: 'SEVEN FIVE',      desc: 'Score 7,500 points.',                                       hint: 'Score 7,500 points in one game.' },
+  { id: 'score_7500',        tier:'medium', icon: '💥', name: 'SIX SEVEN',      desc: 'Score 6,700 points.',                                       hint: 'Score 7,500 points in one game.' },
   { id: 'score_10000',       tier:'medium', icon: '👑', name: 'TEN THOUSAND',    desc: 'Score 10,000 points.',                                      hint: 'Score 10,000 points in one game.' },
   { id: 'score_15000',       tier:'medium', icon: '🔮', name: 'FIFTEEN K',       desc: 'Score 15,000 points.',                                      hint: 'Score 15,000 points in one game.' },
   { id: 'med_score_25k',     tier:'medium', icon: '🌊', name: 'BIG FISH',        desc: 'Score 25,000 points in a single game.',                     hint: 'Score 25,000 in one run — try Hard + Smart Shark.' },
@@ -105,13 +105,13 @@ export const ACHIEVEMENTS = [
   { id: 'sh_50k',               tier:'extrahard', icon: '💀', name: 'FIFTY GRAND',      desc: 'Score 50,000 points in a single game.',                                   hint: 'Score 50,000 in one run.' },
   { id: 'sh_score_75k',         tier:'extrahard', icon: '💀', name: 'SEVENTY FIVE K',   desc: 'Score 75,000 points in a single game.',                                   hint: 'Score 75,000 in one run.' },
   { id: 'sh_level_50',          tier:'extrahard', icon: '💀', name: 'THE VOID',         desc: 'Reach level 35.',                                                         hint: 'Survive until level 35.' },
-  { id: 'sh_level_45',          tier:'extrahard', icon: '💀', name: 'DARK ABYSS',       desc: 'Reach level 45.',                                                         hint: 'Survive until level 45.' },
+  { id: 'sh_level_45',          tier:'extrahard', icon: '💀', name: 'THE GAUNTLET',    desc: 'Reach level 30 on Hard + Smart Shark.',                                   hint: 'Reach level 30 with both Hard difficulty and Smart Shark on.' },
   { id: 'sh_iron_fish',         tier:'extrahard', icon: '💀', name: 'IRON FISH',        desc: 'Reach level 10 on Hard + Smart Shark without collecting a single powerup.', hint: 'Hard + Smart Shark, reach level 10, touch zero powerups.' },
   { id: 'sh_no_powerup_hard_15',tier:'extrahard', icon: '💀', name: 'THE MONK',         desc: 'Reach level 15 on Hard without collecting any powerups.',                 hint: 'Reach level 15 on Hard, ignoring every powerup.' },
-  { id: 'sh_speed_god',         tier:'extrahard', icon: '💀', name: 'SPEED GOD',        desc: 'Complete 3 consecutive levels each in under 4 seconds.',                  hint: 'Clear 3 levels in a row in under 4 seconds each.' },
-  { id: 'sh_speed_demon',       tier:'extrahard', icon: '💀', name: 'SPEED DEMON',      desc: 'Complete 5 consecutive levels each in under 4 seconds.',                  hint: 'Clear 5 levels in a row in under 4 seconds each.' },
+  { id: 'sh_speed_god',         tier:'extrahard', icon: '💀', name: 'SPEED GOD',        desc: 'Complete 3 consecutive levels each in under 6 seconds.',                  hint: 'Clear 3 levels in a row in under 6 seconds each.' },
+  { id: 'sh_speed_demon',       tier:'extrahard', icon: '💀', name: 'SPEED DEMON',      desc: 'Complete 5 consecutive levels each in under 6 seconds.',                  hint: 'Clear 5 levels in a row in under 6 seconds each.' },
   { id: 'sh_hell_x5',           tier:'extrahard', icon: '💀', name: 'HELL GAUNTLET',    desc: 'Survive the Hell powerup 5 times in a single game.',                      hint: 'Survive Hell 5 times in one game.' },
-  { id: 'sh_hell_x10',          tier:'extrahard', icon: '💀', name: 'INFERNO',          desc: 'Survive the Hell powerup 10 times total across all games.',               hint: 'Survive Hell 10 times total across all your games.' },
+  { id: 'sh_hell_x10',          tier:'extrahard', icon: '💀', name: 'INFERNO',          desc: 'Survive the Hell powerup 3 times total across all games.',                hint: 'Survive Hell 3 times total across all your games.' },
 
   // ── ALX CHALLENGE ──
   { id: 'alx_challenge',  tier:'alx', icon: '🐟', name: 'THE ALX CHALLENGE', desc: 'Score 100,000 points. We see you.', hint: 'Score 100,000 points in a single game. Good luck.' },
@@ -396,6 +396,15 @@ export function onComboReached(combo) {
 }
 
 export function onLevelComplete(level, timeLeft) {
+  // Accumulate play time on each level complete too (not just on death)
+  if (_gameStats.gameStartTime) {
+    _stats.totalPlayMs += Date.now() - _gameStats.gameStartTime;
+    _gameStats.gameStartTime = Date.now(); // reset for next level
+    _save();
+  }
+  if (_stats.totalPlayMs >= 30 * 60 * 1000)     unlock('marathon');
+  if (_stats.totalPlayMs >= 2 * 60 * 60 * 1000) unlock('marathon_2h');
+
   const levelTime = S.maxTime - timeLeft;
 
   // Speed achievements
@@ -406,7 +415,7 @@ export function onLevelComplete(level, timeLeft) {
   if (timeLeft < 2) unlock('last_second');
 
   // Speed chains
-  if (levelTime <= 4) {
+  if (levelTime <= 6) {
     _gameStats.consecutiveFastLevels++;
     if (_gameStats.consecutiveFastLevels >= 3) unlock('sh_speed_god');
     if (_gameStats.consecutiveFastLevels >= 5) unlock('sh_speed_demon');
@@ -433,7 +442,7 @@ export function onLevelComplete(level, timeLeft) {
   if (level >= 25) unlock('level_25');
   if (level >= 30) unlock('med_level_30');
   if (level >= 35) unlock('sh_level_50');
-  if (level >= 45) unlock('sh_level_45');
+  if (diff === 'hard' && S.settings.smartShark && level >= 30) unlock('sh_level_45');
 
   // Difficulty-based
   const diff = S.settings.difficulty;
@@ -514,7 +523,7 @@ export function onHellSurvived() {
   _stats.totalHellSurvivals++;
   _save();
   if (_gameStats.hellSurviveCount >= 5)  unlock('sh_hell_x5');
-  if (_stats.totalHellSurvivals >= 10)   unlock('sh_hell_x10');
+  if (_stats.totalHellSurvivals >= 3)    unlock('sh_hell_x10');
 }
 
 export function onGameOver(_score, _level) {
@@ -525,7 +534,7 @@ export function onGameOver(_score, _level) {
   _stats.gamesPlayed++;
   _save();
 
-  if (_stats.gamesPlayed === 1)                          unlock('first_game');
+  unlock('first_game');
   if (_stats.gamesPlayed >= 20)                          unlock('survivor');
   if (_stats.totalPlayMs >= 30 * 60 * 1000)              unlock('marathon');
   if (_stats.totalPlayMs >= 2 * 60 * 60 * 1000)          unlock('marathon_2h');
