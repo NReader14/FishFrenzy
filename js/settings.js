@@ -171,6 +171,8 @@ function rebuildSkinPicker() {
   const grid = document.getElementById('skin-grid');
   if (!grid) return;
   grid.innerHTML = '';
+  const customGrid = document.getElementById('custom-skin-grid');
+  if (customGrid) customGrid.innerHTML = '';
   buildSkinPicker();
 }
 
