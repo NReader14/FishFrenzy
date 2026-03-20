@@ -5,7 +5,6 @@
 import S from './state.js';
 import {
   onAuthChange,
-  signInWithGoogle,
   signInWithEmail,
   registerWithEmail,
   resetPassword,
@@ -44,20 +43,6 @@ export function initAuthUI() {
   document.getElementById('login-back-btn')?.addEventListener('click', () => {
     loginOv.classList.add('hidden');
     overlay.classList.remove('hidden');
-  });
-
-  // ─── Google sign-in (redirect — page navigates away, result handled on return) ───
-  document.getElementById('google-signin-btn')?.addEventListener('click', async () => {
-    _setAuthError('');
-    const btn = document.getElementById('google-signin-btn');
-    if (btn) btn.disabled = true;
-    try {
-      await signInWithGoogle();
-      // Page will navigate away; code below won't run
-    } catch (err) {
-      _setAuthError(_friendlyError(err.code));
-      if (btn) btn.disabled = false;
-    }
   });
 
   // ─── Email form ───
@@ -117,15 +102,18 @@ function _updateAuthUI() {
   const signinBtn   = document.getElementById('signin-btn');
   const signedInEl  = document.getElementById('signed-in-status');
   const nameEl      = document.getElementById('auth-display-name');
+  const anonHint    = document.getElementById('anon-hint');
   const user = S.currentUser;
 
   if (user) {
     signinBtn?.classList.add('hidden');
     signedInEl?.classList.remove('hidden');
     if (nameEl) nameEl.textContent = user.displayName || user.email?.split('@')[0] || 'PLAYER';
+    if (anonHint) anonHint.style.display = 'none';
   } else {
     signinBtn?.classList.remove('hidden');
     signedInEl?.classList.add('hidden');
+    if (anonHint) anonHint.style.display = 'block';
   }
 }
 
