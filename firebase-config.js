@@ -23,6 +23,11 @@ import {
   getAuth,
   signInAnonymously,
   signInWithEmailAndPassword,
+  signInWithRedirect,
+  getRedirectResult,
+  GoogleAuthProvider,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
@@ -51,6 +56,14 @@ let isOnline = true;
 // ─── AUTH ───
 
 export async function initAuth() {
+  // Handle Google redirect result if we're returning from a signInWithRedirect flow
+  try {
+    await getRedirectResult(auth);
+    // onAuthStateChanged will fire with the signed-in user if redirect succeeded
+  } catch (err) {
+    DEBUG && console.warn("[Firebase] Redirect result error:", err.message);
+  }
+
   if (auth.currentUser) {
     currentUser = auth.currentUser;
     DEBUG && console.log("[Firebase] Existing session:", currentUser.uid);
@@ -72,6 +85,80 @@ export async function initAuth() {
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
 });
+
+// ─── USER AUTH (Google + Email/Password) ───
+
+export function onAuthChange(callback) {
+  return onAuthStateChanged(auth, callback);
+}
+
+export async function signInWithGoogle() {
+  const provider = new GoogleAuthProvider();
+  await signInWithRedirect(auth, provider);
+  // Page will reload after redirect — result handled by getRedirectResult in initAuth
+}
+
+export async function signInWithEmail(email, password) {
+  const result = await signInWithEmailAndPassword(auth, email, password);
+  currentUser = result.user;
+  return result.user;
+}
+
+export async function registerWithEmail(email, password) {
+  const result = await createUserWithEmailAndPassword(auth, email, password);
+  currentUser = result.user;
+  return result.user;
+}
+
+export async function resetPassword(email) {
+  await sendPasswordResetEmail(auth, email);
+}
+
+export async function signOutUser() {
+  await signOut(auth);
+  // Re-establish anonymous session so score saving still works
+  try {
+    const result = await signInAnonymously(auth);
+    currentUser = result.user;
+  } catch (_) {}
+}
+
+export async function saveUserSettings(uid, settings) {
+  try {
+    await setDoc(doc(db, 'users', uid), { settings, updatedAt: serverTimestamp() }, { merge: true });
+  } catch (err) {
+    console.warn('[Firebase] Could not save user settings:', err.message);
+  }
+}
+
+export async function loadUserSettings(uid) {
+  try {
+    const snap = await getDoc(doc(db, 'users', uid));
+    return snap.exists() ? snap.data().settings || null : null;
+  } catch (err) {
+    console.warn('[Firebase] Could not load user settings:', err.message);
+    return null;
+  }
+}
+
+export async function saveUserAchievements(uid, data) {
+  // data = { unlocked: [...ids], stats: {...} }
+  try {
+    await setDoc(doc(db, 'users', uid), { achievements: data, updatedAt: serverTimestamp() }, { merge: true });
+  } catch (err) {
+    console.warn('[Firebase] Could not save achievements:', err.message);
+  }
+}
+
+export async function loadUserAchievements(uid) {
+  try {
+    const snap = await getDoc(doc(db, 'users', uid));
+    return snap.exists() ? snap.data().achievements || null : null;
+  } catch (err) {
+    console.warn('[Firebase] Could not load achievements:', err.message);
+    return null;
+  }
+}
 
 // ─── SCORES ───
 
@@ -114,6 +201,7 @@ export async function fetchHighScores() {
         name: data.name || "???",
         score: data.score || 0,
         level: data.level || 1,
+        uid: data.uid || null,
         skin: data.skinC1 ? {
           c1: data.skinC1, c2: data.skinC2, c3: data.skinC3,
           fishType: data.skinFishType || 'standard',
@@ -161,7 +249,8 @@ export async function saveHighScore(name, sc, lv, skinSnapshot = null) {
       name: cleanName,
       score: cleanScore,
       level: cleanLevel,
-      timestamp: serverTimestamp()
+      timestamp: serverTimestamp(),
+      ...(currentUser && !currentUser.isAnonymous ? { uid: currentUser.uid } : {})
     };
     if (skinSnapshot) {
       payload.skinC1       = skinSnapshot.c1       || '#4488ff';

@@ -440,8 +440,9 @@ export function drawShark() {
 export function drawTreats() {
   const tm = mob();
   for (const t of S.treats) {
-    const bob = Math.round(Math.sin(t.bobPhase) * 2);
-    t.bobPhase += 0.03;
+    const fast = S.settings.fastTreats;
+    const bob = Math.round(Math.sin(t.bobPhase) * (fast ? 4 : 2));
+    t.bobPhase += fast ? 0.09 : 0.03;
     ctx.save();
     ctx.translate(t.x, t.y + bob);
     ctx.scale(tm, tm);

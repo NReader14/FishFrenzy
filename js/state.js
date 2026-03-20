@@ -85,6 +85,9 @@ const S = {
   globalHighScore: 0,
   pbNotified: false,
 
+  // Logged-in user (null = anonymous)
+  currentUser: null,
+
   // Admin credentials (temporary)
   adminCredentials: null,
 
@@ -108,6 +111,7 @@ const S = {
     sfxVolume: 80,
     track: 'chiptune',
     sharkQuips: true,
+    fastTreats: false,
     showAds: false,
   },
 

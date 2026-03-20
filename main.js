@@ -48,7 +48,13 @@ import {
   verifyAdminCredentials, fetchPatchNotes
 } from './firebase-config.js';
 import { initControls } from './js/controls.js';
+import { initAuthUI } from './js/auth.js';
 import { initSettings, saveSettings, cancelTrackPreview } from './js/settings.js';
+import {
+  initAchievements, onGameStart as achGameStart, onLevelStart as achLevelStart,
+  onLevelComplete as achLevelComplete, onGameOver as achGameOver,
+  onSharkDistanceFrame, buildAchievementsHTML
+} from './js/achievements.js';
 import { initCursor } from './js/cursor.js';
 import { initAudio, startMusic, stopMusic, sfxLevelUp, sfxGameOver, sfxSharkBite, sfxMenuClick, startCardMusic, stopCardMusic, setMusicTempo } from './js/audio.js';
 import { initMobileScale } from './js/mobile-scale.js';
@@ -119,6 +125,26 @@ function refreshDifficultyUI() {
   ['easy', 'normal', 'hard', 'tutorial'].forEach(d => {
     document.getElementById(`diff-${d}`)?.classList.toggle('diff-active', d === S.settings.difficulty);
   });
+  refreshMultiplierHint();
+}
+
+function refreshMultiplierHint() {
+  const el = document.getElementById('score-multiplier-hint');
+  if (!el) return;
+  const diff = S.settings.difficulty;
+  if (diff === 'tutorial') { el.style.display = 'none'; return; }
+  const diffMul    = diff === 'easy' ? 0.75 : diff === 'hard' ? 1.5 : 1;
+  const smartMul   = S.settings.smartShark   ? 1.25 : 1;
+  const mysteryMul    = S.settings.mysteryBlocks ? 1.05 : 1;
+  const fastTreatsMul = S.settings.fastTreats   ? 1.03 : 1;
+  const total         = diffMul * smartMul * mysteryMul * fastTreatsMul;
+  const pct      = Math.round((total - 1) * 100);
+  if (pct === 0) { el.style.display = 'none'; return; }
+  const sign  = pct > 0 ? '+' : '';
+  const color = pct >= 50 ? '#44ee88' : pct > 0 ? '#ffaa44' : '#ee5566';
+  el.style.display = 'block';
+  el.style.color   = color;
+  el.textContent   = `${sign}${pct}% SCORE MULTIPLIER`;
 }
 
 ['easy', 'normal', 'hard', 'tutorial'].forEach(d => {
@@ -253,6 +279,7 @@ async function initGame() {
   }
 
   startLevel();
+  achGameStart();
   cancelTrackPreview();
   startMusic();
 }
@@ -345,6 +372,7 @@ function startLevel() {
   S.fish.speed = gameVars.fishSpeed;
 
   S.gameRunning = true;
+  achLevelStart(S.level);
   if (S.level > 1) sfxLevelUp();
   S.levelBanner = { text: `LEVEL ${S.level}`, sub: S.level > 1 ? 'LEVEL UP!' : null, startTime: Date.now() };
 
@@ -393,6 +421,11 @@ function endGame(won, msg) {
     return;
   }
 
+  if (won) {
+    achLevelComplete(S.level, S.timeLeft);
+  } else {
+    achGameOver(S.score, S.level);
+  }
   if (!won) { stopMusic(); sfxGameOver(); }
   S.gameRunning = false;
   clearInterval(S.timerInterval);
@@ -940,6 +973,7 @@ function loop(timestamp) {
     updateShark();
     updateBuddy();
     updateTreats();
+    if (S.shark && S.fish) onSharkDistanceFrame(dist(S.shark, S.fish));
     updateParticles();
     trySpawnPowerups();
     updatePWItems();
@@ -1000,9 +1034,12 @@ function loop(timestamp) {
 
 initControls();
 initSettings();
+initAuthUI();
+initAchievements();
 initCursor();
 initMobileScale();
 refreshDifficultyUI(); // run after initSettings so saved difficulty is loaded
+window.addEventListener('settingsMultiplierChanged', refreshMultiplierHint);
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -1092,6 +1129,18 @@ function renderNotes(notes, container) {
         <ul class="patch-note-list">${(n.items || []).map(i => `<li>${i}</li>`).join('')}</ul>
       </div>`).join('');
 }
+
+document.getElementById('achievements-btn')?.addEventListener('click', () => {
+  overlay.classList.add('hidden');
+  const achOv = document.getElementById('achievements-overlay');
+  const achContent = document.getElementById('achievements-content');
+  if (achContent) achContent.innerHTML = buildAchievementsHTML();
+  achOv?.classList.remove('hidden');
+});
+document.getElementById('achievements-back-btn')?.addEventListener('click', () => {
+  document.getElementById('achievements-overlay')?.classList.add('hidden');
+  overlay.classList.remove('hidden');
+});
 
 document.getElementById('patch-notes-btn')?.addEventListener('click', () => {
   overlay.classList.add('hidden');

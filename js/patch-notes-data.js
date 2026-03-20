@@ -5,7 +5,22 @@
 
 export const NOTES = [
   {
-    v: 'v1.1', emoji: '🐡', title: 'MOBILE & POLISH', date: 'MAR 2026',
+    v: 'v1.2', emoji: '🏆', title: 'ACHIEVE & BELIEVE', date: 'MAR 2026',
+    items: [
+      '🏆 55 Achievements added — from first treat to 100,000 points',
+      '☠️ 5 SUPER HARD achievements for the truly deranged',
+      '🔔 Toast notifications pop up when you unlock an achievement',
+      '☁️ Achievements sync to the cloud — progress carries across devices when signed in',
+      '🔑 User login added — sign in with Google or email to save settings & scores',
+      '⚙️ Settings now sync to the cloud when signed in',
+      '🏅 Scores now linked to your account — your name highlights on the leaderboard',
+      '🎵 Fast Treats setting — treats bob faster for a +3% score bonus',
+      '🎭 Mystery Blocks setting — power-up icons hidden until collected (+5% score)',
+      '📱 Settings menu no longer overflows on mobile screens',
+    ]
+  },
+  {
+    v: 'v1.1', emoji: '🐡', title: 'SLEEK & PEAK', date: 'MAR 2026',
     items: [
       '📱 Fish, shark, treats and power-ups are now bigger on portrait mobile — actually playable',
       '🎵 Added Songs by <strong><span style="color:#ffd700">KRe$cendo</span></strong> — new music tracks',
@@ -32,7 +47,7 @@ export const NOTES = [
     ]
   },
   {
-    v: 'v0.8', emoji: '✨', title: 'POLISH & SKINS UPDATE', date: 'MAR 2026',
+    v: 'v0.8', emoji: '✨', title: 'STYLE & GUILE', date: 'MAR 2026',
     items: [
       '🐡 New <strong>Pufferfish</strong> body type — round, spiky, and adorable',
       '😈 Angler fish redesigned — taller, scarier, glowing lure with curved stalk',
@@ -49,7 +64,7 @@ export const NOTES = [
     ]
   },
   {
-    v: 'v0.7', emoji: '🎮', title: 'GAMEPLAY UPDATE', date: 'ALX 2026',
+    v: 'v0.7', emoji: '🎮', title: 'CHOMP & STOMP', date: 'ALX 2026',
     items: [
       '🍄 Mushroom stays on screen longer — actually catchable now',
       '👁️ Decoy fish survives shark chomps — teleports to safety instead of disappearing',
@@ -60,7 +75,7 @@ export const NOTES = [
     ]
   },
   {
-    v: 'v0.6', emoji: '💬', title: 'FEEDBACK UPDATE', date: '2026',
+    v: 'v0.6', emoji: '💬', title: 'TALK & STALK', date: '2026',
     items: [
       '💬 New <strong>FEEDBACK</strong> button in Settings — send bug reports or suggestions directly to the developer',
       '🔒 Fully anonymous — no account required',
@@ -68,7 +83,7 @@ export const NOTES = [
     ]
   },
   {
-    v: 'v0.5', emoji: '🎨', title: 'CUSTOMISATION UPDATE', date: '2026',
+    v: 'v0.5', emoji: '🎨', title: 'FINS & GRINS', date: '2026',
     items: [
       '🐟 Design your own fish in the new <strong>FISH DESIGNER</strong> — pick colours, accessories and a name',
       '👒 15 accessories across 3 tabs: <strong>HATS, MASKS, OUTFITS</strong>',
@@ -78,7 +93,7 @@ export const NOTES = [
     ]
   },
   {
-    v: 'v0.4', emoji: '🎵', title: 'AUDIO & IMMERSION', date: '2026',
+    v: 'v0.4', emoji: '🎵', title: 'BEATS & TREATS', date: '2026',
     items: [
       '🥁 Background music with hi-hat pattern',
       '❄️ Ice and Goop slow the music tempo',
@@ -88,7 +103,7 @@ export const NOTES = [
     ]
   },
   {
-    v: 'v0.3', emoji: '⚡', title: 'POWER-UPS & SHARK AI', date: '2026',
+    v: 'v0.3', emoji: '⚡', title: 'POWER & DEVOUR', date: '2026',
     items: [
       '🧠 Smart Shark mode — predicts your movement',
       '✨ 18+ power-ups including Frenzy, Rainbow, Body Swap and Hell',
@@ -97,7 +112,7 @@ export const NOTES = [
     ]
   },
   {
-    v: 'v0.2', emoji: '🏆', title: 'ONLINE SCORES', date: '2026',
+    v: 'v0.2', emoji: '🏆', title: 'SCORE & MORE', date: '2026',
     items: [
       '🌍 Global leaderboard via Firebase',
       '⚙️ Admin panel for score wipe and game config',
@@ -105,7 +120,7 @@ export const NOTES = [
     ]
   },
   {
-    v: 'v0.1', emoji: '🐠', title: 'INITIAL RELEASE', date: '2026',
+    v: 'v0.1', emoji: '🐠', title: 'FISH & WISH', date: '2026',
     items: [
       '🎮 Core game loop — collect treats, dodge the shark',
       '🎯 Easy / Normal / Hard difficulties',

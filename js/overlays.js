@@ -59,13 +59,14 @@ export function buildScoreboardHtml(scores, highlightIdx = -1) {
   html += '</tr></thead><tbody>';
 
   scores.forEach((s, i) => {
-    const cls = i === highlightIdx ? 'new-score' : '';
+    const isMyScore = S.currentUser && s.uid && s.uid === S.currentUser.uid;
+    const cls = [i === highlightIdx ? 'new-score' : '', isMyScore ? 'my-score' : ''].filter(Boolean).join(' ');
     const rankLabel = i < 3 ? medals[i] : `${i + 1}.`;
     html += `<tr class="${cls}">`;
     html += `<td class="rank">${rankLabel}</td>`;
     const nameColours = ['#ffdd44', '#c0c0d0', '#cd7f32'];
     const nStyle = i < 3 ? ` style="color:${nameColours[i]}"` : '';
-    html += `<td class="name-col"${nStyle}>${s.name || '???'}</td>`;
+    html += `<td class="name-col"${nStyle}>${s.name || '???'}${isMyScore ? ' <span class="my-score-tag">YOU</span>' : ''}</td>`;
     html += `<td>${s.score}</td>`;
     html += `<td>${s.level}</td>`;
     html += '</tr>';

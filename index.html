@@ -108,11 +108,26 @@
       <button id="diff-tutorial" class="diff-btn diff-tutorial">TUTORIAL</button>
     </div>
     <div class="menu-buttons">
-      <button id="start-btn" class="btn-primary">START</button>
-      <button id="rules-btn" class="btn-secondary">RULES</button>
-      <button id="scoreboard-btn" class="btn-secondary">HI-SCORES</button>
-      <button id="settings-btn" class="btn-secondary">SETTINGS</button>
-      <button id="feedback-btn" class="btn-secondary">FEEDBACK</button>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+        <button id="start-btn" class="btn-primary">START</button>
+        <p id="score-multiplier-hint" style="display:none;margin:0;font-size:7px;letter-spacing:0.08em;"></p>
+      </div>
+      <div class="menu-btn-grid">
+        <button id="rules-btn" class="btn-secondary">RULES</button>
+        <button id="scoreboard-btn" class="btn-secondary">HI-SCORES</button>
+        <button id="settings-btn" class="btn-secondary">SETTINGS</button>
+        <button id="feedback-btn" class="btn-secondary">FEEDBACK</button>
+        <button id="achievements-btn" class="btn-secondary menu-btn-wide">ACHIEVEMENTS</button>
+      </div>
+    </div>
+    <div id="auth-status" class="auth-status">
+      <button id="signin-btn" class="btn-auth">SIGN IN</button>
+      <div id="signed-in-status" class="signed-in-status hidden">
+        <span class="auth-icon">●</span>
+        <span style="color:#5588aa;font-size:6px;">SIGNED IN AS</span>
+        <span id="auth-display-name" class="auth-name"></span>
+        <button id="signout-btn" class="btn-auth-signout">SIGN OUT</button>
+      </div>
     </div>
     <p class="controls-hint">ARROW KEYS / WASD TO SWIM</p>
       <p class="controls-hint controls-hint-touch">TAP &amp; DRAG ANYWHERE TO SWIM</p>
@@ -202,6 +217,13 @@
     </div>
     <div class="settings-section">
       <div class="settings-row">
+        <span class="settings-label">FAST TREATS</span>
+        <button id="toggle-fast-treats-btn" class="settings-toggle">OFF</button>
+      </div>
+      <p class="settings-hint">Treats bob faster — harder to grab. +3% score.</p>
+    </div>
+    <div class="settings-section">
+      <div class="settings-row">
         <span class="settings-label">ADS</span>
         <button id="toggle-ads-btn" class="settings-toggle">ON</button>
       </div>
@@ -214,6 +236,20 @@
       </div>
       <p class="settings-hint">Guided hints on level 1 — controls, collecting and the shark.</p>
     </div>
+    <div class="settings-section">
+      <div class="settings-label" style="margin-bottom:10px;">CUSTOMISE</div>
+      <div class="settings-customise-btns">
+        <button id="skins-btn" class="btn-secondary">🐟 SKINS</button>
+        <button id="music-btn" class="btn-secondary">🎵 MUSIC</button>
+      </div>
+    </div>
+    <button id="admin-panel-btn" class="btn-secondary hidden" style="border-color:#44ddff;color:#44ddff;margin-bottom:8px;">ADMIN</button>
+    <button id="settings-back-btn" class="btn-secondary">BACK</button>
+  </div>
+
+  <!-- MUSIC OVERLAY -->
+  <div id="music-overlay" class="game-overlay hidden">
+    <div class="settings-title">MUSIC</div>
     <div class="settings-section">
       <div class="settings-row">
         <span class="settings-label">MUSIC</span>
@@ -237,16 +273,40 @@
       <div id="track-picker" class="track-picker"></div>
       <p class="settings-hint track-kredcendo">★ Gold tracks produced by <span>KRe$cendo</span></p>
     </div>
-    <div class="settings-section">
-      <div class="settings-label" style="margin-bottom:12px;">FISH SKIN</div>
-      <div id="skin-grid" class="skin-grid"></div>
+    <button id="music-back-btn" class="btn-secondary">BACK</button>
+  </div>
+
+  <!-- SKINS OVERLAY -->
+  <div id="skins-overlay" class="game-overlay hidden">
+    <div class="skins-inner">
+      <div class="settings-title">SKINS</div>
+      <div class="skins-label">FISH SKIN</div>
+      <div id="skin-grid" class="skin-grid skins-grid"></div>
+      <div id="custom-skins-section" class="hidden">
+        <div class="skins-label" style="margin-top:14px;">CUSTOM OUTFITS</div>
+        <div id="custom-skin-grid" class="skin-grid skins-grid custom-skin-scroll"></div>
+      </div>
+      <button id="skins-back-btn" class="btn-secondary" style="margin-top:14px;">BACK</button>
     </div>
-    <div class="settings-section hidden" id="custom-skins-section">
-      <div class="settings-label" style="margin-bottom:10px;">CUSTOM OUTFITS</div>
-      <div id="custom-skin-grid" class="skin-grid custom-skin-scroll"></div>
+  </div>
+
+  <!-- LOGIN OVERLAY -->
+  <div id="login-overlay" class="game-overlay hidden">
+    <div class="login-box">
+      <div class="settings-title">SIGN IN</div>
+      <button id="google-signin-btn" class="btn-google">
+        <svg width="16" height="16" viewBox="0 0 48 48" style="vertical-align:middle;margin-right:8px"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        CONTINUE WITH GOOGLE
+      </button>
+      <div class="auth-divider"><span>OR</span></div>
+      <input id="auth-email"    class="auth-input" type="email"    placeholder="EMAIL"    autocomplete="email">
+      <input id="auth-password" class="auth-input" type="password" placeholder="PASSWORD" autocomplete="current-password">
+      <div id="auth-error" class="auth-error hidden"></div>
+      <button id="email-submit-btn" class="btn-primary auth-submit">SIGN IN</button>
+      <button id="auth-forgot-btn"  class="btn-auth-link">FORGOT PASSWORD?</button>
+      <button id="auth-mode-toggle" class="btn-auth-link">CREATE ACCOUNT</button>
+      <button id="login-back-btn"   class="btn-secondary" style="margin-top:8px;">BACK</button>
     </div>
-    <button id="admin-panel-btn" class="btn-secondary hidden" style="border-color:#44ddff;color:#44ddff;margin-bottom:8px;">ADMIN</button>
-    <button id="settings-back-btn" class="btn-secondary">BACK</button>
   </div>
 
   <!-- FISH DRAW OVERLAY — custom skin designer -->
@@ -396,6 +456,16 @@
       <button id="feedback-close-btn" class="btn-secondary">CLOSE</button>
     </div>
   </div>
+
+  <!-- ACHIEVEMENTS OVERLAY -->
+  <div id="achievements-overlay" class="game-overlay hidden">
+    <div class="settings-title">ACHIEVEMENTS</div>
+    <div id="achievements-content" class="ach-content"></div>
+    <button id="achievements-back-btn" class="btn-secondary" style="margin-top:14px;">BACK</button>
+  </div>
+
+  <!-- ACHIEVEMENT TOAST CONTAINER -->
+  <div id="achievement-toasts" class="achievement-toasts"></div>
 
   <!-- ═══════════════════════════════════════════════════════════════ -->
   <!-- PATCH NOTES OVERLAY                                           -->

@@ -21,6 +21,7 @@ import { fetchGameConfig } from '../firebase-config.js';
 import { gameVars, firebaseGameVars } from './game-vars.js';
 import { sfxPowerup, setMusicTempo, startCardMusic } from './audio.js';
 import { SKINS } from './skins.js';
+import { onPowerupCollected as achPowerup, onHellSurvived as achHell } from './achievements.js';
 
 // ─── HELPERS ───
 export function clearTO(t) { if (t) clearTimeout(t); return null; }
@@ -662,6 +663,7 @@ function deactivateHell() {
   S.hellActive = false;
   stOff('hell', 's-hell');
   S.hellTO = null;
+  achHell();
   // hellAnim continues for outro/end phases — cleared by drawHellAnim after 9.5s total
 }
 
@@ -877,6 +879,7 @@ export function updatePWItems() {
         spawnParticles(item.x, item.y, cfg.glow, 12);
         sfxPowerup();
         cfg.fn();
+        achPowerup(k);
       }
       S.pwItems[k] = null;
       continue;

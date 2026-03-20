@@ -204,11 +204,30 @@
   margin-bottom: 8px;
 }
 
-/* Make the 3 secondary menu buttons uniform and narrower than START */
-.menu-buttons .btn-secondary {
-  width: 170px;
-  font-size: 9px;
-  padding: 8px 24px;
+.menu-btn-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  width: 210px;
+}
+
+.menu-btn-grid .btn-secondary {
+  width: 100%;
+  font-size: 8px;
+  padding: 8px 4px;
+  text-align: center;
+}
+
+.settings-customise-btns {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.settings-customise-btns .btn-secondary {
+  flex: 1;
+  font-size: 8px;
+  padding: 9px 4px;
   text-align: center;
 }
 
@@ -644,6 +663,20 @@
   text-shadow: 0 0 8px rgba(68,238,136,.3) !important;
 }
 
+.scoreboard-table .my-score td {
+  background: rgba(68,221,255,0.05);
+}
+
+.my-score-tag {
+  font-size: 5px;
+  color: #44ddff;
+  border: 1px solid #44ddff;
+  padding: 1px 3px;
+  margin-left: 4px;
+  vertical-align: middle;
+  letter-spacing: 0.05em;
+}
+
 .no-scores {
   color: #334455;
   font-size: 9px;
@@ -704,7 +737,7 @@
 }
 
 .settings-section {
-  width: 500px;
+  width: min(500px, 100%);
   margin-bottom: 14px;
 }
 
@@ -926,6 +959,199 @@
   letter-spacing: 0.5px;
 }
 
+
+/* ─── AUTH STATUS BAR ─── */
+.auth-status {
+  margin: 4px 0 2px;
+  min-height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-auth {
+  background: none;
+  border: 1px solid #335566;
+  color: #5588aa;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.btn-auth:hover {
+  border-color: #44ddff;
+  color: #44ddff;
+}
+
+.signed-in-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  background: rgba(0, 40, 60, 0.5);
+  border: 1px solid #1a4a6a;
+  border-radius: 3px;
+  padding: 5px 10px;
+}
+
+.auth-icon {
+  color: #44ee88;
+  font-size: 9px;
+}
+
+.auth-name {
+  color: #44ddff;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-auth-signout {
+  background: none;
+  border: 1px solid #444;
+  color: #557;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 5px;
+  padding: 3px 7px;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.btn-auth-signout:hover {
+  border-color: #ee5566;
+  color: #ee5566;
+}
+
+/* ─── LOGIN OVERLAY ─── */
+.login-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 320px;
+  gap: 8px;
+}
+
+.btn-google {
+  width: 100%;
+  padding: 10px 16px;
+  background: #fff;
+  color: #333;
+  border: 2px solid #ddd;
+  border-radius: 3px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.btn-google:hover {
+  background: #f5f5f5;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.auth-divider {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #335566;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #1a2a3a;
+}
+
+.auth-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #0a1628;
+  border: 1px solid #1a3a5a;
+  color: #aabbcc;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  padding: 9px 10px;
+  outline: none;
+  letter-spacing: 0.05em;
+}
+
+.auth-input:focus {
+  border-color: #44ddff;
+  color: #eef;
+}
+
+.auth-error {
+  color: #ee5566;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+.auth-submit {
+  width: 100%;
+}
+
+.btn-auth-link {
+  background: none;
+  border: none;
+  color: #5588aa;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  padding: 2px 0;
+  text-decoration: underline;
+  transition: color 0.15s;
+}
+
+.btn-auth-link:hover {
+  color: #44ddff;
+}
+
+/* ─── SKINS OVERLAY ─── */
+#skins-overlay {
+  justify-content: flex-start;
+  padding: 16px 12px;
+}
+
+.skins-inner {
+  width: 100%;
+  max-width: 680px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.skins-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #5588aa;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  align-self: flex-start;
+}
+
+.skins-grid {
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  width: 100%;
+}
+
+#custom-skins-section {
+  width: 100%;
+}
 
 /* ─── NAME ENTRY ─── */
 .name-entry-title {
@@ -1440,3 +1666,197 @@
   white-space: nowrap;
 }
 .ad-skip-btn:hover { color: #334455; border-color: #223344; }
+
+/* ─── MENU BTN GRID wide button ─── */
+.menu-btn-wide {
+  grid-column: 1 / -1;
+}
+
+/* ─── ACHIEVEMENTS OVERLAY ─── */
+#achievements-overlay {
+  justify-content: flex-start;
+  padding: 16px 12px;
+}
+
+.ach-content {
+  width: 100%;
+  max-width: 680px;
+  max-height: calc(100% - 100px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.ach-content::-webkit-scrollbar { width: 4px; }
+.ach-content::-webkit-scrollbar-track { background: #0a0a16; }
+.ach-content::-webkit-scrollbar-thumb { background: #223; border-radius: 2px; }
+
+.ach-summary {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #44ddff;
+  text-align: center;
+  margin-bottom: 14px;
+  letter-spacing: 1px;
+}
+
+.ach-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+.ach-card {
+  background: #060f1a;
+  border: 1px solid #1a3a5a;
+  border-radius: 3px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color 0.15s;
+}
+
+.ach-unlocked {
+  border-color: #44ddff;
+  background: #061624;
+}
+
+.ach-locked {
+  opacity: 0.45;
+}
+
+.ach-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.ach-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  color: #aabbcc;
+  letter-spacing: 0.5px;
+  line-height: 1.6;
+}
+
+.ach-unlocked .ach-name {
+  color: #44ddff;
+}
+
+.ach-desc {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 5.5px;
+  color: #4a6a88;
+  line-height: 1.8;
+  letter-spacing: 0.3px;
+}
+
+.ach-unlocked .ach-desc {
+  color: #5588aa;
+}
+
+/* ─── ACHIEVEMENT TOASTS ─── */
+.achievement-toasts {
+  position: absolute;
+  bottom: 48px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 200;
+  pointer-events: none;
+}
+
+.achievement-toast {
+  background: #061624;
+  border: 1px solid #44ddff;
+  border-radius: 3px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: ach-toast-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  max-width: 260px;
+}
+
+.achievement-toast.ach-toast-out {
+  animation: ach-toast-out 0.45s ease forwards;
+}
+
+@keyframes ach-toast-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes ach-toast-out {
+  from { transform: translateX(0);    opacity: 1; }
+  to   { transform: translateX(110%); opacity: 0; }
+}
+
+.ach-toast-icon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.ach-toast-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ach-toast-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 5px;
+  color: #5588aa;
+  letter-spacing: 0.5px;
+}
+
+.ach-toast-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: #44ddff;
+  letter-spacing: 0.5px;
+}
+
+/* ─── SUPER HARD section ─── */
+.ach-superhard-header {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: #ee3344;
+  text-align: center;
+  letter-spacing: 3px;
+  margin: 18px 0 10px;
+  text-shadow: 0 0 12px rgba(238, 51, 68, 0.6), 0 0 24px rgba(238, 51, 68, 0.3);
+  animation: sh-pulse 2s ease-in-out infinite;
+}
+@keyframes sh-pulse {
+  0%, 100% { text-shadow: 0 0 8px rgba(238,51,68,0.4); }
+  50%       { text-shadow: 0 0 20px rgba(238,51,68,0.9), 0 0 40px rgba(238,51,68,0.4); }
+}
+
+.ach-card-sh {
+  border-color: #441122;
+  background: #0a0308;
+}
+
+.ach-unlocked-sh {
+  border-color: #ee3344 !important;
+  background: #180508 !important;
+}
+
+.ach-name-sh {
+  color: #ee3344 !important;
+}
+
+.ach-unlocked-sh .ach-name-sh {
+  color: #ff6677 !important;
+}
+
+.ach-sh-cleared {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 5px;
+  color: #ee3344;
+  letter-spacing: 1px;
+  margin-top: 2px;
+  text-shadow: 0 0 6px rgba(238,51,68,0.6);
+}

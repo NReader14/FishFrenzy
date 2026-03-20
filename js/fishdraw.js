@@ -4,6 +4,7 @@
 
 import { ACCESSORY_TABS, addCustomSkinToList, drawSkinPreview } from './skins.js';
 import { saveCustomSkin } from '../firebase-config.js';
+import { onCustomSkinCreated as achSkinCreated } from './achievements.js';
 
 const NAME_TITLES = [
   '', 'Mr', 'Supercool', 'The Amazing', 'Great', 'Magnificent', 'Legendary',
@@ -372,6 +373,7 @@ async function saveSkin() {
     const fullName = buildName();
     const skinPayload = { name: fullName, c1: state.c1, c2: state.c2, c3: state.c3, hat: state.hat, mask: state.mask, outfit: state.outfit, fishType: state.fishType };
     await saveCustomSkin(skinPayload);
+    achSkinCreated();
     const idx = addCustomSkinToList(skinPayload);
     window.dispatchEvent(new CustomEvent('fishSkinSaved', { detail: { idx } }));
     if (btn) btn.textContent = 'SAVED!';

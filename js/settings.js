@@ -6,7 +6,8 @@ import S from './state.js';
 import { SKINS, drawSkinPreview, addCustomSkinToList } from './skins.js';
 import { startMusic, stopMusic, initAudio, setMusicVolume, setSfxVolume, seekMusicToMiddle, TRACKS } from './audio.js';
 import { openFishDraw, initFishDraw } from './fishdraw.js';
-import { fetchCustomSkins } from '../firebase-config.js';
+import { fetchCustomSkins, saveUserSettings, loadUserSettings } from '../firebase-config.js';
+import { onTrackChanged as achTrack } from './achievements.js';
 
 const STORAGE_KEY = 'fishFrenzySettings';
 
@@ -26,14 +27,25 @@ function load() {
       if (typeof saved.sfxVolume   === 'number')  S.settings.sfxVolume   = saved.sfxVolume;
       if (typeof saved.track === 'string' && TRACKS.some(t => t.id === saved.track))
         S.settings.track = saved.track;
-      if (typeof saved.sharkQuips === 'boolean') S.settings.sharkQuips = saved.sharkQuips;
-      if (typeof saved.showAds   === 'boolean') S.settings.showAds    = saved.showAds;
+      if (typeof saved.sharkQuips  === 'boolean') S.settings.sharkQuips  = saved.sharkQuips;
+      if (typeof saved.fastTreats  === 'boolean') S.settings.fastTreats  = saved.fastTreats;
+      if (typeof saved.showAds     === 'boolean') S.settings.showAds     = saved.showAds;
     }
   } catch (_) {}
 }
 
 function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...S.settings }));
+  if (S.currentUser) saveUserSettings(S.currentUser.uid, S.settings);
+}
+
+export async function syncSettingsFromCloud(uid) {
+  const cloudSettings = await loadUserSettings(uid);
+  if (!cloudSettings) return;
+  // Merge cloud settings into S.settings (cloud wins)
+  Object.assign(S.settings, cloudSettings);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...S.settings }));
+  refreshUI();
 }
 
 function updateToggle(id, active) {
@@ -50,7 +62,8 @@ function refreshUI() {
   updateToggle('toggle-tutorial-btn',   S.settings.tutorial);
   updateToggle('toggle-music-btn',      S.settings.music);
   updateToggle('toggle-sfx-btn',        S.settings.sfx);
-  updateToggle('toggle-shark-quips-btn', S.settings.sharkQuips);
+  updateToggle('toggle-shark-quips-btn',  S.settings.sharkQuips);
+  updateToggle('toggle-fast-treats-btn', S.settings.fastTreats);
   updateToggle('toggle-ads-btn',         S.settings.showAds ?? false);
   const mvs = document.getElementById('music-vol-slider');
   const svs = document.getElementById('sfx-vol-slider');
@@ -83,6 +96,7 @@ function buildTrackPicker() {
     btn.addEventListener('click', () => {
       S.settings.track = track.id;
       save();
+      achTrack(track.id);
       refreshTrackPicker();
       if (!S.settings.music) return;
       stopMusic();
@@ -183,6 +197,8 @@ export function initSettings() {
 
   const overlay    = document.getElementById('overlay');
   const settingsOv = document.getElementById('settings-overlay');
+  const skinsOv    = document.getElementById('skins-overlay');
+  const musicOv    = document.getElementById('music-overlay');
   const adminBtn   = document.getElementById('admin-panel-btn');
   const adminOv    = document.getElementById('admin-overlay');
 
@@ -214,6 +230,28 @@ export function initSettings() {
     refreshUI();
   });
 
+  document.getElementById('skins-btn')?.addEventListener('click', () => {
+    settingsOv.classList.add('hidden');
+    skinsOv.classList.remove('hidden');
+    refreshSkinPicker();
+  });
+
+  document.getElementById('skins-back-btn')?.addEventListener('click', () => {
+    skinsOv.classList.add('hidden');
+    settingsOv.classList.remove('hidden');
+  });
+
+  document.getElementById('music-btn')?.addEventListener('click', () => {
+    settingsOv.classList.add('hidden');
+    musicOv.classList.remove('hidden');
+    refreshUI();
+  });
+
+  document.getElementById('music-back-btn')?.addEventListener('click', () => {
+    musicOv.classList.add('hidden');
+    settingsOv.classList.remove('hidden');
+  });
+
   document.getElementById('settings-back-btn')?.addEventListener('click', () => {
     settingsOv.classList.add('hidden');
     overlay.classList.remove('hidden');
@@ -225,6 +263,7 @@ export function initSettings() {
     S.settings.mysteryBlocks = !S.settings.mysteryBlocks;
     save();
     refreshUI();
+    window.dispatchEvent(new Event('settingsMultiplierChanged'));
   });
 
   document.getElementById('toggle-smart-shark-btn')?.addEventListener('click', () => {
@@ -232,6 +271,7 @@ export function initSettings() {
     S.smartSharkHistory = [];
     save();
     refreshUI();
+    window.dispatchEvent(new Event('settingsMultiplierChanged'));
   });
 
   document.getElementById('toggle-tutorial-btn')?.addEventListener('click', () => {
@@ -258,6 +298,13 @@ export function initSettings() {
     S.settings.sharkQuips = !S.settings.sharkQuips;
     updateToggle('toggle-shark-quips-btn', S.settings.sharkQuips);
     save();
+  });
+
+  document.getElementById('toggle-fast-treats-btn')?.addEventListener('click', () => {
+    S.settings.fastTreats = !S.settings.fastTreats;
+    save();
+    refreshUI();
+    window.dispatchEvent(new Event('settingsMultiplierChanged'));
   });
 
   document.getElementById('toggle-ads-btn')?.addEventListener('click', () => {

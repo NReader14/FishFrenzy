@@ -7,6 +7,7 @@ import { st, scoreEl } from './dom.js';
 import { COMBO_WINDOW, W, H } from './constants.js';
 import { spawnParticles } from './particles.js';
 import { sfxCollect, sfxCombo } from './audio.js';
+import { onTreatCollected as achTreat, onScoreUpdate as achScore, onComboReached as achCombo } from './achievements.js';
 
 const STREAK_MSGS = { 2: 'NICE!', 3: 'GREAT!', 4: 'UNSTOPPABLE!', 5: 'GODLIKE!' };
 const STREAK_COLS = { 2: '#88ddff', 3: '#44ee88', 4: '#ffdd44', 5: '#ff44ff' };
@@ -29,6 +30,8 @@ export function collectTreat(t) {
   // Audio
   sfxCollect();
   if (cm >= 2) sfxCombo(cm);
+  achTreat();
+  achCombo(cm);
 
   // Streak messages
   if (STREAK_MSGS[cm]) {
@@ -42,10 +45,12 @@ export function collectTreat(t) {
   // Calculate points
   const basePts = S.frenzyActive ? 20 : 10;
   const starMul = S.starActive ? 2 : 1;
-  const smartMul = S.settings.smartShark ? 1.25 : 1;
+  const smartMul   = S.settings.smartShark   ? 1.25 : 1;
+  const mysteryMul    = S.settings.mysteryBlocks ? 1.05 : 1;
+  const fastTreatsMul = S.settings.fastTreats   ? 1.03 : 1;
   const diffMul = S.settings.difficulty === 'easy' ? 0.75 : S.settings.difficulty === 'hard' ? 1.5 : 1;
   const crazyMul = S.crazyMultiplier || 1;
-  const pts = Math.round(basePts * cm * (S.bodySwapActive ? 2 : 1) * starMul * smartMul * diffMul * crazyMul);
+  const pts = Math.round(basePts * cm * (S.bodySwapActive ? 2 : 1) * starMul * smartMul * mysteryMul * fastTreatsMul * diffMul * crazyMul);
 
   if (S.hellActive) {
     // Hell: collecting treats drains score
@@ -58,6 +63,7 @@ export function collectTreat(t) {
 
   S.score += pts;
   scoreEl.textContent = S.score;
+  achScore(S.score);
 
   // Global high score check
   if (S.score > S.globalHighScore && S.globalHighScore > 0 && !S.pbNotified) {
