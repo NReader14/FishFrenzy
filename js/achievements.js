@@ -9,73 +9,80 @@ import { saveUserAchievements, loadUserAchievements, saveAchievementBoard } from
 const STORAGE_KEY = 'fishFrenzyAchievements';
 
 // ─── Definitions ──────────────────────────────────────────────
+// tier: 'easy' | 'medium' | 'hard' | 'extrahard' | 'alx' | 'secret'
 export const ACHIEVEMENTS = [
-  // ── PROGRESSION ──
-  { id: 'first_treat',    icon: '🪱', name: 'FIRST BITE',       desc: 'Collect your first treat.' },
-  { id: 'level_5',        icon: '🐟', name: 'FIVE DEEP',         desc: 'Reach level 5.' },
-  { id: 'level_10',       icon: '🌊', name: 'DEEP WATER',        desc: 'Reach level 10.' },
-  { id: 'level_20',       icon: '🏆', name: 'ABYSS SWIMMER',     desc: 'Reach level 20.' },
-  { id: 'score_100',      icon: '💯', name: 'TRIPLE DIGITS',     desc: 'Score 100 points.' },
-  { id: 'score_500',      icon: '⭐', name: 'FIVE HUNDRED',      desc: 'Score 500 points.' },
-  { id: 'score_1000',     icon: '💫', name: 'FOUR FIGURES',      desc: 'Score 1,000 points.' },
-  { id: 'score_5000',     icon: '🌟', name: 'FIVE THOUSAND',     desc: 'Score 5,000 points.' },
-  { id: 'score_10000',    icon: '👑', name: 'TEN THOUSAND',      desc: 'Score 10,000 points.' },
-  { id: 'centurion',      icon: '💎', name: 'CENTURION',         desc: 'Collect 100 treats in one game.' },
+  // ── EASY ──
+  { id: 'first_treat',    tier:'easy', icon: '🪱', name: 'FIRST BITE',       desc: 'Collect your first treat.' },
+  { id: 'score_100',      tier:'easy', icon: '💯', name: 'TRIPLE DIGITS',    desc: 'Score 100 points.' },
+  { id: 'score_500',      tier:'easy', icon: '⭐', name: 'FIVE HUNDRED',     desc: 'Score 500 points.' },
+  { id: 'score_1000',     tier:'easy', icon: '💫', name: 'FOUR FIGURES',     desc: 'Score 1,000 points.' },
+  { id: 'level_5',        tier:'easy', icon: '🐟', name: 'FIVE DEEP',        desc: 'Reach level 5.' },
+  { id: 'easy_game',      tier:'easy', icon: '😌', name: 'EASY RIDER',       desc: 'Complete level 3 on Easy.' },
+  { id: 'normal_game',    tier:'easy', icon: '😎', name: 'JUST RIGHT',       desc: 'Complete level 5 on Normal.' },
+  { id: 'first_powerup',  tier:'easy', icon: '✨', name: 'POWERED UP',       desc: 'Collect your first powerup.' },
+  { id: 'use_frenzy',     tier:'easy', icon: '🔥', name: 'FEEDING FRENZY',   desc: 'Use the Frenzy powerup.' },
+  { id: 'use_ice',        tier:'easy', icon: '❄️', name: 'ICE ICE BABY',     desc: 'Use the Ice powerup.' },
+  { id: 'use_ghost',      tier:'easy', icon: '👻', name: 'BOO!',             desc: 'Use the Ghost powerup.' },
+  { id: 'use_star',       tier:'easy', icon: '⭐', name: 'STAR POWER',       desc: 'Use the Star powerup.' },
+  { id: 'use_rainbow',    tier:'easy', icon: '🌈', name: 'OVER THE RAINBOW', desc: 'Use the Rainbow powerup.' },
+  { id: 'use_bodyswap',   tier:'easy', icon: '🎭', name: 'BODY SNATCHER',    desc: 'Use the Body Swap powerup.' },
+  { id: 'use_bomb',       tier:'easy', icon: '💣', name: 'KABOOM',           desc: 'Use the Bomb powerup.' },
+  { id: 'use_claude',     tier:'easy', icon: '🤖', name: 'AI FISH',          desc: 'Use The Claude powerup.' },
+  { id: 'use_hell',       tier:'easy', icon: '👹', name: 'HELL AND BACK',    desc: 'Survive the Hell powerup.' },
+  { id: 'close_call',     tier:'easy', icon: '😰', name: 'CLOSE CALL',       desc: 'Survive within 25px of the shark.' },
+  { id: 'play_goldfish',  tier:'easy', icon: '🐠', name: 'GOLDFISH',         desc: 'Play a game as a Goldfish.' },
+  { id: 'play_clownfish', tier:'easy', icon: '🤡', name: 'CLOWNFISH',        desc: 'Play a game as a Clownfish.' },
+  { id: 'play_angler',    tier:'easy', icon: '🎣', name: 'ANGLER',           desc: 'Play a game as an Angler Fish.' },
+  { id: 'play_pufferfish',tier:'easy', icon: '🐡', name: 'PUFFERFISH',       desc: 'Play a game as a Pufferfish.' },
+  { id: 'signed_in',      tier:'easy', icon: '🔑', name: 'WELCOME BACK',     desc: 'Sign in with an account.' },
+  { id: 'designer',       tier:'easy', icon: '🎨', name: 'FISH DESIGNER',    desc: 'Create a custom fish skin.' },
 
-  // ── DIFFICULTY ──
-  { id: 'easy_game',      icon: '😌', name: 'EASY RIDER',        desc: 'Complete level 3 on Easy.' },
-  { id: 'normal_game',    icon: '😎', name: 'JUST RIGHT',        desc: 'Complete level 5 on Normal.' },
-  { id: 'hard_game',      icon: '🔥', name: 'HARD BOILED',       desc: 'Complete level 5 on Hard.' },
-  { id: 'hard_level_10',  icon: '😈', name: 'MASOCHIST',         desc: 'Reach level 10 on Hard.' },
-  { id: 'daredevil',      icon: '⚡', name: 'DAREDEVIL',         desc: 'Complete level 5 with Hard + Smart Shark.' },
+  // ── MEDIUM ──
+  { id: 'score_5000',        tier:'medium', icon: '🌟', name: 'FIVE THOUSAND',   desc: 'Score 5,000 points.' },
+  { id: 'score_10000',       tier:'medium', icon: '👑', name: 'TEN THOUSAND',    desc: 'Score 10,000 points.' },
+  { id: 'med_score_25k',     tier:'medium', icon: '🌊', name: 'BIG FISH',        desc: 'Score 25,000 points in a single game.' },
+  { id: 'level_10',          tier:'medium', icon: '🌊', name: 'DEEP WATER',      desc: 'Reach level 10.' },
+  { id: 'hard_game',         tier:'medium', icon: '🔥', name: 'HARD BOILED',     desc: 'Complete level 5 on Hard.' },
+  { id: 'blitz',             tier:'medium', icon: '💥', name: 'BLITZ',           desc: 'Collect 5 treats in under 2 seconds.' },
+  { id: 'chain_5',           tier:'medium', icon: '⚡', name: 'CHAIN MASTER',    desc: 'Reach a x5 combo.' },
+  { id: 'speed_run',         tier:'medium', icon: '⏩', name: 'SPEED RUN',       desc: 'Complete a level in under 10 seconds.' },
+  { id: 'centurion',         tier:'medium', icon: '💎', name: 'CENTURION',       desc: 'Collect 100 treats in one game.' },
+  { id: 'power_collector',   tier:'medium', icon: '🎮', name: 'POWER COLLECTOR', desc: 'Use 8 different powerup types in one game.' },
+  { id: 'med_all_powerups',  tier:'medium', icon: '🕹️', name: 'COMPLETIONIST',   desc: 'Use 10 different powerup types across all your games.' },
+  { id: 'fashionista',       tier:'medium', icon: '👗', name: 'FASHIONISTA',     desc: 'Use 5 different skins.' },
+  { id: 'music_explorer',    tier:'medium', icon: '🎵', name: 'MUSIC EXPLORER',  desc: 'Listen to 5 different music tracks.' },
+  { id: 'night_swimmer',     tier:'medium', icon: '🌙', name: 'NIGHT SWIMMER',   desc: 'Score 1,000+ points without collecting any powerups.' },
 
-  // ── SKILL ──
-  { id: 'speed_run',      icon: '⏩', name: 'SPEED RUN',         desc: 'Complete a level in under 10 seconds.' },
-  { id: 'speed_extreme',  icon: '⚡', name: 'LIGHTNING FISH',    desc: 'Complete a level in under 5 seconds.' },
-  { id: 'untouchable',    icon: '🛡️', name: 'UNTOUCHABLE',       desc: 'Complete a level without the shark getting within 120px.' },
-  { id: 'close_call',     icon: '😰', name: 'CLOSE CALL',        desc: 'Survive within 25px of the shark.' },
-  { id: 'blitz',          icon: '💥', name: 'BLITZ',             desc: 'Collect 5 treats in under 2 seconds.' },
-  { id: 'chain_5',        icon: '⚡', name: 'CHAIN MASTER',      desc: 'Reach a x5 combo.' },
-  { id: 'combo_king',     icon: '👊', name: 'COMBO KING',        desc: 'Reach x5 combo 10 times total.' },
-  { id: 'perfectionist',  icon: '✨', name: 'PERFECTIONIST',     desc: 'Complete a game to level 5 without collecting any powerups.' },
-  { id: 'treat_hoarder',  icon: '🍽️', name: 'TREAT HOARDER',    desc: 'Collect 500 treats across all games.' },
-  { id: 'marathon',       icon: '🏃', name: 'MARATHON',          desc: 'Play for 30 minutes total.' },
+  // ── HARD ──
+  { id: 'level_20',          tier:'hard', icon: '🏆', name: 'ABYSS SWIMMER',    desc: 'Reach level 20.' },
+  { id: 'med_level_30',      tier:'hard', icon: '🏔️', name: 'THIRTY DEEP',      desc: 'Reach level 30.' },
+  { id: 'hard_level_10',     tier:'hard', icon: '😈', name: 'MASOCHIST',        desc: 'Reach level 10 on Hard.' },
+  { id: 'daredevil',         tier:'hard', icon: '⚡', name: 'DAREDEVIL',        desc: 'Complete level 5 with Hard + Smart Shark.' },
+  { id: 'speed_extreme',     tier:'hard', icon: '⚡', name: 'LIGHTNING FISH',   desc: 'Complete a level in under 5 seconds.' },
+  { id: 'med_speed_chain',   tier:'hard', icon: '🏎️', name: 'SPEEDSTER',        desc: 'Complete 5 consecutive levels each in under 10 seconds.' },
+  { id: 'untouchable',       tier:'hard', icon: '🛡️', name: 'UNTOUCHABLE',      desc: 'Complete a level without the shark getting within 120px.' },
+  { id: 'med_no_powerup_hard',tier:'hard',icon: '🔥', name: 'PURIST',           desc: 'Reach level 7 on Hard without collecting any powerups.' },
+  { id: 'med_combo_spree',   tier:'hard', icon: '👊', name: 'ON FIRE',          desc: 'Hit x5 combo 3 times in a single game.' },
+  { id: 'combo_king',        tier:'hard', icon: '👊', name: 'COMBO KING',       desc: 'Reach x5 combo 10 times total.' },
+  { id: 'perfectionist',     tier:'hard', icon: '✨', name: 'PERFECTIONIST',    desc: 'Reach level 5 without collecting any powerups.' },
+  { id: 'treat_hoarder',     tier:'hard', icon: '🍽️', name: 'TREAT HOARDER',   desc: 'Collect 500 treats across all games.' },
+  { id: 'power_mad',         tier:'hard', icon: '🌀', name: 'POWER MAD',        desc: 'Collect 50 powerups total.' },
+  { id: 'full_house',        tier:'hard', icon: '🃏', name: 'FULL HOUSE',       desc: 'Play with Hard + Smart Shark + Mystery Blocks + Fast Treats.' },
+  { id: 'marathon',          tier:'hard', icon: '🏃', name: 'MARATHON',         desc: 'Play for 30 minutes total.' },
+  { id: 'overachiever',      tier:'hard', icon: '🏅', name: 'OVERACHIEVER',     desc: 'Unlock 25 achievements.' },
 
-  // ── POWERUPS ──
-  { id: 'first_powerup',  icon: '✨', name: 'POWERED UP',        desc: 'Collect your first powerup.' },
-  { id: 'use_frenzy',     icon: '🔥', name: 'FEEDING FRENZY',    desc: 'Use the Frenzy powerup.' },
-  { id: 'use_ice',        icon: '❄️', name: 'ICE ICE BABY',      desc: 'Use the Ice powerup.' },
-  { id: 'use_ghost',      icon: '👻', name: 'BOO!',              desc: 'Use the Ghost powerup.' },
-  { id: 'use_star',       icon: '⭐', name: 'STAR POWER',        desc: 'Use the Star powerup.' },
-  { id: 'use_bodyswap',   icon: '🎭', name: 'BODY SNATCHER',     desc: 'Use the Body Swap powerup.' },
-  { id: 'use_hell',       icon: '👹', name: 'HELL AND BACK',     desc: 'Survive the Hell powerup.' },
-  { id: 'use_rainbow',    icon: '🌈', name: 'OVER THE RAINBOW',  desc: 'Use the Rainbow powerup.' },
-  { id: 'use_claude',     icon: '🤖', name: 'AI FISH',           desc: 'Use The Claude powerup.' },
-  { id: 'use_bomb',       icon: '💣', name: 'KABOOM',            desc: 'Use the Bomb powerup.' },
-  { id: 'power_collector',icon: '🎮', name: 'POWER COLLECTOR',   desc: 'Use 8 different powerup types in one game.' },
-  { id: 'power_mad',      icon: '🌀', name: 'POWER MAD',         desc: 'Collect 50 powerups total.' },
+  // ── EXTRA HARD ──
+  { id: 'sh_50k',         tier:'extrahard', icon: '💀', name: 'FIFTY GRAND',   desc: 'Score 50,000 points in a single game.' },
+  { id: 'sh_level_50',    tier:'extrahard', icon: '💀', name: 'THE VOID',      desc: 'Reach level 35.' },
+  { id: 'sh_iron_fish',   tier:'extrahard', icon: '💀', name: 'IRON FISH',     desc: 'Reach level 10 on Hard + Smart Shark without collecting a single powerup.' },
+  { id: 'sh_speed_god',   tier:'extrahard', icon: '💀', name: 'SPEED GOD',     desc: 'Complete 3 consecutive levels each in under 4 seconds.' },
+  { id: 'sh_hell_x5',     tier:'extrahard', icon: '💀', name: 'HELL GAUNTLET', desc: 'Survive the Hell powerup 5 times in a single game.' },
 
-  // ── CUSTOMISATION ──
-  { id: 'signed_in',      icon: '🔑', name: 'WELCOME BACK',      desc: 'Sign in with a Google or email account.' },
-  { id: 'designer',       icon: '🎨', name: 'FISH DESIGNER',     desc: 'Create a custom fish skin.' },
-  { id: 'play_goldfish',  icon: '🐠', name: 'GOLDFISH',          desc: 'Play a game as a Goldfish.' },
-  { id: 'play_clownfish', icon: '🤡', name: 'CLOWNFISH',         desc: 'Play a game as a Clownfish.' },
-  { id: 'play_angler',    icon: '🎣', name: 'ANGLER',            desc: 'Play a game as an Angler Fish.' },
-  { id: 'play_pufferfish',icon: '🐡', name: 'PUFFERFISH',        desc: 'Play a game as a Pufferfish.' },
-  { id: 'fashionista',    icon: '👗', name: 'FASHIONISTA',        desc: 'Use 5 different skins.' },
-  { id: 'music_explorer', icon: '🎵', name: 'MUSIC EXPLORER',    desc: 'Listen to 5 different music tracks.' },
-  { id: 'full_house',     icon: '🃏', name: 'FULL HOUSE',        desc: 'Play with Hard + Smart Shark + Mystery Blocks + Fast Treats.' },
+  // ── ALX CHALLENGE ──
+  { id: 'alx_challenge',  tier:'alx', icon: '🐟', name: 'THE ALX CHALLENGE', desc: 'Score 100,000 points. We see you.' },
 
-  // ── MISC ──
-  { id: 'night_swimmer',  icon: '🌙', name: 'NIGHT SWIMMER',     desc: 'Score 1,000+ points without collecting any powerups.' },
-  { id: 'overachiever',   icon: '🏅', name: 'OVERACHIEVER',      desc: 'Unlock 25 achievements.' },
-
-  // ── SUPER HARD ──
-  { id: 'sh_100k',        icon: '💀', name: 'ONE HUNDRED K',     desc: 'Score 100,000 points in a single game.', superhard: true },
-  { id: 'sh_level_50',    icon: '💀', name: 'THE VOID',          desc: 'Reach level 50.', superhard: true },
-  { id: 'sh_iron_fish',   icon: '💀', name: 'IRON FISH',         desc: 'Reach level 10 on Hard + Smart Shark without collecting a single powerup.', superhard: true },
-  { id: 'sh_speed_god',   icon: '💀', name: 'SPEED GOD',         desc: 'Complete 3 consecutive levels each in under 4 seconds.', superhard: true },
-  { id: 'sh_hell_x5',     icon: '💀', name: 'HELL GAUNTLET',     desc: 'Survive the Hell powerup 5 times in a single game.', superhard: true },
+  // ── SECRET ──
+  { id: 'death_card', tier:'secret', icon: '🂡', name: 'DEATH CARD', desc: 'Draw the Death card from the Playing Card powerup.' },
 ];
 
 // ─── State ────────────────────────────────────────────────────
@@ -88,7 +95,7 @@ let _stats = {
   combo5Count: 0,
   skinsUsed: new Set(),
   tracksUsed: new Set(),
-  powerupsUsed: new Set(),     // per game, reset on start
+  allPowerupTypes: new Set(),  // cumulative across all games
 };
 
 // ─── Per-game tracking ────────────────────────────────────────
@@ -97,10 +104,12 @@ let _gameStats = {
   powerupTypes: new Set(),
   minSharkDist: 9999,
   levelMinSharkDist: 9999,
-  treatTimes: [],       // timestamps for blitz
+  treatTimes: [],
   noPowerups: true,
   hellSurviveCount: 0,
-  consecutiveFastLevels: 0, // levels cleared under 4s in a row
+  consecutiveFastLevels: 0,   // levels under 4s in a row (speed god)
+  consecutiveMedFastLevels: 0, // levels under 10s in a row (speedster)
+  gameCombo5Count: 0,          // x5 combos this game (on fire)
   gameStartTime: 0,
 };
 
@@ -117,8 +126,9 @@ function _load() {
       if (typeof rs.totalPowerups === 'number') _stats.totalPowerups = rs.totalPowerups;
       if (typeof rs.totalPlayMs   === 'number') _stats.totalPlayMs   = rs.totalPlayMs;
       if (typeof rs.combo5Count   === 'number') _stats.combo5Count   = rs.combo5Count;
-      if (Array.isArray(rs.skinsUsed))  _stats.skinsUsed  = new Set(rs.skinsUsed);
-      if (Array.isArray(rs.tracksUsed)) _stats.tracksUsed = new Set(rs.tracksUsed);
+      if (Array.isArray(rs.skinsUsed))       _stats.skinsUsed       = new Set(rs.skinsUsed);
+      if (Array.isArray(rs.tracksUsed))      _stats.tracksUsed      = new Set(rs.tracksUsed);
+      if (Array.isArray(rs.allPowerupTypes)) _stats.allPowerupTypes = new Set(rs.allPowerupTypes);
     }
   } catch (_) {}
 }
@@ -131,8 +141,9 @@ function _buildPayload() {
       totalPowerups: _stats.totalPowerups,
       totalPlayMs:   _stats.totalPlayMs,
       combo5Count:   _stats.combo5Count,
-      skinsUsed:     [..._stats.skinsUsed],
-      tracksUsed:    [..._stats.tracksUsed],
+      skinsUsed:       [..._stats.skinsUsed],
+      tracksUsed:      [..._stats.tracksUsed],
+      allPowerupTypes: [..._stats.allPowerupTypes],
     }
   };
 }
@@ -161,8 +172,9 @@ export async function syncAchievementsFromCloud(uid) {
     if (typeof cs.totalPowerups === 'number') _stats.totalPowerups = Math.max(_stats.totalPowerups, cs.totalPowerups);
     if (typeof cs.totalPlayMs   === 'number') _stats.totalPlayMs   = Math.max(_stats.totalPlayMs,   cs.totalPlayMs);
     if (typeof cs.combo5Count   === 'number') _stats.combo5Count   = Math.max(_stats.combo5Count,   cs.combo5Count);
-    if (Array.isArray(cs.skinsUsed))  for (const s of cs.skinsUsed)  _stats.skinsUsed.add(s);
-    if (Array.isArray(cs.tracksUsed)) for (const t of cs.tracksUsed) _stats.tracksUsed.add(t);
+    if (Array.isArray(cs.skinsUsed))       for (const s of cs.skinsUsed)       _stats.skinsUsed.add(s);
+    if (Array.isArray(cs.tracksUsed))      for (const t of cs.tracksUsed)      _stats.tracksUsed.add(t);
+    if (Array.isArray(cs.allPowerupTypes)) for (const p of cs.allPowerupTypes) _stats.allPowerupTypes.add(p);
   }
   // Write merged result back to both stores
   const merged = _buildPayload();
@@ -259,7 +271,7 @@ export function onGameStart() {
   if (_stats.skinsUsed.size >= 5) unlock('fashionista');
 }
 
-export function onLevelStart(level) {
+export function onLevelStart(_level) {
   _gameStats.levelMinSharkDist = 9999;
 }
 
@@ -289,12 +301,14 @@ export function onTreatCollected() {
 }
 
 export function onScoreUpdate(score) {
-  if (score >= 100)    unlock('score_100');
-  if (score >= 500)    unlock('score_500');
-  if (score >= 1000)   unlock('score_1000');
-  if (score >= 5000)   unlock('score_5000');
-  if (score >= 10000)  unlock('score_10000');
-  if (score >= 100000) unlock('sh_100k');
+  if (score >= 100)     unlock('score_100');
+  if (score >= 500)     unlock('score_500');
+  if (score >= 1000)    unlock('score_1000');
+  if (score >= 5000)    unlock('score_5000');
+  if (score >= 10000)   unlock('score_10000');
+  if (score >= 25000)  unlock('med_score_25k');
+  if (score >= 50000)  unlock('sh_50k');
+  if (score >= 100000) unlock('alx_challenge');
 
   // Night swimmer: 1000 points with zero powerups
   if (score >= 1000 && _gameStats.noPowerups) unlock('night_swimmer');
@@ -304,8 +318,10 @@ export function onComboReached(combo) {
   if (combo >= 5) {
     unlock('chain_5');
     _stats.combo5Count++;
+    _gameStats.gameCombo5Count++;
     _save();
     if (_stats.combo5Count >= 10) unlock('combo_king');
+    if (_gameStats.gameCombo5Count >= 3) unlock('med_combo_spree');
   }
 }
 
@@ -324,6 +340,14 @@ export function onLevelComplete(level, timeLeft) {
     _gameStats.consecutiveFastLevels = 0;
   }
 
+  // Speedster: 5 consecutive levels under 10 seconds
+  if (levelTime <= 10) {
+    _gameStats.consecutiveMedFastLevels++;
+    if (_gameStats.consecutiveMedFastLevels >= 5) unlock('med_speed_chain');
+  } else {
+    _gameStats.consecutiveMedFastLevels = 0;
+  }
+
   // Untouchable: shark never got within 120px this level
   if (_gameStats.levelMinSharkDist >= 120) unlock('untouchable');
 
@@ -331,7 +355,8 @@ export function onLevelComplete(level, timeLeft) {
   if (level >= 5)  unlock('level_5');
   if (level >= 10) unlock('level_10');
   if (level >= 20) unlock('level_20');
-  if (level >= 50) unlock('sh_level_50');
+  if (level >= 30) unlock('med_level_30');
+  if (level >= 35) unlock('sh_level_50');
 
   // Difficulty-based
   const diff = S.settings.difficulty;
@@ -340,6 +365,9 @@ export function onLevelComplete(level, timeLeft) {
   if (diff === 'hard'   && level >= 5) unlock('hard_game');
   if (diff === 'hard'   && level >= 10) unlock('hard_level_10');
   if (diff === 'hard' && S.settings.smartShark && level >= 5) unlock('daredevil');
+
+  // Purist: level 7 on Hard with no powerups
+  if (diff === 'hard' && level >= 7 && _gameStats.noPowerups) unlock('med_no_powerup_hard');
 
   // Iron Fish: level 10 on Hard + Smart Shark with no powerups
   if (diff === 'hard' && S.settings.smartShark && level >= 10 && _gameStats.noPowerups) unlock('sh_iron_fish');
@@ -362,9 +390,13 @@ export function onPowerupCollected(type) {
   _stats.totalPowerups++;
   _save();
 
+  _stats.allPowerupTypes.add(type);
+  _save();
+
   unlock('first_powerup');
   if (_stats.totalPowerups >= 50) unlock('power_mad');
   if (_gameStats.powerupTypes.size >= 8) unlock('power_collector');
+  if (_stats.allPowerupTypes.size >= 10) unlock('med_all_powerups');
 
   switch (type) {
     case 'frenzy':   unlock('use_frenzy');   break;
@@ -384,7 +416,7 @@ export function onHellSurvived() {
   if (_gameStats.hellSurviveCount >= 5) unlock('sh_hell_x5');
 }
 
-export function onGameOver(score, level) {
+export function onGameOver(_score, _level) {
   // Accumulate play time
   if (_gameStats.gameStartTime) {
     _stats.totalPlayMs += Date.now() - _gameStats.gameStartTime;
@@ -412,35 +444,89 @@ export function onTrackChanged(trackId) {
 
 export function getUnlocked() { return _unlocked; }
 export function getUnlockedCount() { return _unlocked.size; }
+export function onDeathCard() { unlock('death_card'); }
+
+function _achCard(a, extraClass = '') {
+  const got = _unlocked.has(a.id);
+  return `<div class="ach-card ${extraClass} ${got ? 'ach-unlocked' : 'ach-locked'}">
+    <div class="ach-icon">${got ? a.icon : '?'}</div>
+    <div class="ach-name">${got ? a.name : '???'}</div>
+    <div class="ach-desc">${got ? a.desc : 'Keep playing to unlock!'}</div>
+  </div>`;
+}
+
+const TIERS = [
+  { key: 'easy',      label: '🟢 EASY',        headerClass: 'ach-header-easy',      cardClass: '',                countLabel: true },
+  { key: 'medium',    label: '⚡ MEDIUM',       headerClass: 'ach-header-medium',    cardClass: 'ach-card-medium', countLabel: true },
+  { key: 'hard',      label: '🔴 HARD',         headerClass: 'ach-header-hard',      cardClass: 'ach-card-hard',   countLabel: true },
+  { key: 'extrahard', label: '☠ EXTRA HARD ☠', headerClass: 'ach-header-sh',        cardClass: 'ach-card-sh',     countLabel: false },
+  { key: 'alx',       label: '🐟 THE ALX CHALLENGE 🐟', headerClass: 'ach-header-alx', cardClass: 'ach-card-alx', countLabel: false },
+];
 
 export function buildAchievementsHTML() {
-  const normal = ACHIEVEMENTS.filter(a => !a.superhard);
-  const superhard = ACHIEVEMENTS.filter(a => a.superhard);
-  const total = ACHIEVEMENTS.length;
-  const count = _unlocked.size;
+  const visibleAchs = ACHIEVEMENTS.filter(a => a.tier !== 'secret');
+  const total = visibleAchs.length;
+  const count = [..._unlocked].filter(id => {
+    const a = ACHIEVEMENTS.find(x => x.id === id);
+    return a && a.tier !== 'secret';
+  }).length;
 
   let html = `<div class="ach-summary">${count} / ${total} UNLOCKED</div>`;
 
-  html += '<div class="ach-grid">';
-  for (const a of normal) {
-    const got = _unlocked.has(a.id);
-    html += `<div class="ach-card ${got ? 'ach-unlocked' : 'ach-locked'}">
-      <div class="ach-icon">${got ? a.icon : '?'}</div>
-      <div class="ach-name">${got ? a.name : '???'}</div>
-      <div class="ach-desc">${got ? a.desc : 'Keep playing to unlock!'}</div>
-    </div>`;
-  }
-  html += '</div>';
+  for (const tier of TIERS) {
+    const list = ACHIEVEMENTS.filter(a => a.tier === tier.key);
+    const tierUnlocked = list.filter(a => _unlocked.has(a.id)).length;
+    const countStr = tier.countLabel ? ` <span class="ach-tier-count">${tierUnlocked}/${list.length}</span>` : '';
 
-  html += '<div class="ach-superhard-header">☠ SUPER HARD ☠</div>';
+    html += `<div class="ach-section-header ${tier.headerClass}">${tier.label}${countStr}</div>`;
+
+    const gridClass = tier.key === 'alx' ? 'ach-grid ach-grid-alx' : 'ach-grid';
+    html += `<div class="${gridClass}">`;
+
+    for (const a of list) {
+      const got = _unlocked.has(a.id);
+      if (tier.key === 'extrahard') {
+        html += `<div class="ach-card ach-card-sh ${got ? 'ach-unlocked-sh' : 'ach-locked'}">
+          <div class="ach-icon">💀</div>
+          <div class="ach-name ach-name-sh">${a.name}</div>
+          <div class="ach-desc">${a.desc}</div>
+          ${got ? '<div class="ach-sh-cleared">CLEARED</div>' : ''}
+        </div>`;
+      } else if (tier.key === 'alx') {
+        html += `<div class="ach-card ach-card-alx ${got ? 'ach-unlocked-alx' : 'ach-locked'}">
+          <div class="ach-icon">${got ? '🐟' : '🔒'}</div>
+          <div class="ach-name ach-name-alx">${a.name}</div>
+          <div class="ach-desc">${a.desc}</div>
+          ${got ? '<div class="ach-alx-cleared">LEGENDARY</div>' : ''}
+        </div>`;
+      } else {
+        html += _achCard(a, tier.cardClass);
+      }
+    }
+    html += '</div>';
+  }
+
+  // Secret achievements — show only if unlocked, otherwise a single teaser card
+  const secrets = ACHIEVEMENTS.filter(a => a.tier === 'secret');
+  const unlockedSecrets = secrets.filter(a => _unlocked.has(a.id));
+  html += '<div class="ach-section-header ach-header-secret">🔮 SECRET</div>';
   html += '<div class="ach-grid">';
-  for (const a of superhard) {
-    const got = _unlocked.has(a.id);
-    html += `<div class="ach-card ach-card-sh ${got ? 'ach-unlocked-sh' : 'ach-locked'}">
-      <div class="ach-icon">${got ? '💀' : '💀'}</div>
-      <div class="ach-name ach-name-sh">${got ? a.name : a.name}</div>
-      <div class="ach-desc">${a.desc}</div>
-      ${got ? '<div class="ach-sh-cleared">CLEARED</div>' : ''}
+  if (unlockedSecrets.length > 0) {
+    for (const a of unlockedSecrets) {
+      html += `<div class="ach-card ach-card-secret ach-unlocked-secret">
+        <div class="ach-icon">${a.icon}</div>
+        <div class="ach-name">${a.name}</div>
+        <div class="ach-desc">${a.desc}</div>
+      </div>`;
+    }
+  }
+  // Show remaining secrets as mystery slots
+  const remaining = secrets.length - unlockedSecrets.length;
+  for (let i = 0; i < remaining; i++) {
+    html += `<div class="ach-card ach-card-secret ach-locked">
+      <div class="ach-icon">🔮</div>
+      <div class="ach-name">???</div>
+      <div class="ach-desc">A secret awaits...</div>
     </div>`;
   }
   html += '</div>';

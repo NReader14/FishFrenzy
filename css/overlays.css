@@ -1838,7 +1838,126 @@
   letter-spacing: 0.5px;
 }
 
-/* ─── SUPER HARD section ─── */
+/* ─── Section headers ─── */
+.ach-section-header {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  text-align: center;
+  margin: 18px 0 10px;
+  padding: 6px 0;
+  letter-spacing: 1px;
+}
+.ach-header-easy {
+  color: #44ee88;
+  text-shadow: 0 0 8px rgba(68,238,136,0.4);
+  border-top: 1px solid #1a4a2a;
+  border-bottom: 1px solid #1a4a2a;
+}
+.ach-header-medium {
+  color: #ffaa44;
+  text-shadow: 0 0 8px rgba(255,170,68,0.5);
+  border-top: 1px solid #553300;
+  border-bottom: 1px solid #553300;
+}
+.ach-header-hard {
+  color: #ff4455;
+  text-shadow: 0 0 8px rgba(255,68,85,0.5);
+  border-top: 1px solid #441111;
+  border-bottom: 1px solid #441111;
+}
+.ach-header-sh {
+  color: #ee3344;
+  text-shadow: 0 0 8px rgba(238,51,68,0.5);
+  border-top: 1px solid #441122;
+  border-bottom: 1px solid #441122;
+}
+.ach-header-alx {
+  color: #ffd700;
+  text-shadow: 0 0 12px rgba(255,215,0,0.8);
+  border-top: 1px solid #664400;
+  border-bottom: 1px solid #664400;
+}
+.ach-header-secret {
+  color: #aa88ff;
+  text-shadow: 0 0 10px rgba(170,136,255,0.6);
+  border-top: 1px solid #332255;
+  border-bottom: 1px solid #332255;
+}
+.ach-tier-count {
+  color: rgba(255,255,255,0.4);
+  font-size: 7px;
+  margin-left: 6px;
+}
+
+/* ─── Medium cards ─── */
+.ach-card-medium {
+  border-color: #553300;
+  background: #0a0600;
+}
+.ach-card-medium.ach-unlocked {
+  border-color: #ffaa44 !important;
+  background: #1a0e00 !important;
+}
+.ach-card-medium.ach-unlocked .ach-name {
+  color: #ffaa44 !important;
+}
+
+/* ─── Hard cards ─── */
+.ach-card-hard {
+  border-color: #441111;
+  background: #0a0303;
+}
+.ach-card-hard.ach-unlocked {
+  border-color: #ff4455 !important;
+  background: #1a0505 !important;
+}
+.ach-card-hard.ach-unlocked .ach-name {
+  color: #ff4455 !important;
+}
+
+/* ─── Secret cards ─── */
+.ach-card-secret {
+  border-color: #332255;
+  background: #080510;
+}
+.ach-unlocked-secret {
+  border-color: #aa88ff !important;
+  background: #130d20 !important;
+}
+.ach-unlocked-secret .ach-name {
+  color: #aa88ff !important;
+}
+
+/* ─── ALX card ─── */
+.ach-grid-alx {
+  grid-template-columns: 1fr;
+  max-width: 340px;
+  margin: 0 auto;
+}
+.ach-card-alx {
+  border-color: #664400;
+  background: #0d0900;
+  padding: 14px 16px;
+}
+.ach-unlocked-alx {
+  border-color: #ffd700 !important;
+  background: #1a1200 !important;
+  box-shadow: 0 0 16px rgba(255,215,0,0.4) !important;
+}
+.ach-name-alx {
+  color: #ffd700 !important;
+  font-size: 9px !important;
+}
+.ach-alx-cleared {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  color: #ffd700;
+  letter-spacing: 2px;
+  margin-top: 4px;
+  text-shadow: 0 0 10px rgba(255,215,0,0.8);
+}
+
+/* ─── SUPER HARD section (legacy header renamed) ─── */
 .ach-superhard-header {
   font-family: 'Press Start 2P', monospace;
   font-size: 9px;

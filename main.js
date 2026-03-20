@@ -7,12 +7,12 @@ import { showAd } from './js/ads.js';
 import { NOTES as LOCAL_PATCH_NOTES } from './js/patch-notes-data.js';
 import {
   W, H,
-  FRENZY_SPEED_BOOST, SHARK_START_DELAY, COMBO_WINDOW,
+  SHARK_START_DELAY, COMBO_WINDOW,
   rand, dist
 } from './js/constants.js';
 import { gameVars, GAME_VAR_DEFAULTS, firebaseGameVars } from './js/game-vars.js';
 import {
-  ctx, overlay, winOverlay, scoreboardOverlay,
+  overlay, winOverlay, scoreboardOverlay,
   rulesOverlay, adminOverlay, scoreEl, timerEl, timerBar,
   levelEl, treatsLeftEl, startBtn, rulesBtn, rulesBackBtn,
   scoreboardBtn, closeScoreboardBtn, adminEmailInput,
@@ -24,7 +24,7 @@ import {
   updateSwapAnim, drawSwapEffect, updateHookAnim, drawHookLine
 } from './js/animations.js';
 import {
-  pwConfig, loadRarities, trySpawnPowerups, updatePWItems,
+  loadRarities, trySpawnPowerups, updatePWItems,
   clearAllPowerupTimeouts, clearTO, useShield,
   overlapsExisting, setEndGame
 } from './js/powerups.js';
@@ -38,14 +38,14 @@ import {
 } from './js/drawing.js';
 import { collectTreat } from './js/scoring.js';
 import {
-  showNameEntry, showScoreboard, showFullLeaderboard, showLoading, hideLoading,
+  showNameEntry, showScoreboard, showFullLeaderboard,
   showAdminError, hideAdminError, buildRulesHTML, openAdminPanel,
   setupAdminEvents, setInitGame
 } from './js/overlays.js';
 import { setupFeedbackForm } from './js/feedback.js';
 import {
   initAuth, fetchHighScores, fetchMaintenance, setMaintenance,
-  verifyAdminCredentials, fetchPatchNotes
+  verifyAdminCredentials
 } from './firebase-config.js';
 import { initControls } from './js/controls.js';
 import { initAuthUI } from './js/auth.js';
@@ -53,10 +53,10 @@ import { initSettings, saveSettings, cancelTrackPreview } from './js/settings.js
 import {
   initAchievements, onGameStart as achGameStart, onLevelStart as achLevelStart,
   onLevelComplete as achLevelComplete, onGameOver as achGameOver,
-  onSharkDistanceFrame, buildAchievementsHTML
+  onSharkDistanceFrame, onDeathCard as achDeathCard, buildAchievementsHTML
 } from './js/achievements.js';
 import { initCursor } from './js/cursor.js';
-import { initAudio, startMusic, stopMusic, sfxLevelUp, sfxGameOver, sfxSharkBite, sfxMenuClick, startCardMusic, stopCardMusic, setMusicTempo } from './js/audio.js';
+import { initAudio, startMusic, stopMusic, sfxLevelUp, sfxGameOver, sfxSharkBite, sfxMenuClick, stopCardMusic, setMusicTempo } from './js/audio.js';
 import { initMobileScale } from './js/mobile-scale.js';
 import { initHallOfFame, stopHallOfFameAnim } from './js/hall-of-fame.js';
 
@@ -264,12 +264,16 @@ async function initGame() {
   S.score = 0;
   S.pbNotified = false;
 
-  // Apply difficulty, then re-apply Firebase values so they always win
+  // Apply defaults → difficulty preset → Firebase admin values (Firebase always wins)
   Object.assign(gameVars, GAME_VAR_DEFAULTS);
   Object.assign(gameVars, DIFFICULTY_PRESETS[S.settings.difficulty] || {});
-  // Re-fetch from Firebase and apply on top (refreshes any admin changes)
   await loadRarities();
   if (Object.keys(firebaseGameVars).length) Object.assign(gameVars, firebaseGameVars);
+
+  // Resolve per-difficulty timer: use difficulty-specific Firebase value if set, else keep current
+  const _d = S.settings.difficulty;
+  if (gameVars[`${_d}_levelTimeBase`] !== undefined) gameVars.levelTimeBase = gameVars[`${_d}_levelTimeBase`];
+  if (gameVars[`${_d}_levelTimeMin`]  !== undefined) gameVars.levelTimeMin  = gameVars[`${_d}_levelTimeMin`];
 
   try {
     const scores = await fetchHighScores();
@@ -1005,6 +1009,7 @@ function loop(timestamp) {
     stopCardMusic();
     startMusic();
     card.fn();
+    if (card.rare === 'death') achDeathCard();
     if (S.cardDeathPending) {
       S.cardDeathPending = false;
       endGame(false, 'The cards decided.');

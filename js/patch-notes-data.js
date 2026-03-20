@@ -7,8 +7,10 @@ export const NOTES = [
   {
     v: 'v1.2', emoji: '🏆', title: 'ACHIEVE & BELIEVE', date: 'MAR 2026',
     items: [
-      '🏆 55 Achievements added — from first treat to 100,000 points',
+      '🏆 62 Achievements added — from first treat to 100,000 points',
+      '⚡ 6 MEDIUM achievements for the committed',
       '☠️ 5 SUPER HARD achievements for the truly deranged',
+      '🐟 THE ALX CHALLENGE — one achievement nobody should be able to get',
       '🔔 Toast notifications pop up when you unlock an achievement',
       '☁️ Achievements sync to the cloud — progress carries across devices when signed in',
       '🔑 User login added — sign in with Google or email to save settings & scores',
