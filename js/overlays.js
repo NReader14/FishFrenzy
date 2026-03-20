@@ -15,11 +15,15 @@ import { playCRTWipe } from './animations.js';
 import {
   fetchHighScores, fetchAllScores, saveHighScore, isFirebaseOnline,
   adminWipeScores, fetchMaintenance, setMaintenance,
-  saveGameConfig, fetchPatchNotes, savePatchNotes, fetchFeedback, deleteFeedback
+  saveGameConfig, fetchPatchNotes, savePatchNotes, fetchFeedback, deleteFeedback,
+  fetchAchievementLeaders
 } from '../firebase-config.js';
 import { pwConfig, clearTO } from './powerups.js';
 import { setupItemTestEvents } from './admin.js';
 import { gameVars, GAME_VAR_META, GAME_VAR_DEFAULTS, firebaseGameVars } from './game-vars.js';
+import { saveSettings } from './settings.js';
+import { getUnlockedCount } from './achievements.js';
+import { saveAchievementBoard } from '../firebase-config.js';
 
 // Forward references (set by main.js)
 let _initGame = null;
@@ -108,13 +112,23 @@ export async function showFullLeaderboard() {
 export async function showScoreboard(highlightIdx = -1) {
   scoreboardContent.innerHTML = '<p class="loading-text">LOADING...</p>';
   scoreboardOverlay.classList.remove('hidden');
+
+  // Reset to scores tab
+  const achBoardContent = document.getElementById('ach-board-content');
+  const tabScoresBtn = document.getElementById('tab-scores-btn');
+  const tabAchBtn = document.getElementById('tab-ach-btn');
+  const viewAllBtn = document.getElementById('view-all-scores-btn');
+  scoreboardContent.classList.remove('hidden');
+  if (achBoardContent) achBoardContent.classList.add('hidden');
+  if (tabScoresBtn) tabScoresBtn.classList.add('scoreboard-tab-active');
+  if (tabAchBtn) tabAchBtn.classList.remove('scoreboard-tab-active');
+
   let scores;
   try { scores = await fetchHighScores(); }
   catch (_) {
     scoreboardContent.innerHTML = '<p class="loading-text">FAILED TO LOAD — CHECK CONNECTION</p>';
     return;
   }
-  // If no explicit index, try to highlight the last player's name
   if (highlightIdx === -1 && S.lastPlayerName) {
     const found = scores.findIndex(s => s.name === S.lastPlayerName);
     if (found !== -1) highlightIdx = found;
@@ -123,12 +137,59 @@ export async function showScoreboard(highlightIdx = -1) {
   if (!isFirebaseOnline()) {
     scoreboardContent.innerHTML += '<p class="no-scores" style="color:#cc8844;">⚠ OFFLINE — SHOWING CACHED SCORES</p>';
   }
+
+  // Tab switching
+  if (tabScoresBtn) {
+    tabScoresBtn.onclick = () => {
+      scoreboardContent.classList.remove('hidden');
+      if (achBoardContent) achBoardContent.classList.add('hidden');
+      if (viewAllBtn) viewAllBtn.classList.remove('hidden');
+      tabScoresBtn.classList.add('scoreboard-tab-active');
+      if (tabAchBtn) tabAchBtn.classList.remove('scoreboard-tab-active');
+    };
+  }
+  if (tabAchBtn) {
+    tabAchBtn.onclick = async () => {
+      scoreboardContent.classList.add('hidden');
+      if (achBoardContent) { achBoardContent.classList.remove('hidden'); }
+      if (viewAllBtn) viewAllBtn.classList.add('hidden');
+      tabAchBtn.classList.add('scoreboard-tab-active');
+      tabScoresBtn.classList.remove('scoreboard-tab-active');
+      if (achBoardContent && achBoardContent.dataset.loaded !== 'true') {
+        achBoardContent.innerHTML = '<p class="loading-text">LOADING...</p>';
+        const leaders = await fetchAchievementLeaders(10);
+        achBoardContent.dataset.loaded = 'true';
+        if (!leaders.length) {
+          achBoardContent.innerHTML = '<p class="no-scores">NO DATA YET — SIGN IN AND PLAY TO APPEAR HERE</p>';
+          return;
+        }
+        const myUid = S.currentUser && !S.currentUser.isAnonymous ? S.currentUser.uid : null;
+        let html = '<table class="scoreboard-table"><thead><tr><th>#</th><th>NAME</th><th>ACHIEVEMENTS</th></tr></thead><tbody>';
+        leaders.forEach((l, i) => {
+          const isMe = myUid && l.uid === myUid;
+          const cls = isMe ? 'my-score' : '';
+          html += `<tr class="${cls}">
+            <td>${i + 1}</td>
+            <td>${l.name || '???'}${isMe ? ' <span class="my-score-tag">YOU</span>' : ''}</td>
+            <td>${l.count} / ${55}</td>
+          </tr>`;
+        });
+        html += '</tbody></table>';
+        achBoardContent.innerHTML = html;
+      }
+    };
+  }
 }
 
 // ─── NAME ENTRY ───
 export function showNameEntry(finalScore, finalLevel, msg) {
   S.nameEntryActive = true;
-  let slots = [0, 0, 0];
+  const saved = S.settings.lastInitials || '';
+  let slots = [0, 1, 2].map(i => {
+    const ch = saved[i] ? saved[i].toUpperCase() : null;
+    const idx = ch ? CHARS.indexOf(ch) : -1;
+    return idx !== -1 ? idx : 0;
+  });
   let activeSlot = 0;
   let errorMsg = '';
 
@@ -254,6 +315,12 @@ export function showNameEntry(finalScore, finalLevel, msg) {
     if (!S.nameEntryActive) return;
     S.nameEntryActive = false;
     S.lastPlayerName = name;
+    S.settings.lastInitials = name;
+    saveSettings();
+    // If signed in, link these initials to their achievement board entry
+    if (S.currentUser && !S.currentUser.isAnonymous) {
+      saveAchievementBoard(S.currentUser.uid, name, getUnlockedCount());
+    }
     confirming = false;
     document.removeEventListener('keydown', onKey);
     nameEntryOverlay.classList.add('hidden');

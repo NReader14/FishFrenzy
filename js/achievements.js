@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import S from './state.js';
-import { saveUserAchievements, loadUserAchievements } from '../firebase-config.js';
+import { saveUserAchievements, loadUserAchievements, saveAchievementBoard } from '../firebase-config.js';
 
 const STORAGE_KEY = 'fishFrenzyAchievements';
 
@@ -168,6 +168,12 @@ export async function syncAchievementsFromCloud(uid) {
   const merged = _buildPayload();
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch (_) {}
   saveUserAchievements(uid, merged);
+
+  // Push count to public board with whatever name we have
+  if (S.currentUser && !S.currentUser.isAnonymous && _unlocked.size > 0) {
+    const name = S.settings.lastInitials || S.currentUser.displayName || '???';
+    saveAchievementBoard(uid, name, _unlocked.size);
+  }
 }
 
 // ─── Toast notification ───────────────────────────────────────
@@ -200,6 +206,12 @@ function unlock(id) {
   _unlocked.add(id);
   _save();
   _toast(id);
+
+  // Push updated count to public achievement board when signed in
+  if (S.currentUser && !S.currentUser.isAnonymous) {
+    const name = S.settings.lastInitials || S.currentUser.displayName || '???';
+    saveAchievementBoard(S.currentUser.uid, name, _unlocked.size);
+  }
 
   // Check overachiever immediately after any unlock
   if (_unlocked.size >= 25 && !_unlocked.has('overachiever')) {
@@ -398,9 +410,8 @@ export function onTrackChanged(trackId) {
 
 // ─── UI helpers ───────────────────────────────────────────────
 
-export function getUnlocked() {
-  return _unlocked;
-}
+export function getUnlocked() { return _unlocked; }
+export function getUnlockedCount() { return _unlocked.size; }
 
 export function buildAchievementsHTML() {
   const normal = ACHIEVEMENTS.filter(a => !a.superhard);

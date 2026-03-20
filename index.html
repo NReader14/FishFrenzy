@@ -324,7 +324,12 @@
   <!-- SCOREBOARD OVERLAY -->
   <div id="scoreboard-overlay" class="game-overlay hidden">
     <div class="scoreboard-title">HIGH SCORES</div>
+    <div class="scoreboard-tabs">
+      <button id="tab-scores-btn" class="scoreboard-tab scoreboard-tab-active">🏆 SCORES</button>
+      <button id="tab-ach-btn" class="scoreboard-tab">🎖 ACHIEVEMENTS</button>
+    </div>
     <div id="scoreboard-content"><p class="loading-text">LOADING...</p></div>
+    <div id="ach-board-content" class="hidden"><p class="loading-text">LOADING...</p></div>
     <div class="scoreboard-actions">
       <button id="close-scoreboard-btn" class="btn-secondary">BACK</button>
       <button id="view-all-scores-btn" class="btn-secondary" style="border-color:#88ffcc;color:#88ffcc;">VIEW ALL</button>

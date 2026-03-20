@@ -582,11 +582,31 @@
 
 
 /* ─── SCOREBOARD ─── */
+.scoreboard-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.scoreboard-tab {
+  flex: 1;
+  padding: 6px 12px;
+  font-family: inherit;
+  font-size: 8px;
+  letter-spacing: 1px;
+  background: transparent;
+  border: 1px solid #555;
+  color: #888;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.scoreboard-tab:hover { border-color: #aaa; color: #ccc; }
+.scoreboard-tab-active { border-color: #ffdd44 !important; color: #ffdd44 !important; }
+
 .scoreboard-title {
   font-size: 16px;
   color: #ffdd44;
   text-shadow: 0 0 16px rgba(255,221,68,.4), 2px 2px 0 #332200;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
   letter-spacing: 3px;
 }
 

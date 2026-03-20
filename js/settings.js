@@ -29,7 +29,8 @@ function load() {
         S.settings.track = saved.track;
       if (typeof saved.sharkQuips  === 'boolean') S.settings.sharkQuips  = saved.sharkQuips;
       if (typeof saved.fastTreats  === 'boolean') S.settings.fastTreats  = saved.fastTreats;
-      if (typeof saved.showAds     === 'boolean') S.settings.showAds     = saved.showAds;
+      if (typeof saved.showAds      === 'boolean') S.settings.showAds      = saved.showAds;
+      if (typeof saved.lastInitials === 'string')  S.settings.lastInitials = saved.lastInitials;
     }
   } catch (_) {}
 }

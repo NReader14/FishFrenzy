@@ -160,6 +160,35 @@ export async function loadUserAchievements(uid) {
   }
 }
 
+export async function saveAchievementBoard(uid, name, count) {
+  try {
+    await setDoc(doc(db, 'achievementBoard', uid), {
+      name: String(name).toUpperCase().slice(0, 3) || '???',
+      count,
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+  } catch (err) {
+    console.warn('[Firebase] Could not save achievement board:', err.message);
+  }
+}
+
+export async function fetchAchievementLeaders(max = 10) {
+  try {
+    const q = query(
+      collection(db, 'achievementBoard'),
+      orderBy('count', 'desc'),
+      limit(max)
+    );
+    const snap = await getDocs(q);
+    const leaders = [];
+    snap.forEach(d => leaders.push({ uid: d.id, ...d.data() }));
+    return leaders;
+  } catch (err) {
+    console.warn('[Firebase] Could not fetch achievement leaders:', err.message);
+    return [];
+  }
+}
+
 // ─── SCORES ───
 
 export async function fetchAllScores(max = 100) {
@@ -240,6 +269,10 @@ export async function saveHighScore(name, sc, lv, skinSnapshot = null) {
       const existingScore = existing.data().score || 0;
       if (cleanScore <= existingScore) {
         DEBUG && console.log("[Firebase] Existing score is higher, not updating.");
+        // Still link uid to the existing doc if the user is now signed in
+        if (currentUser && !currentUser.isAnonymous && !existing.data().uid) {
+          setDoc(docRef, { uid: currentUser.uid }, { merge: true }).catch(() => {});
+        }
         const scores = await fetchHighScores();
         return scores.findIndex(s => s.name === cleanName);
       }

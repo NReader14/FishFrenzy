@@ -113,6 +113,7 @@ const S = {
     sharkQuips: true,
     fastTreats: false,
     showAds: false,
+    lastInitials: '',
   },
 
   // Tutorial
