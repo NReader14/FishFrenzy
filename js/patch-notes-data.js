@@ -5,6 +5,19 @@
 
 export const NOTES = [
   {
+    v: 'v1.1', emoji: '🐡', title: 'MOBILE & POLISH', date: 'MAR 2026',
+    items: [
+      '📱 Fish, shark, treats and power-ups are now bigger on portrait mobile — actually playable',
+      '🎵 Added Songs by <strong><span style="color:#ffd700">KRe$cendo</span></strong> — new music tracks',
+      '🎧 Music previews now play from the middle of the track so you hear the good bit',
+      '⚡ Music previews load instantly — no waiting for songs to buffer',
+      '🤖 Claude power-up now freezes the entire game while it does its thing, then resumes',
+      '👕 Stripes, Checkers, Frost and Plaid outfits redesigned as proper shirts on the fish body',
+      '🐟 Saving a custom skin now updates it instantly without needing a reload',
+      '🔧 Fixed custom skins duplicating in the picker after saving a new design',
+    ]
+  },
+  {
     v: 'v1.0', emoji: '🎉', title: 'FULL RELEASE', date: 'MAR 2026',
     items: [
       '📺 AI-generated ads now appear after you die — purely for entertainment',
@@ -12,7 +25,7 @@ export const NOTES = [
       '⚙️ Ads can be toggled off in Settings if you\'re no fun',
       '🏆 Hall of Fame banner on the main menu — top score with animated fish',
       '🐟 Skin data now saved with scores — your fish appears on the leaderboard',
-      '💰 Score cap raised to 1,000,000 — ALX we see you',
+      '💰 Score cap raised to 1,000,000 — <span style="color:#ff4444">ALX we see you 😊</span>',
       '🐛 Rainbow power-up no longer permanently slows the shark after ending',
       '⚡ Shark speed interactions fully reworked — no more stacking bugs',
       '🧹 Major codebase cleanup — dead code removed, debug logs gated, status badges added for Double, Wave and Poison',
@@ -103,6 +116,7 @@ export const NOTES = [
     v: '🙏 THANKS', emoji: '', title: '', date: '2026', thanks: true,
     items: [
       '🧪 Big thanks to <strong>LMW</strong>, <strong>ALX</strong> and everyone who helped test — you made this better',
+      'Shout out to <strong><span style="color:#ffd700">KRe$cendo</span></strong> for the amazing music 🎧🎶'
     ]
   },
 ];

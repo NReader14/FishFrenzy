@@ -1093,25 +1093,14 @@ function renderNotes(notes, container) {
       </div>`).join('');
 }
 
-document.getElementById('patch-notes-btn')?.addEventListener('click', async () => {
+document.getElementById('patch-notes-btn')?.addEventListener('click', () => {
   overlay.classList.add('hidden');
   const patchOv = document.getElementById('patch-notes-overlay');
   patchOv?.classList.remove('hidden');
   const container = patchOv?.querySelector('.patch-notes-container');
   if (!container) return;
 
-  // Show local notes immediately
   renderNotes(LOCAL_PATCH_NOTES, container);
-
-  // Try Firebase override (admin can push custom notes)
-  try {
-    const saved = await fetchPatchNotes();
-    if (saved) {
-      let notes;
-      try { notes = JSON.parse(saved); } catch (_) { notes = null; }
-      if (Array.isArray(notes) && notes.length) renderNotes(notes, container);
-    }
-  } catch (_) { /* keep local notes */ }
 });
 document.getElementById('patch-notes-back-btn')?.addEventListener('click', () => {
   document.getElementById('patch-notes-overlay')?.classList.add('hidden');
