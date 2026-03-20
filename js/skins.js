@@ -370,10 +370,20 @@ function drawTuxedo(c) {
 }
 
 function drawStripes(c) {
-  c.fillStyle = 'rgba(255,255,255,0.28)';
-  c.fillRect(-14, -7, 28, 3);
-  c.fillRect(-14, -1, 28, 3);
-  c.fillRect(-14,  5, 28, 3);
+  // White shirt base (torso half only)
+  c.fillStyle = '#dde8f2';
+  c.fillRect(-14, -8, 14, 16);
+  // Blue horizontal stripes
+  c.fillStyle = '#2255aa';
+  c.fillRect(-14, -7, 14, 3);
+  c.fillRect(-14, -1, 14, 3);
+  c.fillRect(-14,  5, 14, 3);
+  // Collar
+  c.fillStyle = '#eef3f8';
+  c.fillRect(-1, -8, 2, 3);
+  // Button line
+  c.fillStyle = '#99aacc';
+  c.fillRect(-3, -5, 1, 11);
 }
 
 function drawPolkaDots(c) {
@@ -406,10 +416,19 @@ function drawCamo(c) {
 }
 
 function drawCheckerboard(c) {
-  c.fillStyle = 'rgba(255,255,255,0.28)';
-  c.fillRect(-14,-8, 6,6);  c.fillRect(-2,-8, 6,6);  c.fillRect(10,-8, 4,6);
-  c.fillRect( -8,-2, 6,6);  c.fillRect( 4,-2, 6,6);
-  c.fillRect(-14, 4, 6,4);  c.fillRect(-2, 4, 6,4);  c.fillRect(10, 4, 4,4);
+  // Dark shirt base (torso half only)
+  c.fillStyle = '#111';
+  c.fillRect(-14, -8, 14, 16);
+  // White checker squares (3 cols × 4 rows of 4px)
+  c.fillStyle = '#eee';
+  for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 3; col++) {
+      if ((row + col) % 2 === 0) c.fillRect(-14 + col * 4, -8 + row * 4, 4, 4);
+    }
+  }
+  // Collar
+  c.fillStyle = '#ccc';
+  c.fillRect(-1, -8, 2, 3);
 }
 
 function drawRainbowBody(c) {
@@ -475,11 +494,25 @@ function drawScalesPattern(c) {
 }
 
 function drawIceFrost(c) {
-  c.fillStyle = 'rgba(150,220,255,0.3)';
-  c.fillRect(-14,-8,28,16);
-  c.fillStyle = 'rgba(200,240,255,0.65)';
-  [-12,-7,-2,3,8].forEach(x => c.fillRect(x,-8,2,5));
-  [-10,-4,2,8].forEach(x => c.fillRect(x,8,2,-4));
+  // Ice blue shirt base (torso half only)
+  c.fillStyle = '#b8dff0';
+  c.fillRect(-14, -8, 14, 16);
+  // Darker top band (collar area)
+  c.fillStyle = '#7bbcd8';
+  c.fillRect(-14, -8, 14, 3);
+  // Icicle drip details
+  c.fillStyle = 'rgba(220,245,255,0.85)';
+  [-12, -8, -4, -1].forEach(x => {
+    c.fillRect(x, -5, 2, 4);
+    c.fillRect(x + 0, -1, 1, 3);
+  });
+  // Shimmer highlight
+  c.fillStyle = 'rgba(255,255,255,0.45)';
+  c.fillRect(-13, -7, 3, 3);
+  c.fillRect(-7,  -4, 2, 2);
+  // Collar
+  c.fillStyle = '#ddf0fa';
+  c.fillRect(-1, -8, 2, 3);
 }
 
 function drawHawaiian(c) {
@@ -496,13 +529,26 @@ function drawHawaiian(c) {
 }
 
 function drawPlaid(c) {
-  c.fillStyle = 'rgba(200,50,50,0.3)';
-  c.fillRect(-14,-8,28,4);  c.fillRect(-14,0,28,4);
-  c.fillStyle = 'rgba(50,50,200,0.3)';
-  c.fillRect(-8,-8,4,16);  c.fillRect(4,-8,4,16);
-  c.fillStyle = 'rgba(255,255,255,0.12)';
-  c.fillRect(-14,-8,28,2);  c.fillRect(-14,4,28,2);
-  c.fillRect(-14,-8,2,16);  c.fillRect(12,-8,2,16);
+  // Tan/beige plaid shirt base (torso half only)
+  c.fillStyle = '#c8a870';
+  c.fillRect(-14, -8, 14, 16);
+  // Red horizontal bands
+  c.fillStyle = 'rgba(180,30,30,0.75)';
+  c.fillRect(-14, -8, 14, 4);
+  c.fillRect(-14,  0, 14, 4);
+  // Blue vertical bands
+  c.fillStyle = 'rgba(30,60,160,0.65)';
+  c.fillRect(-11, -8, 4, 16);
+  c.fillRect(-3,  -8, 4, 16);
+  // Thin white grid lines
+  c.fillStyle = 'rgba(255,255,255,0.3)';
+  c.fillRect(-14, -4, 14, 1);
+  c.fillRect(-14,  4, 14, 1);
+  c.fillRect( -9, -8, 1, 16);
+  c.fillRect( -1, -8, 1, 16);
+  // Collar
+  c.fillStyle = '#ddc898';
+  c.fillRect(-1, -8, 2, 3);
 }
 
 function drawTie(c) {
