@@ -721,7 +721,7 @@ const CARD_POOL = [
   { label: '-7 SECONDS',  emoji: '⌛', good: false, fn: () => { S.timeLeft = Math.max(1, S.timeLeft - 7); timerEl.textContent = S.timeLeft; } },
   { label: 'GOOPED',      emoji: '🧪', good: false, fn: () => activateGoop() },
   { label: 'POISONED',    emoji: '☠', good: false, fn: () => activatePoison() },
-  { label: 'SHARK RAGE',  emoji: '😡', good: false, fn: () => { S.shark.speed += 0.8; setTimeout(() => { if (S.shark) S.shark.speed = Math.max(0.5, S.shark.speed - 0.8); }, 5000); } },
+  { label: 'SHARK RAGE',  emoji: '😡', good: false, fn: () => { S.shark.speed += 0.8; setTimeout(() => { if (S.shark) restoreSharkSpeed(); }, 5000); } },
 ];
 
 function makeCard() {
