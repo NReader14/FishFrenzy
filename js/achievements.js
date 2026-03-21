@@ -445,6 +445,9 @@ export function onLevelComplete(level, timeLeft) {
   // Untouchable: shark never got within 120px this level
   if (_gameStats.levelMinSharkDist >= 120) unlock('untouchable');
 
+  // Difficulty-based
+  const diff = S.settings.difficulty;
+
   // Level progression
   if (level >= 5)  unlock('level_5');
   if (level >= 10) unlock('level_10');
@@ -454,9 +457,6 @@ export function onLevelComplete(level, timeLeft) {
   if (level >= 30) unlock('med_level_30');
   if (level >= 35) unlock('sh_level_50');
   if (diff === 'hard' && S.settings.smartShark && level >= 30) unlock('sh_level_45');
-
-  // Difficulty-based
-  const diff = S.settings.difficulty;
   if (diff === 'easy'     && level >= 3)  unlock('easy_game');
   if (diff === 'normal'   && level >= 5)  unlock('normal_game');
   if (diff === 'hard'     && level >= 5)  unlock('hard_game');

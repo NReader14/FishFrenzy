@@ -162,38 +162,50 @@ function refreshMultiplierHint() {
 // ═══════════════════════════════════════════════════════════════
 
 (async function boot() {
-  await initAuth();
+  // Check maintenance FIRST — if under maintenance, show screen and stop before auth
   const maint = await fetchMaintenance();
+  if (!maint) await initAuth();
+
   if (maint) {
-    document.getElementById('game-wrapper').innerHTML = `
-      <div class="game-overlay" style="background:#0a0a16;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-        <h1 style="color:#ee5566;font-size:16px;font-family:'Press Start 2P',monospace;">UNDER MAINTENANCE</h1>
-        <p style="color:#5588aa;font-size:8px;margin-top:16px;font-family:'Press Start 2P',monospace;">WE'LL BE BACK SOON!</p>
-        <button id="maint-admin-btn" class="btn-secondary" style="margin-top:24px;">ADMIN LOGIN</button>
-      </div>`;
+    // Replace boot screen with maintenance screen (still covering everything)
+    const bootEl = document.getElementById('boot-screen');
+    if (bootEl) {
+      bootEl.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;">
+          <div style="font-size:28px;margin-bottom:8px;">🔧</div>
+          <h1 style="color:#ee5566;font-size:15px;font-family:'Press Start 2P',monospace;letter-spacing:2px;line-height:1.6;">UNDER<br>MAINTENANCE</h1>
+          <p style="color:#5588aa;font-size:7px;font-family:'Press Start 2P',monospace;margin-top:4px;line-height:2;">WE'LL BE BACK SOON!</p>
+          <button id="maint-admin-btn" class="btn-secondary" style="margin-top:16px;">ADMIN LOGIN</button>
+        </div>`;
+    }
     document.getElementById('maint-admin-btn').addEventListener('click', () => {
-      const wrapper = document.getElementById('game-wrapper');
-      wrapper.innerHTML = `
-        <div class="game-overlay" style="background:#0a0a16;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-          <div class="admin-title" style="font-family:'Press Start 2P',monospace;font-size:10px;color:#44ddff;margin-bottom:16px;">ADMIN LOGIN</div>
-          <div class="admin-form" style="display:flex;flex-direction:column;gap:8px;width:240px;">
-            <input type="email" id="maint-email" class="admin-input" placeholder="Email" autocomplete="email">
-            <input type="password" id="maint-pass" class="admin-input" placeholder="Password" autocomplete="current-password">
-            <div id="maint-error" class="admin-error hidden" style="color:#ee5566;font-size:7px;margin:4px 0;"></div>
-            <button id="maint-login-btn" class="btn-primary" style="padding:10px 20px;font-size:9px;margin-top:8px;">DISABLE MAINTENANCE</button>
-          </div>
+      const bootEl2 = document.getElementById('boot-screen');
+      if (bootEl2) bootEl2.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:260px;">
+          <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:#44ddff;margin-bottom:8px;">ADMIN LOGIN</div>
+          <input type="email" id="maint-email" class="admin-input" placeholder="Email" autocomplete="email">
+          <input type="password" id="maint-pass" class="admin-input" placeholder="Password" autocomplete="current-password">
+          <div id="maint-error" class="admin-error hidden" style="color:#ee5566;font-size:7px;margin:2px 0;"></div>
+          <button id="maint-login-btn" class="btn-primary" style="padding:10px 20px;font-size:9px;margin-top:4px;width:100%;">DISABLE MAINTENANCE</button>
         </div>`;
       document.getElementById('maint-login-btn').addEventListener('click', async () => {
         try {
           await setMaintenance(false, document.getElementById('maint-email').value, document.getElementById('maint-pass').value);
           location.reload();
-        } catch (err) {
+        } catch (_) {
           const e = document.getElementById('maint-error');
-          e.textContent = 'LOGIN FAILED'; e.classList.remove('hidden');
+          if (e) { e.textContent = 'LOGIN FAILED'; e.classList.remove('hidden'); }
         }
       });
     });
     return;
+  }
+
+  // Not in maintenance — fade out boot screen to reveal the game
+  const bootEl = document.getElementById('boot-screen');
+  if (bootEl) {
+    bootEl.classList.add('boot-fade');
+    setTimeout(() => bootEl.remove(), 320);
   }
   if (!localStorage.getItem('fishFrenzyWelcomed')) {
     showWelcomeOverlay();
