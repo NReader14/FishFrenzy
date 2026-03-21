@@ -429,7 +429,15 @@ function endGame(won, msg) {
       treatsLeftEl.textContent = S.treats.length;
       return;
     }
-    // Died — restart tutorial from beginning
+    // Timer ran out — just reset the clock, don't crash the tutorial
+    if (msg === "Time's up!") {
+      S.timeLeft = S.maxTime;
+      timerEl.textContent = S.timeLeft;
+      timerBar.style.width = '100%';
+      timerBar.classList.remove('danger');
+      return;
+    }
+    // Died by shark — restart tutorial from beginning
     S.tutorialActive = false;
     S.gameRunning = false;
     clearInterval(S.timerInterval);

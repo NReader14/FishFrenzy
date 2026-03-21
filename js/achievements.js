@@ -5,6 +5,7 @@
 
 import S from './state.js';
 import { saveUserAchievements, loadUserAchievements, saveAchievementBoard } from '../firebase-config.js';
+import { SKINS } from './skins.js';
 
 const STORAGE_KEY = 'fishFrenzyAchievements';
 
@@ -331,11 +332,12 @@ export function onGameStart() {
     unlock('full_house');
   }
 
-  // Skin achievements (skin indices: 3=Angler, 4=Goldfish, 5=Clownfish, 6=Pufferfish)
-  if (skinIdx === 4) unlock('play_goldfish');
-  if (skinIdx === 5) unlock('play_clownfish');
-  if (skinIdx === 3) unlock('play_angler');
-  if (skinIdx === 6) unlock('play_pufferfish');
+  // Skin achievements — check fishType so custom skins with those bodies also count
+  const fishType = SKINS[skinIdx]?.fishType || 'standard';
+  if (fishType === 'goldfish')   unlock('play_goldfish');
+  if (fishType === 'clownfish')  unlock('play_clownfish');
+  if (fishType === 'angler')     unlock('play_angler');
+  if (fishType === 'pufferfish') unlock('play_pufferfish');
 
   // Fashionista: 5+ different skins used
   if (_stats.skinsUsed.size >= 5) unlock('fashionista');
@@ -374,7 +376,7 @@ export function onScoreUpdate(score) {
   if (score >= 1000)   unlock('score_1000');
   if (score >= 2500)   unlock('score_2500');
   if (score >= 5000)   unlock('score_5000');
-  if (score >= 7500)   unlock('score_7500');
+  if (score >= 6700)   unlock('score_7500');
   if (score >= 10000)  unlock('score_10000');
   if (score >= 15000)  unlock('score_15000');
   if (score >= 25000)  unlock('med_score_25k');
@@ -478,6 +480,9 @@ export function onLevelComplete(level, timeLeft) {
   const pt = _gameStats.powerupTypes;
   if (pt.has('frenzy') && pt.has('star') && pt.has('rainbow')) unlock('triple_threat');
   if (pt.has('ice') && pt.has('ghost'))                         unlock('ice_ghost');
+
+  // Hell survived by completing the level while hell was still active
+  if (S.hellActive) onHellSurvived();
 }
 
 export function onSharkDistanceFrame(d) {

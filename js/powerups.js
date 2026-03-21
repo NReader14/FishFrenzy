@@ -892,7 +892,8 @@ export function updatePWItems() {
 export function clearAllPowerupTimeouts() {
   [S.frenzyTO, S.iceTO, S.ghostTO, S.hourglassTO, S.buddyTO,
    S.bombTO, S.crazyTO, S.decoyTO, S.starTO, S.rainbowTO,
-   S.magnetTO, S.promptTO, S.promptTO2, S.claudeTO, S.bodySwapTO, S.hellTO].forEach(clearTO);
+   S.magnetTO, S.promptTO, S.promptTO2, S.claudeTO, S.bodySwapTO, S.hellTO,
+   S.goopTO].forEach(clearTO);
   _claudeTypewriterTOs.forEach(clearTO);
   _claudeTypewriterTOs = [];
   _bodySwapCountdownTOs.forEach(clearTO);
