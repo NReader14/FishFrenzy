@@ -592,11 +592,11 @@ function updateFish(dt = 1) {
 
   if (nx < 0) S.fish.dir = -1;
   if (nx > 0) S.fish.dir = 1;
-  S.fish.vx += nx * s * 0.3 * dt;
-  S.fish.vy += ny * s * 0.3 * dt;
+  S.fish.vx += nx * s * 0.3;
+  S.fish.vy += ny * s * 0.3;
 
-  S.fish.vx *= Math.pow(gameVars.fishFriction, dt);
-  S.fish.vy *= Math.pow(gameVars.fishFriction, dt);
+  S.fish.vx *= gameVars.fishFriction;
+  S.fish.vy *= gameVars.fishFriction;
   S.fish.x += S.fish.vx * dt;
   S.fish.y += S.fish.vy * dt;
   S.fish.x = Math.max(S.fish.w / 2, Math.min(W - S.fish.w / 2, S.fish.x));
