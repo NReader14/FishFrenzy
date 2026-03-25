@@ -718,8 +718,7 @@ function updateShark(dt = 1) {
     return;
   }
 
-  const _baseSpeed = Math.max(0, (gameVars.fishSpeed + gameVars.sharkSpeedBase) + gameVars.sharkSpeedPerLevel * Math.sqrt(S.level * 2));
-  const _activeSpeed = S.iceActive ? _baseSpeed * 0.25 : _baseSpeed + (S.shark.rageBonus || 0);
+  const _activeSpeed = S.shark.speed + (S.shark.rageBonus || 0);
 
   // Prompt: wander phase — random movement, no targeting
   if (S.promptActive && S.promptWandering) {
@@ -728,8 +727,8 @@ function updateShark(dt = 1) {
       S.promptWanderAngle = Math.random() * Math.PI * 2;
       S.promptWanderTimer = now;
     }
-    S.shark.x += Math.cos(S.promptWanderAngle) * _baseSpeed * dt;
-    S.shark.y += Math.sin(S.promptWanderAngle) * _baseSpeed * dt;
+    S.shark.x += Math.cos(S.promptWanderAngle) * S.shark.speed * dt;
+    S.shark.y += Math.sin(S.promptWanderAngle) * S.shark.speed * dt;
     // Bounce off walls
     if (S.shark.x <= 20 || S.shark.x >= W - 20) S.promptWanderAngle = Math.PI - S.promptWanderAngle;
     if (S.shark.y <= 20 || S.shark.y >= H - 20) S.promptWanderAngle = -S.promptWanderAngle;
