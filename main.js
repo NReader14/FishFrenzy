@@ -309,7 +309,7 @@ function spawnTreat() {
     bobPhase: rand(0, Math.PI * 2), collected: false
   };
   let attempts = 0;
-  while ((dist(t, S.fish) < 60 || overlapsExisting(t.x, t.y, 30)) && attempts < 30) {
+  while ((dist(t, S.fish) < gameVars.pwSpawnRadius || overlapsExisting(t.x, t.y, 30)) && attempts < 30) {
     t.x = rand(30, W - 30); t.y = rand(30, H - 30); attempts++;
   }
   S.treats.push(t);
@@ -327,8 +327,7 @@ function startLevel() {
 
   S.fish = {
     x: W / 2, y: H / 2, w: 36, h: 22,
-    vx: 0, vy: 0, dir: 1, angle: 0, tailPhase: 0,
-    speed: gameVars.fishSpeed, friction: gameVars.fishFriction
+    vx: 0, vy: 0, dir: 1, angle: 0, tailPhase: 0
   };
 
   // Sqrt curve: scales fast early, softens at high levels to stay fair
@@ -386,7 +385,6 @@ function startLevel() {
     s.style.color = '';
   }
   st.combo.textContent = '⚡x1';
-  S.fish.speed = gameVars.fishSpeed;
 
   S.gameRunning = true;
   achLevelStart(S.level);
@@ -720,6 +718,9 @@ function updateShark(dt = 1) {
     return;
   }
 
+  const _baseSpeed = Math.max(0, (gameVars.fishSpeed + gameVars.sharkSpeedBase) + gameVars.sharkSpeedPerLevel * Math.sqrt(S.level * 2));
+  const _activeSpeed = S.iceActive ? _baseSpeed * 0.25 : _baseSpeed + (S.shark.rageBonus || 0);
+
   // Prompt: wander phase — random movement, no targeting
   if (S.promptActive && S.promptWandering) {
     const now = Date.now();
@@ -727,9 +728,8 @@ function updateShark(dt = 1) {
       S.promptWanderAngle = Math.random() * Math.PI * 2;
       S.promptWanderTimer = now;
     }
-    const _promptSpeed = Math.max(0, (gameVars.fishSpeed + gameVars.sharkSpeedBase) + gameVars.sharkSpeedPerLevel * Math.sqrt(S.level * 2));
-    S.shark.x += Math.cos(S.promptWanderAngle) * _promptSpeed * dt;
-    S.shark.y += Math.sin(S.promptWanderAngle) * _promptSpeed * dt;
+    S.shark.x += Math.cos(S.promptWanderAngle) * _baseSpeed * dt;
+    S.shark.y += Math.sin(S.promptWanderAngle) * _baseSpeed * dt;
     // Bounce off walls
     if (S.shark.x <= 20 || S.shark.x >= W - 20) S.promptWanderAngle = Math.PI - S.promptWanderAngle;
     if (S.shark.y <= 20 || S.shark.y >= H - 20) S.promptWanderAngle = -S.promptWanderAngle;
@@ -750,9 +750,8 @@ function updateShark(dt = 1) {
       S.shark.ghostWanderAngle = Math.random() * Math.PI * 2;
       S.shark.ghostWanderTimer = now;
     }
-    const _ghostSpeed = Math.max(0, (gameVars.fishSpeed + gameVars.sharkSpeedBase) + gameVars.sharkSpeedPerLevel * Math.sqrt(S.level * 2));
-    S.shark.x += Math.cos(S.shark.ghostWanderAngle) * _ghostSpeed * 0.7 * dt;
-    S.shark.y += Math.sin(S.shark.ghostWanderAngle) * _ghostSpeed * 0.7 * dt;
+    S.shark.x += Math.cos(S.shark.ghostWanderAngle) * _activeSpeed * 0.7 * dt;
+    S.shark.y += Math.sin(S.shark.ghostWanderAngle) * _activeSpeed * 0.7 * dt;
     if (S.shark.x <= 20 || S.shark.x >= W - 20) S.shark.ghostWanderAngle = Math.PI - S.shark.ghostWanderAngle;
     if (S.shark.y <= 20 || S.shark.y >= H - 20) S.shark.ghostWanderAngle = -S.shark.ghostWanderAngle;
     S.shark.x = Math.max(20, Math.min(W - 20, S.shark.x));
@@ -814,7 +813,7 @@ function updateShark(dt = 1) {
       // Tier 1+: solve for geometric intercept time
       // Find t where dist(fish(t), shark) = speed * t
       // fish(t) ≈ target + v*t  (linear; accel added as post-correction)
-      const spd = Math.max(0, (gameVars.fishSpeed + gameVars.sharkSpeedBase) + gameVars.sharkSpeedPerLevel * Math.sqrt(S.level * 2));
+      const spd = _activeSpeed;
       const dx  = target.x - S.shark.x;
       const dy  = target.y - S.shark.y;
       const a   = vx * vx + vy * vy - spd * spd;
@@ -874,9 +873,8 @@ function updateShark(dt = 1) {
   S.shark.chaseTimer += 0.02 * dt;
   const a = Math.atan2(targetY - S.shark.y, targetX - S.shark.x);
   const wobble = Math.sin(S.shark.chaseTimer * 3) * 0.4;
-  const sharkSpeed = Math.max(0, (gameVars.fishSpeed + gameVars.sharkSpeedBase) + gameVars.sharkSpeedPerLevel * Math.sqrt(S.level * 2));
-  const dx = Math.cos(a + wobble) * sharkSpeed;
-  const dy = Math.sin(a + wobble) * sharkSpeed;
+  const dx = Math.cos(a + wobble) * _activeSpeed;
+  const dy = Math.sin(a + wobble) * _activeSpeed;
   S.shark.x += dx * dt;
   S.shark.y += dy * dt;
 

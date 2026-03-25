@@ -50,7 +50,6 @@ let _bodySwapCountdownTOs = [];
 // ─── FRENZY ───
 function activateFrenzy() {
   S.frenzyActive = true;
-  S.fish.speed = gameVars.fishSpeed + FRENZY_SPEED_BOOST;
   stOn('frenzy', 's-frenzy');
   S.frenzyTO = clearTO(S.frenzyTO);
   S.frenzyTO = setTimeout(deactivateFrenzy, FRENZY_DURATION);
@@ -58,7 +57,6 @@ function activateFrenzy() {
 
 function deactivateFrenzy() {
   S.frenzyActive = false;
-  S.fish.speed = getCurrentFishSpeed();
   stOff('frenzy', 's-frenzy');
   S.frenzyTO = null;
 }
@@ -248,7 +246,6 @@ function activateCrazy() {
   S.scorePopups.push({ x: S.fish.x, y: S.fish.y - 36, pts: `🍄 x20 PTS! -${stolen}s`, life: 2.2, decay: 0.012 });
 
   // Countdown popups: 5 4 3 2 1
-  const { W, H } = { W: 480, H: 720 };
   [5, 4, 3, 2, 1].forEach((n, i) => {
     _bodySwapCountdownTOs.push(setTimeout(() => {
       if (!S.crazyActive) return;
@@ -439,7 +436,6 @@ function activateRainbow() {
 function activateGoop() {
   S.goopActive = true;
   S.goopStartTime = Date.now();
-  S.fish.speed = gameVars.fishSpeed * 0.5;
   setMusicTempo(1.8);
   stOn('goop', 's-goop');
   spawnParticles(S.fish.x, S.fish.y, '#66cc44', 16);
@@ -447,7 +443,6 @@ function activateGoop() {
   S.goopTO = clearTO(S.goopTO);
   S.goopTO = setTimeout(() => {
     S.goopActive = false;
-    S.fish.speed = getCurrentFishSpeed();
     stOff('goop', 's-goop');
     S.goopTO = null;
     if (!S.iceActive && !S.hourglassActive) setMusicTempo(1.0);
@@ -525,7 +520,7 @@ function activateBodySwap() {
   // Zero out fish velocity so AI starts fresh
   S.fish.vx = 0; S.fish.vy = 0;
   // Boost shark speed for agility
-  S.shark.speed = S.fish.speed + 1;
+  S.shark.speed = getCurrentFishSpeed() + 1;
   stOn('bodyswap', 's-bodyswap');
   spawnParticles(S.fish.x, S.fish.y, '#ff4488', 20);
   spawnParticles(S.shark.x, S.shark.y, '#44ff88', 16);
@@ -542,7 +537,7 @@ function activateBodySwap() {
 function _wipeSwapEffects() {
   if (S.frenzyActive)    { S.frenzyTO    = clearTO(S.frenzyTO);    deactivateFrenzy(); }
   if (S.iceActive)       { S.iceTO       = clearTO(S.iceTO);       deactivateIce(); }
-  if (S.goopActive)      { S.goopTO = clearTO(S.goopTO); S.goopActive = false; S.fish.speed = gameVars.fishSpeed; stOff('goop', 's-goop'); }
+  if (S.goopActive)      { S.goopTO = clearTO(S.goopTO); S.goopActive = false; stOff('goop', 's-goop'); }
   if (S.ghostActive)     { S.ghostTO     = clearTO(S.ghostTO);     deactivateGhost(); }
   if (S.hourglassActive) { S.hourglassTO = clearTO(S.hourglassTO); deactivateHourglass(); }
   if (S.buddyActive)     { S.buddyTO     = clearTO(S.buddyTO);     deactivateBuddy(); }
@@ -558,9 +553,8 @@ export function deactivateBodySwap() {
   S.bodySwapActive = false;
   S.bodySwapAnim = null;
   S.fish.vx = 0; S.fish.vy = 0;
-  S.fish.speed = getCurrentFishSpeed();
-  // Keep shark frozen for 1s so the fish can escape before the chase resumes
-  S.shark.speed = 0;
+  // Keep shark frozen for 4s (3-2-1-GO! countdown + 1s head start) via sharkDelay
+  S.sharkDelay = 240;
   stOff('bodyswap', 's-bodyswap');
   spawnParticles(S.fish.x, S.fish.y, '#ff4488', 10);
   spawnParticles(S.shark.x, S.shark.y, '#44ff88', 10);
@@ -585,10 +579,7 @@ export function deactivateBodySwap() {
     }
     S.inputFrozen = false;
   }, 3000));
-  // Shark releases 1s after GO! — fish gets a head start
-  _bodySwapCountdownTOs.push(setTimeout(() => {
-    restoreSharkSpeed();
-  }, 4000));
+  // Shark releases 1s after GO! — handled by S.sharkDelay = 240 set above
 }
 
 // ─── THE CLAUDE ───
@@ -723,7 +714,7 @@ const CARD_POOL = [
   { label: '-7 SECONDS',  emoji: '⌛', good: false, fn: () => { S.timeLeft = Math.max(1, S.timeLeft - 7); timerEl.textContent = S.timeLeft; } },
   { label: 'GOOPED',      emoji: '🧪', good: false, fn: () => activateGoop() },
   { label: 'POISONED',    emoji: '☠', good: false, fn: () => activatePoison() },
-  { label: 'SHARK RAGE',  emoji: '😡', good: false, fn: () => { S.shark.speed += 0.8; setTimeout(() => { if (S.shark) restoreSharkSpeed(); }, 5000); } },
+  { label: 'SHARK RAGE',  emoji: '😡', good: false, fn: () => { S.shark.rageBonus = (S.shark.rageBonus || 0) + 0.8; setTimeout(() => { if (S.shark) S.shark.rageBonus = 0; }, 5000); } },
 ];
 
 function makeCard() {
