@@ -346,7 +346,7 @@ function startLevel() {
   }
 
   S.treats = [];
-  const treatCount = gameVars.treatBase + S.level * gameVars.treatPerLevel;
+  const treatCount = Math.max(1, gameVars.treatBase + S.level * gameVars.treatPerLevel);
   for (let i = 0; i < treatCount; i++) spawnTreat();
   treatsLeftEl.textContent = S.treats.length;
 
@@ -637,7 +637,7 @@ const SHARK_QUIPS = [
 
   // threatening
   "i'm gonna get you",
-  "hi luke, i'm gonan get you",
+  "hi Luke, i'm gonna get you",
   'you were never safe. not once.',
   'just keep swimming... so i can follow you',
   'i am in your walls',
