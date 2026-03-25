@@ -22,10 +22,12 @@ export function initAuthUI() {
     if (user && !user.isAnonymous) {
       const isNew = !S.currentUser;
       S.currentUser = user;
-      await Promise.all([
-        syncSettingsFromCloud(user.uid),
-        syncAchievementsFromCloud(user.uid),
-      ]);
+      try {
+        await Promise.all([
+          syncSettingsFromCloud(user.uid),
+          syncAchievementsFromCloud(user.uid),
+        ]);
+      } catch (_) {}
       if (isNew) achSignIn();
     } else {
       S.currentUser = null;

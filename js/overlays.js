@@ -366,9 +366,12 @@ export function showNameEntry(finalScore, finalLevel, msg) {
       outfitKey:  activeSkin.outfitKey  || 'none',
       difficulty: S.settings.difficulty || 'normal',
     };
-    const idx = await saveHighScore(name, finalScore, finalLevel, skinSnapshot);
+    let idx = -1, scores = [];
+    try {
+      idx    = await saveHighScore(name, finalScore, finalLevel, skinSnapshot);
+      scores = await fetchHighScores();
+    } catch (_) {}
     hideLoading();
-    const scores = await fetchHighScores();
     const hiEl = document.getElementById('global-hi-score');
     if (hiEl && scores.length > 0) hiEl.textContent = scores[0].score.toLocaleString();
     endScreenOverlay.classList.remove('hidden');
@@ -392,7 +395,7 @@ export function showNameEntry(finalScore, finalLevel, msg) {
     });
   }
 
-  async function tryConfirm() { showConfirmDialog(); }
+  function tryConfirm() { showConfirmDialog(); }
 
   function onKey(e) {
     if (!S.nameEntryActive) return;

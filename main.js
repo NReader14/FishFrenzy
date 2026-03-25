@@ -280,7 +280,7 @@ async function initGame() {
   // Apply defaults → difficulty preset → Firebase admin values (Firebase always wins)
   Object.assign(gameVars, GAME_VAR_DEFAULTS);
   Object.assign(gameVars, DIFFICULTY_PRESETS[S.settings.difficulty] || {});
-  await loadRarities();
+  try { await loadRarities(); } catch (_) {}
   if (Object.keys(firebaseGameVars).length) Object.assign(gameVars, firebaseGameVars);
 
   // Resolve per-difficulty timer: use difficulty-specific Firebase value if set, else keep current
@@ -500,10 +500,10 @@ function endGame(won, msg) {
   if (!won) {
     if (msg === "Time's up!") {
       const fx = S.fish.x, fy = S.fish.y;
-      playTimeUpDeath(fx, fy, () => playCRTGameOver(() => showAd().then(() => showNameEntry(S.score, S.level, msg))));
+      playTimeUpDeath(fx, fy, () => playCRTGameOver(() => { const go = () => showNameEntry(S.score, S.level, msg); showAd().then(go).catch(go); }));
     } else {
       S.chompAnim = { timer: 0, x: S.fish.x, y: S.fish.y };
-      playCRTGameOver(() => showAd().then(() => showNameEntry(S.score, S.level, msg)));
+      playCRTGameOver(() => { const go = () => showNameEntry(S.score, S.level, msg); showAd().then(go).catch(go); });
     }
   } else {
     winOverlay.classList.remove('hidden');
@@ -992,7 +992,7 @@ function loop(timestamp) {
   updateHookAnim();
   if ((!S.gamePaused && !S.bodySwapAnim) || S.swapAnim) {
     // Track fish position history for smart shark prediction
-    if (S.settings.smartShark && S.fish && S.gameRunning) {
+    if (S.settings.smartShark && S.fish && S.shark && S.gameRunning) {
       S.smartSharkHistory.push({ x: S.fish.x, y: S.fish.y });
       if (S.smartSharkHistory.length > 120) S.smartSharkHistory.shift();
     }
