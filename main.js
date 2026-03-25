@@ -367,7 +367,7 @@ function startLevel() {
   S.comboCount = 0; S.comboTimer = 0;
   S.accelBonus = 0; S.lastMoveDir = { x: 0, y: 0 }; S.keys = {};
   S.lastSpawnedPW = null;
-  S.gamePaused = false; S.goopActive = false;
+  S.gamePaused = false;
   S.hookLine = null; S.swapAnim = null; S.chompAnim = null;
 
   S.frenzyTO = clearTO(S.frenzyTO); S.iceTO = clearTO(S.iceTO);

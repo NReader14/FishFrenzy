@@ -10,7 +10,7 @@ import { W, H, rand, dist,
   FRENZY_DURATION, ICE_DURATION, HOURGLASS_DURATION, GOOP_DURATION,
   GHOST_DURATION, BUDDY_DURATION, BOMB_DURATION, CRAZY_DURATION,
   DECOY_DURATION, STAR_DURATION, RAINBOW_DURATION,
-  PROMPT_WANDER_DURATION, BODY_SWAP_DURATION, HELL_DURATION
+  PROMPT_FREEZE_DURATION, PROMPT_WANDER_DURATION, BODY_SWAP_DURATION, HELL_DURATION
 } from './constants.js';
 import { pwConfig } from './powerups.js';
 
@@ -826,7 +826,7 @@ export function drawPowerupTimerBars() {
     bars.push({ colour: '#ff88ff', label: '🌈', rem });
   }
   if (S.promptActive) {
-    const rem = Math.max(0, 1 - (Date.now() - S.promptStartTime) / PROMPT_WANDER_DURATION);
+    const rem = Math.max(0, 1 - (Date.now() - S.promptStartTime) / (PROMPT_FREEZE_DURATION + PROMPT_WANDER_DURATION));
     bars.push({ colour: '#aa66ff', label: '✍️', rem });
   }
   if (S.bodySwapActive) {

@@ -39,6 +39,7 @@ const S = {
 
   // Active power-up states
   frenzyActive: false, frenzyTimer: 0, frenzyTO: null,
+  crazyMultiplier: 1,
   iceActive: false, iceTO: null, iceStartTime: 0,
   shieldActive: false,
   magnetActive: false,

@@ -7,8 +7,8 @@ export const gameVars = {
   fishFriction:       0.88,  // How quickly fish decelerates (0=none, 1=instant stop)
   fishAccelRate:      0.003, // Speed gained per frame held
   fishMaxSpeedBonus:  0.8,   // Max extra speed from acceleration
-  sharkSpeedBase:     -1.75, // Shark speed offset above fish speed (fishSpeed + offset + level*perLevel)
-  sharkSpeedPerLevel: 0.2,   // Shark speed added per level
+  sharkSpeedBase:     -2.0,  // Shark speed offset above fish speed (fishSpeed + offset + level*perLevel)
+  sharkSpeedPerLevel: 0.18,  // Shark speed added per level
   treatBase:          5,     // Treats at level 1
   treatPerLevel:      2,     // Extra treats added per level
   levelTimeBase:      35,    // Starting countdown (seconds) — fallback, per-difficulty values below take priority
@@ -25,7 +25,7 @@ export const GAME_VAR_META = {
   fishFriction:       { label: 'Fish Friction',        min: 0.5,  max: 0.99, step: 0.01 },
   fishAccelRate:      { label: 'Fish Accel Rate',      min: 0,    max: 0.02, step: 0.001 },
   fishMaxSpeedBonus:  { label: 'Fish Max Speed Bonus', min: 0,    max: 3,    step: 0.1  },
-  sharkSpeedBase:     { label: 'Shark Speed Offset',   min: -2,   max: 5,    step: 0.05 },
+  sharkSpeedBase:     { label: 'Shark Speed Offset',   min: -5,   max: 5,    step: 0.05 },
   sharkSpeedPerLevel: { label: 'Shark Speed/Level',    min: 0,    max: 1,    step: 0.05 },
   treatBase:          { label: 'Treats Base',          min: 1,    max: 30,   step: 1    },
   treatPerLevel:      { label: 'Treats/Level',         min: 0,    max: 15,   step: 1    },

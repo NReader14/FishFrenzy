@@ -50,6 +50,7 @@ let _bodySwapCountdownTOs = [];
 // ─── FRENZY ───
 function activateFrenzy() {
   S.frenzyActive = true;
+  S.frenzyTimer = Date.now();
   stOn('frenzy', 's-frenzy');
   S.frenzyTO = clearTO(S.frenzyTO);
   S.frenzyTO = setTimeout(deactivateFrenzy, FRENZY_DURATION);
