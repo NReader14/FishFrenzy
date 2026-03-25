@@ -26,7 +26,7 @@ import {
 import {
   loadRarities, trySpawnPowerups, updatePWItems,
   clearAllPowerupTimeouts, clearTO, useShield,
-  overlapsExisting, setEndGame
+  overlapsExisting, setEndGame, getCurrentFishSpeed
 } from './js/powerups.js';
 import {
   drawWater, drawFish, drawBuddy, drawDecoy, drawShark,
@@ -118,7 +118,7 @@ function updateTutorial() {
 const DIFFICULTY_PRESETS = {
   easy:     { sharkSpeedBase: -2.4, sharkSpeedPerLevel: 0.12, levelTimeBase: 45, levelTimeMin: 25 },
   normal:   {},
-  hard:     { sharkSpeedBase: -0.9, sharkSpeedPerLevel: 0.28, levelTimeBase: 28, levelTimeMin: 14 },
+  hard:     { sharkSpeedBase: -0.9, sharkSpeedPerLevel: 0.28, levelTimeBase: 26, levelTimeMin: 12 },
   tutorial: { sharkSpeedBase: -3.0, sharkSpeedPerLevel: 0.05, levelTimeBase: 120, levelTimeMin: 120, treatBase: 3, treatPerLevel: 0 },
 };
 
@@ -134,7 +134,7 @@ function refreshMultiplierHint() {
   if (!el) return;
   const diff = S.settings.difficulty;
   if (diff === 'tutorial') { el.style.display = 'none'; return; }
-  const diffMul    = diff === 'easy' ? 0.75 : diff === 'hard' ? 1.5 : 1;
+  const diffMul    = diff === 'easy' ? 0.75 : diff === 'hard' ? 1.25 : 1;
   const smartMul   = S.settings.smartShark   ? 1.25 : 1;
   const mysteryMul    = S.settings.mysteryBlocks ? 1.05 : 1;
   const fastTreatsMul = S.settings.fastTreats   ? 1.03 : 1;
@@ -536,13 +536,13 @@ function updateFish(dt = 1) {
     const wobble = Math.sin(Date.now() * 0.003) * 0.3;
     S.fish.vx = Math.cos(a + wobble) * chaseSpeed;
     S.fish.vy = Math.sin(a + wobble) * chaseSpeed;
-    S.fish.x += S.fish.vx;
-    S.fish.y += S.fish.vy;
+    S.fish.x += S.fish.vx * dt;
+    S.fish.y += S.fish.vy * dt;
     S.fish.x = Math.max(S.fish.w / 2, Math.min(W - S.fish.w / 2, S.fish.x));
     S.fish.y = Math.max(S.fish.h / 2, Math.min(H - S.fish.h / 2, S.fish.y));
     if (S.fish.vx > 0.3) S.fish.dir = 1;
     else if (S.fish.vx < -0.3) S.fish.dir = -1;
-    S.fish.tailPhase += 0.18;
+    S.fish.tailPhase += 0.18 * dt;
 
     // Fish (enemy) catches shark (player)
     if (dist(S.fish, S.shark) < 30) {
@@ -584,7 +584,7 @@ function updateFish(dt = 1) {
     S.lastMoveDir = { x: 0, y: 0 };
   }
 
-  const s = S.fish.speed + S.accelBonus;
+  const s = getCurrentFishSpeed() + S.accelBonus;
 
   const inputLen = Math.hypot(moveX, moveY);
   const nx = inputLen > 0 ? moveX / inputLen : 0;
@@ -592,13 +592,13 @@ function updateFish(dt = 1) {
 
   if (nx < 0) S.fish.dir = -1;
   if (nx > 0) S.fish.dir = 1;
-  S.fish.vx += nx * s * 0.3;
-  S.fish.vy += ny * s * 0.3;
+  S.fish.vx += nx * s * 0.3 * dt;
+  S.fish.vy += ny * s * 0.3 * dt;
 
-  S.fish.vx *= S.fish.friction;
-  S.fish.vy *= S.fish.friction;
-  S.fish.x += S.fish.vx;
-  S.fish.y += S.fish.vy;
+  S.fish.vx *= Math.pow(gameVars.fishFriction, dt);
+  S.fish.vy *= Math.pow(gameVars.fishFriction, dt);
+  S.fish.x += S.fish.vx * dt;
+  S.fish.y += S.fish.vy * dt;
   S.fish.x = Math.max(S.fish.w / 2, Math.min(W - S.fish.w / 2, S.fish.x));
   S.fish.y = Math.max(S.fish.h / 2, Math.min(H - S.fish.h / 2, S.fish.y));
 
@@ -606,17 +606,17 @@ function updateFish(dt = 1) {
   if (spd > 0.5) {
     let targetAngle = Math.atan2(S.fish.vy, S.fish.vx * S.fish.dir);
     targetAngle = Math.max(-1.4, Math.min(1.4, targetAngle));
-    S.fish.angle = S.fish.angle + (targetAngle - S.fish.angle) * 0.12;
+    S.fish.angle = S.fish.angle + (targetAngle - S.fish.angle) * (1 - Math.pow(0.88, dt));
   } else {
-    S.fish.angle = S.fish.angle + (0 - S.fish.angle) * 0.1;
+    S.fish.angle = S.fish.angle + (0 - S.fish.angle) * (1 - Math.pow(0.90, dt));
   }
 
   if (S.fish.vx > 0.3) S.fish.dir = 1;
   else if (S.fish.vx < -0.3) S.fish.dir = -1;
 
-  S.fish.tailPhase += 0.15;
+  S.fish.tailPhase += 0.15 * dt;
 
-  if (Math.random() < 0.12) {
+  if (Math.random() < 0.12 * dt) {
     S.bubbles.push({
       x: S.fish.x - S.fish.dir * 16, y: S.fish.y + rand(-4, 4),
       r: rand(1.5, 3), vy: rand(-0.5, -1.5), life: 1, decay: rand(0.015, 0.03)
@@ -672,15 +672,15 @@ const SHARK_QUIPS = [
 ];
 let _sharkQuipTimer = 0;
 
-function updateShark() {
+function updateShark(dt = 1) {
   if (S.shark.hidden || S.hourglassActive || S.gamePaused) return;
 
   // Tick quip display timer
-  if (S.shark.quip && S.shark.quip.timer > 0) S.shark.quip.timer--;
+  if (S.shark.quip && S.shark.quip.timer > 0) S.shark.quip.timer -= dt;
 
   // Randomly trigger a new quip (avg ~every 5 seconds at 60fps)
   if (!S.bodySwapActive) {
-    _sharkQuipTimer--;
+    _sharkQuipTimer -= dt;
     if (_sharkQuipTimer <= 0) {
       _sharkQuipTimer = Math.round(gameVars.sharkQuipInterval * 60 * (0.4 + Math.random() * 1.2));
       const text = SHARK_QUIPS[Math.floor(Math.random() * SHARK_QUIPS.length)];
@@ -688,7 +688,7 @@ function updateShark() {
     }
   }
 
-  if (S.sharkDelay > 0) { S.sharkDelay--; S.shark.tailPhase += 0.06; return; }
+  if (S.sharkDelay > 0) { S.sharkDelay -= dt; S.shark.tailPhase += 0.06 * dt; return; }
 
   // Body swap: player controls the shark
   if (S.bodySwapActive) {
@@ -700,23 +700,23 @@ function updateShark() {
 
     if (moveX !== 0 || moveY !== 0) {
       const len = Math.hypot(moveX, moveY);
-      S.shark.x += (moveX / len) * S.shark.speed;
-      S.shark.y += (moveY / len) * S.shark.speed;
+      S.shark.x += (moveX / len) * S.shark.speed * dt;
+      S.shark.y += (moveY / len) * S.shark.speed * dt;
       const ta = Math.atan2(moveY, moveX);
       let diff = ta - S.shark.angle;
       while (diff > Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
-      S.shark.angle += diff * 0.35;
+      S.shark.angle += diff * (1 - Math.pow(0.65, dt));
     }
     S.shark.x = Math.max(20, Math.min(W - 20, S.shark.x));
     S.shark.y = Math.max(20, Math.min(H - 20, S.shark.y));
-    S.shark.tailPhase += 0.12;
+    S.shark.tailPhase += 0.12 * dt;
     return;
   }
 
   // Prompt: freeze phase — just wag tail, no movement or targeting
   if (S.promptActive && !S.promptWandering) {
-    S.shark.tailPhase += 0.06;
+    S.shark.tailPhase += 0.06 * dt;
     return;
   }
 
@@ -727,8 +727,9 @@ function updateShark() {
       S.promptWanderAngle = Math.random() * Math.PI * 2;
       S.promptWanderTimer = now;
     }
-    S.shark.x += Math.cos(S.promptWanderAngle) * S.shark.speed;
-    S.shark.y += Math.sin(S.promptWanderAngle) * S.shark.speed;
+    const _promptSpeed = Math.max(0, (gameVars.fishSpeed + gameVars.sharkSpeedBase) + gameVars.sharkSpeedPerLevel * Math.sqrt(S.level * 2));
+    S.shark.x += Math.cos(S.promptWanderAngle) * _promptSpeed * dt;
+    S.shark.y += Math.sin(S.promptWanderAngle) * _promptSpeed * dt;
     // Bounce off walls
     if (S.shark.x <= 20 || S.shark.x >= W - 20) S.promptWanderAngle = Math.PI - S.promptWanderAngle;
     if (S.shark.y <= 20 || S.shark.y >= H - 20) S.promptWanderAngle = -S.promptWanderAngle;
@@ -737,8 +738,8 @@ function updateShark() {
     let diff = S.promptWanderAngle - S.shark.angle;
     while (diff > Math.PI) diff -= Math.PI * 2;
     while (diff < -Math.PI) diff += Math.PI * 2;
-    S.shark.angle += diff * 0.15;
-    S.shark.tailPhase += 0.12;
+    S.shark.angle += diff * (1 - Math.pow(0.85, dt));
+    S.shark.tailPhase += 0.12 * dt;
     return;
   }
 
@@ -749,8 +750,9 @@ function updateShark() {
       S.shark.ghostWanderAngle = Math.random() * Math.PI * 2;
       S.shark.ghostWanderTimer = now;
     }
-    S.shark.x += Math.cos(S.shark.ghostWanderAngle) * S.shark.speed * 0.7;
-    S.shark.y += Math.sin(S.shark.ghostWanderAngle) * S.shark.speed * 0.7;
+    const _ghostSpeed = Math.max(0, (gameVars.fishSpeed + gameVars.sharkSpeedBase) + gameVars.sharkSpeedPerLevel * Math.sqrt(S.level * 2));
+    S.shark.x += Math.cos(S.shark.ghostWanderAngle) * _ghostSpeed * 0.7 * dt;
+    S.shark.y += Math.sin(S.shark.ghostWanderAngle) * _ghostSpeed * 0.7 * dt;
     if (S.shark.x <= 20 || S.shark.x >= W - 20) S.shark.ghostWanderAngle = Math.PI - S.shark.ghostWanderAngle;
     if (S.shark.y <= 20 || S.shark.y >= H - 20) S.shark.ghostWanderAngle = -S.shark.ghostWanderAngle;
     S.shark.x = Math.max(20, Math.min(W - 20, S.shark.x));
@@ -758,8 +760,8 @@ function updateShark() {
     let gda = S.shark.ghostWanderAngle - S.shark.angle;
     while (gda > Math.PI) gda -= Math.PI * 2;
     while (gda < -Math.PI) gda += Math.PI * 2;
-    S.shark.angle += gda * 0.12;
-    S.shark.tailPhase += 0.12;
+    S.shark.angle += gda * (1 - Math.pow(0.88, dt));
+    S.shark.tailPhase += 0.12 * dt;
     return;
   }
 
@@ -812,7 +814,7 @@ function updateShark() {
       // Tier 1+: solve for geometric intercept time
       // Find t where dist(fish(t), shark) = speed * t
       // fish(t) ≈ target + v*t  (linear; accel added as post-correction)
-      const spd = S.shark.speed;
+      const spd = Math.max(0, (gameVars.fishSpeed + gameVars.sharkSpeedBase) + gameVars.sharkSpeedPerLevel * Math.sqrt(S.level * 2));
       const dx  = target.x - S.shark.x;
       const dy  = target.y - S.shark.y;
       const a   = vx * vx + vy * vy - spd * spd;
@@ -869,21 +871,22 @@ function updateShark() {
     targetY = Math.max(10, Math.min(H - 10, targetY));
   }
 
-  S.shark.chaseTimer += 0.02;
+  S.shark.chaseTimer += 0.02 * dt;
   const a = Math.atan2(targetY - S.shark.y, targetX - S.shark.x);
   const wobble = Math.sin(S.shark.chaseTimer * 3) * 0.4;
-  const dx = Math.cos(a + wobble) * S.shark.speed;
-  const dy = Math.sin(a + wobble) * S.shark.speed;
-  S.shark.x += dx;
-  S.shark.y += dy;
+  const sharkSpeed = Math.max(0, (gameVars.fishSpeed + gameVars.sharkSpeedBase) + gameVars.sharkSpeedPerLevel * Math.sqrt(S.level * 2));
+  const dx = Math.cos(a + wobble) * sharkSpeed;
+  const dy = Math.sin(a + wobble) * sharkSpeed;
+  S.shark.x += dx * dt;
+  S.shark.y += dy * dt;
 
   let targetAngle = a;
   let diff = targetAngle - S.shark.angle;
   while (diff > Math.PI) diff -= Math.PI * 2;
   while (diff < -Math.PI) diff += Math.PI * 2;
-  S.shark.angle += diff * 0.15;
+  S.shark.angle += diff * (1 - Math.pow(0.85, dt));
 
-  S.shark.tailPhase += 0.12;
+  S.shark.tailPhase += 0.12 * dt;
 
   S.shark.x = Math.max(20, Math.min(W - 20, S.shark.x));
   S.shark.y = Math.max(20, Math.min(H - 20, S.shark.y));
@@ -998,7 +1001,7 @@ function loop(timestamp) {
     }
     updateTutorial();
     updateFish(dt);
-    updateShark();
+    updateShark(dt);
     updateBuddy();
     updateTreats();
     if (S.shark && S.fish) onSharkDistanceFrame(dist(S.shark, S.fish));

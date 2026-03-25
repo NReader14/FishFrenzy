@@ -28,7 +28,7 @@ export function clearTO(t) { if (t) clearTimeout(t); return null; }
 function stOn(key, cls)  { if (st[key]) st[key].classList.add('s-on', cls); }
 function stOff(key, cls) { if (st[key]) st[key].classList.remove('s-on', cls); }
 
-function getCurrentFishSpeed() {
+export function getCurrentFishSpeed() {
   let speed = gameVars.fishSpeed;
   if (S.frenzyActive) speed += FRENZY_SPEED_BOOST;
   if (S.goopActive)   speed *= 0.5;

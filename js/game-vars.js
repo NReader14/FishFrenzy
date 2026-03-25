@@ -13,8 +13,8 @@ export const gameVars = {
   treatPerLevel:      2,     // Extra treats added per level
   levelTimeBase:      35,    // Starting countdown (seconds) — fallback, per-difficulty values below take priority
   levelTimeMin:       18,    // Minimum countdown floor — fallback
-  easy_levelTimeBase:     45,  hard_levelTimeBase:     28,  normal_levelTimeBase:   35,
-  easy_levelTimeMin:      25,  hard_levelTimeMin:      14,  normal_levelTimeMin:    18,
+  easy_levelTimeBase:     45,  hard_levelTimeBase:     26,  normal_levelTimeBase:   35,
+  easy_levelTimeMin:      25,  hard_levelTimeMin:      12,  normal_levelTimeMin:    18,
   pwSpawnRadius:      80,    // Min distance from fish for powerup spawns
   sharkQuipInterval:  5,    // Avg seconds between shark quips
   sharkQuipDuration:  3.5,  // Min seconds each quip stays on screen
@@ -36,7 +36,7 @@ export const GAME_VAR_META = {
   normal_levelTimeBase:   { label: 'Normal: Time Base (s)',       min: 10, max: 120, step: 1 },
   normal_levelTimeMin:    { label: 'Normal: Time Min (s)',        min: 5,  max: 60,  step: 1 },
   hard_levelTimeBase:     { label: 'Hard: Time Base (s)',         min: 10, max: 120, step: 1 },
-  hard_levelTimeMin:      { label: 'Hard: Time Min (s)',          min: 5,  max: 60,  step: 1 },
+  hard_levelTimeMin:      { label: 'Hard: Time Min (s)',          min: 3,  max: 60,  step: 1 },
   pwSpawnRadius:          { label: 'Powerup Spawn Radius',        min: 0,  max: 300, step: 10 },
   sharkQuipInterval:  { label: 'Shark Quip Interval (s)', min: 1, max: 30,   step: 0.5  },
   sharkQuipDuration:  { label: 'Shark Quip Duration (s)', min: 1, max: 20,   step: 0.5  },

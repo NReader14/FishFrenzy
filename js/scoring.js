@@ -48,7 +48,7 @@ export function collectTreat(t) {
   const smartMul   = S.settings.smartShark   ? 1.25 : 1;
   const mysteryMul    = S.settings.mysteryBlocks ? 1.05 : 1;
   const fastTreatsMul = S.settings.fastTreats   ? 1.03 : 1;
-  const diffMul = S.settings.difficulty === 'easy' ? 0.75 : S.settings.difficulty === 'hard' ? 1.5 : 1;
+  const diffMul = S.settings.difficulty === 'easy' ? 0.75 : S.settings.difficulty === 'hard' ? 1.25 : 1;
   const crazyMul = S.crazyMultiplier || 1;
   const pts = Math.round(basePts * cm * (S.bodySwapActive ? 2 : 1) * starMul * smartMul * mysteryMul * fastTreatsMul * diffMul * crazyMul);
 
