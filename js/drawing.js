@@ -262,37 +262,66 @@ export function drawShark() {
   const finCol   = frozen ? '#4a5a6a' : '#556677';
   const bellyCol = frozen ? '#8899aa' : '#99aabb';
 
-  const tw = Math.round(Math.sin(S.shark.tailPhase) * 4);
+  // Progressive wave: tail leads, amplitude fades toward head
+  const phase = S.shark.tailPhase;
+  const tw  = Math.sin(phase) * 3.5;              // tail fins (full swing)
+  const tw2 = Math.sin(phase - 0.35) * 2.2;      // tail-body junction
+  const tw3 = Math.sin(phase - 0.65) * 0.9;      // rear body
+  const dw  = Math.sin(phase * 0.72 + 0.9) * 1.1; // dorsal fin independent sway
+  const fw  = Math.sin(phase * 0.88 + 0.5) * 0.8; // pec fin independent sway
+
+  // Tail fins
   ctx.fillStyle = finCol;
-  ctx.fillRect(-30, -6 + tw, 8, 3);
-  ctx.fillRect(-34, -8 + tw, 5, 3);
-  ctx.fillRect(-30, 3 + tw, 8, 3);
-  ctx.fillRect(-34, 5 + tw, 5, 3);
+  ctx.fillRect(-30, -6 + tw,  8, 3);
+  ctx.fillRect(-34, -8 + tw,  5, 3);
+  ctx.fillRect(-30,  3 + tw,  8, 3);
+  ctx.fillRect(-34,  5 + tw,  5, 3);
+
+  // Tail-body junction
   ctx.fillStyle = darkCol;
-  ctx.fillRect(-24, -3 + tw, 6, 6);
+  ctx.fillRect(-24, -3 + tw2, 6, 6);
 
+  // Rear body segment (follows tail with damping)
   ctx.fillStyle = bodyCol;
-  ctx.fillRect(-18, -5, 36, 10);
-  ctx.fillRect(-14, -6, 28, 2);
-  ctx.fillRect(-14, 5, 28, 2);
-
+  ctx.fillRect(-18, -5 + tw3, 10, 10);
+  ctx.fillRect(-18, -6 + tw3,  8,  2);
+  ctx.fillRect(-18,  5 + tw3,  8,  2);
   ctx.fillStyle = bellyCol;
-  ctx.fillRect(-14, 2, 28, 4);
+  ctx.fillRect(-14,  2 + tw3,  6,  4);
 
+  // Mid body segment (barely moves)
+  ctx.fillStyle = bodyCol;
+  ctx.fillRect(-8, -5, 14, 10);
+  ctx.fillRect(-8, -6, 12,  2);
+  ctx.fillRect(-8,  5, 12,  2);
+  ctx.fillStyle = bellyCol;
+  ctx.fillRect(-8,  2, 12,  4);
+
+  // Front body + head (anchored)
+  ctx.fillStyle = bodyCol;
+  ctx.fillRect(6, -5, 10, 10);
+  ctx.fillRect(6, -6,  8,  2);
+  ctx.fillRect(6,  5,  8,  2);
+  ctx.fillStyle = bellyCol;
+  ctx.fillRect(6,  2,  8,  4);
+
+  // Head taper
   ctx.fillStyle = bodyCol;
   ctx.fillRect(16, -4, 6, 8);
   ctx.fillRect(20, -3, 5, 6);
   ctx.fillRect(24, -2, 4, 4);
   ctx.fillRect(27, -1, 3, 2);
 
+  // Dorsal fin (slight independent sway)
   ctx.fillStyle = finCol;
-  ctx.fillRect(-2, -12, 3, 7);
-  ctx.fillRect(-1, -16, 3, 5);
-  ctx.fillRect(0, -19, 2, 4);
+  ctx.fillRect(-2, -12 + dw, 3, 7);
+  ctx.fillRect(-1, -16 + dw, 3, 5);
+  ctx.fillRect( 0, -19 + dw, 2, 4);
 
+  // Pec fin (slight independent sway)
   ctx.fillStyle = finCol;
-  ctx.fillRect(2, 6, 8, 3);
-  ctx.fillRect(4, 9, 5, 2);
+  ctx.fillRect(2, 6 + fw, 8, 3);
+  ctx.fillRect(4, 9 + fw, 5, 2);
 
   const smart = S.settings.smartShark;
   ctx.fillStyle = frozen ? '#aabbcc' : smart ? '#00ff88' : '#ffee44';

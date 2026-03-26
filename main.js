@@ -116,9 +116,9 @@ function updateTutorial() {
 
 // ─── DIFFICULTY PRESETS ───
 const DIFFICULTY_PRESETS = {
-  easy:     { sharkSpeedBase: -2.4, sharkSpeedPerLevel: 0.12, levelTimeBase: 45, levelTimeMin: 25 },
+  easy:     { sharkSpeedBase: -2.4, sharkSpeedPerLevel: 0.12, levelTimeBase: 45, levelTimeMin: 25, treatBase: 3, treatPerLevel: 1 },
   normal:   {},
-  hard:     { sharkSpeedBase: -0.9, sharkSpeedPerLevel: 0.28, levelTimeBase: 26, levelTimeMin: 12 },
+  hard:     { sharkSpeedBase: -0.9, sharkSpeedPerLevel: 0.28, levelTimeBase: 26, levelTimeMin: 12, treatBase: 6, treatPerLevel: 3 },
   tutorial: { sharkSpeedBase: -3.0, sharkSpeedPerLevel: 0.05, levelTimeBase: 120, levelTimeMin: 120, treatBase: 3, treatPerLevel: 0 },
 };
 
@@ -705,7 +705,7 @@ function updateShark(dt = 1) {
       let diff = ta - S.shark.angle;
       while (diff > Math.PI) diff -= Math.PI * 2;
       while (diff < -Math.PI) diff += Math.PI * 2;
-      S.shark.angle += diff * (1 - Math.pow(0.65, dt));
+      S.shark.angle += diff * (1 - Math.pow(0.78, dt));
     }
     S.shark.x = Math.max(20, Math.min(W - 20, S.shark.x));
     S.shark.y = Math.max(20, Math.min(H - 20, S.shark.y));
@@ -835,27 +835,32 @@ function updateShark(dt = 1) {
       targetY = target.y + vy * t + 0.5 * ay * t * t + ny;
     }
 
-    // 4. Treat-path blocking (tier 2+)
+    // 4. Treat-path blocking (tier 1+)
     // Detect which treat the fish is heading toward and cut off the path.
-    if (tier >= 2 && S.treats?.length) {
-      const treatBlend = (0.36 + tp * 0.1) + (tier === 3 ? 0.28 : 0);
+    if (tier >= 1 && S.treats?.length) {
+      const treatBlend = tier === 1 ? (0.18 + tp * 0.08)
+                       : tier === 2 ? (0.44 + tp * 0.12)
+                       :              (0.44 + tp * 0.12 + 0.34); // tier 3
+      const detectR = tier >= 3 ? 360 : 280;
+      const dotThresh = tier >= 3 ? 0.15 : 0.25;
       let bestTreat = null, bestScore = -Infinity;
       const speed = Math.hypot(vx, vy) || 0.01;
       for (const tr of S.treats) {
         if (tr.collected) continue;
         const tx = tr.x - target.x, ty = tr.y - target.y;
         const d  = Math.hypot(tx, ty);
-        if (d > 280) continue;
+        if (d > detectR) continue;
         const dot = (tx * vx + ty * vy) / (speed * d); // cos of angle, -1→1
-        if (dot > 0.25) {
+        if (dot > dotThresh) {
           const score = dot / d;
           if (score > bestScore) { bestScore = score; bestTreat = tr; }
         }
       }
       if (bestTreat) {
-        // Aim for a point 35% of the way from fish to the treat
-        const cutX = target.x + (bestTreat.x - target.x) * 0.48;
-        const cutY = target.y + (bestTreat.y - target.y) * 0.48;
+        // Cut point: intercept between fish and the treat (deeper at higher tiers)
+        const cutDepth = tier >= 3 ? 0.58 : tier === 2 ? 0.52 : 0.42;
+        const cutX = target.x + (bestTreat.x - target.x) * cutDepth;
+        const cutY = target.y + (bestTreat.y - target.y) * cutDepth;
         targetX = targetX * (1 - treatBlend) + cutX * treatBlend;
         targetY = targetY * (1 - treatBlend) + cutY * treatBlend;
       }
@@ -867,7 +872,11 @@ function updateShark(dt = 1) {
 
   S.shark.chaseTimer += 0.02 * dt;
   const a = Math.atan2(targetY - S.shark.y, targetX - S.shark.x);
-  const wobble = Math.sin(S.shark.chaseTimer * 3) * 0.4;
+  // Wobble scales to zero when fish is cornered near a wall or shark is right on top
+  const wallMargin = Math.min(target.x, W - target.x, target.y, H - target.y);
+  const closeness  = Math.hypot(target.x - S.shark.x, target.y - S.shark.y);
+  const wobbleScale = Math.min(1, closeness / 80) * Math.min(1, wallMargin / 45);
+  const wobble = Math.sin(S.shark.chaseTimer * 3) * 0.4 * wobbleScale;
   const dx = Math.cos(a + wobble) * _activeSpeed;
   const dy = Math.sin(a + wobble) * _activeSpeed;
   S.shark.x += dx * dt;
@@ -877,7 +886,7 @@ function updateShark(dt = 1) {
   let diff = targetAngle - S.shark.angle;
   while (diff > Math.PI) diff -= Math.PI * 2;
   while (diff < -Math.PI) diff += Math.PI * 2;
-  S.shark.angle += diff * (1 - Math.pow(0.85, dt));
+  S.shark.angle += diff * (1 - Math.pow(0.93, dt));
 
   S.shark.tailPhase += 0.12 * dt;
 

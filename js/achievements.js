@@ -111,7 +111,7 @@ export const ACHIEVEMENTS = [
   { id: 'sh_no_powerup_hard_15',tier:'extrahard', icon: '💀', name: 'THE MONK',         desc: 'Reach level 15 on Hard without collecting any powerups.',                 hint: 'Reach level 15 on Hard, ignoring every powerup.' },
   { id: 'sh_speed_god',         tier:'extrahard', icon: '💀', name: 'SPEED GOD',        desc: 'Complete 3 consecutive levels each in under 6 seconds.',                  hint: 'Clear 3 levels in a row in under 6 seconds each.' },
   { id: 'sh_speed_demon',       tier:'extrahard', icon: '💀', name: 'SPEED DEMON',      desc: 'Complete 5 consecutive levels each in under 6 seconds.',                  hint: 'Clear 5 levels in a row in under 6 seconds each.' },
-  { id: 'sh_hell_x5',           tier:'extrahard', icon: '💀', name: 'HELL GAUNTLET',    desc: 'Survive the Hell powerup 5 times in a single game.',                      hint: 'Survive Hell 5 times in one game.' },
+  { id: 'sh_hell_x5',           tier:'extrahard', icon: '💀', name: 'HELL GAUNTLET',    desc: 'Survive the Hell powerup 3 times in a single game.',                      hint: 'Survive Hell 3 times in one game.' },
   { id: 'sh_hell_x10',          tier:'extrahard', icon: '💀', name: 'INFERNO',          desc: 'Survive the Hell powerup 3 times total across all games.',                hint: 'Survive Hell 3 times total across all your games.' },
 
   // ── ALX CHALLENGE ──
@@ -538,7 +538,7 @@ export function onHellSurvived() {
   _gameStats.hellSurviveCount++;
   _stats.totalHellSurvivals++;
   _save();
-  if (_gameStats.hellSurviveCount >= 5)  unlock('sh_hell_x5');
+  if (_gameStats.hellSurviveCount >= 3)  unlock('sh_hell_x5');
   if (_stats.totalHellSurvivals >= 3)    unlock('sh_hell_x10');
 }
 

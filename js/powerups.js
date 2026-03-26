@@ -693,7 +693,7 @@ export const pwConfig = {
   rainbow:   { emoji: '🌈', glow: '#ff88ff', fn: activateRainbow,  rarity: 6, ok: () => !S.rainbowActive, life: 1500 },
   prompt:    { emoji: '✍️', glow: '#aa66ff', fn: activatePrompt,   rarity: 3, ok: () => !S.promptActive },
   claude:    { emoji: '🤖', glow: '#cc88ff', fn: activateClaude,   rarity: 6, ok: () => !S.claudeActive && S.treats.length > 0, life: CLAUDE_ITEM_LIFETIME },
-  hell:      { emoji: '👹', glow: '#ff0000', fn: activateHell,     rarity: 6, ok: () => !S.hellActive && !S.hellAnim, life: 5000 },
+  hell:      { emoji: '👹', glow: '#ff0000', fn: activateHell,     rarity: 6, ok: () => !S.hellActive && !S.hellAnim, life: 5000, spawnMul: 0.1 },
   card:      { emoji: '🃏', glow: '#bb88ff', fn: activateCard,     rarity: 4, ok: () => !S.cardAnim, life: 4000 },
   nice:      { emoji: '😏', glow: '#ff88cc', fn: activateNice,     rarity: 5, ok: () => true, life: 3000 },
 };
@@ -784,7 +784,11 @@ export async function loadRarities() {
 // ═══════════════════════════════════════════════════════════════
 
 function getFieldBudget() {
-  return Math.min(15, Math.floor(7 + (Math.max(1, S.level) - 1) * (8 / 14)));
+  const lv = Math.max(1, S.level) - 1;
+  const diff = S.settings.difficulty;
+  if (diff === 'easy') return Math.min(20, Math.floor(12 + lv * (8 / 14)));
+  if (diff === 'hard') return Math.min(15, Math.floor(7 + lv * (8 / 14)));
+  return Math.min(15, Math.floor(7 + lv * (8 / 14)));
 }
 
 function getFieldCost() {
@@ -851,7 +855,7 @@ export function trySpawnPowerups() {
     const r = c.rarity;
     if (currentCost + r > budget) continue;
 
-    const rarityMul = RARITY[r]?.spawnMul ?? 0.025;
+    const rarityMul = c.spawnMul ?? RARITY[r]?.spawnMul ?? 0.025;
     if (Math.random() < PW_SPAWN_CHANCE * rarityMul) {
       S.pwItems[k] = spawnPW(k);
       S.lastSpawnedPW = k;
