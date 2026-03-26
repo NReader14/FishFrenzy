@@ -186,17 +186,18 @@ export function drawDecoy() {
 }
 
 // ─── GHOST SHARK (for HELL active phase) — identical to real shark, semi-transparent ───
-function drawSharkEntity(e, alpha = 1) {
+function drawSharkEntity(e, alpha = 1, frozen = false) {
   ctx.save();
   ctx.translate(e.x, e.y);
   ctx.rotate(e.angle);
   const _sm = mob(); ctx.scale(_sm, _sm);
-  if (alpha < 1) ctx.globalAlpha = alpha;
+  const effectiveAlpha = frozen ? Math.min(alpha, 0.6) : alpha;
+  if (effectiveAlpha < 1) ctx.globalAlpha = effectiveAlpha;
 
-  const bodyCol  = '#667788';
-  const darkCol  = '#555566';
-  const finCol   = '#556677';
-  const bellyCol = '#99aabb';
+  const bodyCol  = frozen ? '#556688' : '#667788';
+  const darkCol  = frozen ? '#445566' : '#555566';
+  const finCol   = frozen ? '#4a5a6a' : '#556677';
+  const bellyCol = frozen ? '#8899aa' : '#99aabb';
 
   const phase = e.tailPhase;
   const tw  = Math.sin(phase) * 3.5;
@@ -248,7 +249,7 @@ function drawSharkEntity(e, alpha = 1) {
   ctx.fillRect(2, 6 + fw, 8, 3);
   ctx.fillRect(4, 9 + fw, 5, 2);
 
-  ctx.fillStyle = '#ffee44';
+  ctx.fillStyle = frozen ? '#aabbcc' : '#ffee44';
   ctx.fillRect(12, -4, 5, 5);
   ctx.fillStyle = '#111';
   ctx.fillRect(14, -4, 2, 5);
@@ -268,7 +269,14 @@ function drawSharkEntity(e, alpha = 1) {
   ctx.fillRect(21, -5, 2, 2);
   ctx.fillRect(24, -4, 2, 2);
 
-  if (!(S.iceActive || S.hourglassActive)) {
+  if (frozen) {
+    ctx.fillStyle = '#88ddff';
+    for (let fi = 0; fi < 4; fi++) {
+      const fa = Date.now() * 0.002 + (fi / 4) * Math.PI * 2;
+      ctx.fillRect(Math.cos(fa) * 22 - 1, Math.sin(fa) * 22 - 1, 3, 3);
+    }
+    ctx.globalAlpha = 1;
+  } else {
     ctx.beginPath(); ctx.ellipse(4, 0, 28, 18, 0, 0, Math.PI * 2);
     ctx.fillStyle = `rgba(255,40,40,${0.06 + Math.sin(Date.now() * 0.005) * 0.03})`;
     ctx.fill();
@@ -1152,7 +1160,9 @@ export function drawHellAnim() {
     }
 
     // Update and draw each ghost shark — independent AI, same speed as real shark
-    const ghostSpeed = S.shark ? Math.max(0.3, S.shark.speed) : 2.0;
+    const ghostFrozen = !!(S.iceActive || S.hourglassActive);
+    const ghostSpeed  = (!ghostFrozen && S.shark) ? Math.max(0.3, S.shark.speed) : 0;
+
     for (let i = 0; i < S.hellAnim.ghosts.length; i++) {
       const g = S.hellAnim.ghosts[i];
       const tx = S.fish ? S.fish.x : cx;
@@ -1161,7 +1171,7 @@ export function drawHellAnim() {
       const dy = ty - g.y;
       const d  = Math.sqrt(dx * dx + dy * dy);
 
-      if (d > 2) {
+      if (!ghostFrozen && d > 2) {
         g.chaseTimer += 0.02;
         const a = Math.atan2(dy, dx);
         const wallMargin  = Math.min(tx, W - tx, ty, H - ty);
@@ -1178,9 +1188,32 @@ export function drawHellAnim() {
         while (diff < -Math.PI) diff += Math.PI * 2;
         g.angle += diff * 0.07;
       }
-      g.tailPhase += 0.12;
+      g.tailPhase += ghostFrozen ? 0.015 : 0.12;
+    }
+
+    // Ghost-ghost collision — push apart so they can't overlap
+    const GHOST_R = 28;
+    for (let i = 0; i < S.hellAnim.ghosts.length; i++) {
+      for (let j = i + 1; j < S.hellAnim.ghosts.length; j++) {
+        const ga = S.hellAnim.ghosts[i];
+        const gb = S.hellAnim.ghosts[j];
+        const ex = gb.x - ga.x;
+        const ey = gb.y - ga.y;
+        const ed = Math.sqrt(ex * ex + ey * ey);
+        if (ed < GHOST_R && ed > 0.1) {
+          const push = (GHOST_R - ed) / 2;
+          const nx = ex / ed;
+          const ny = ey / ed;
+          ga.x -= nx * push;  ga.y -= ny * push;
+          gb.x += nx * push;  gb.y += ny * push;
+        }
+      }
+    }
+
+    for (let i = 0; i < S.hellAnim.ghosts.length; i++) {
+      const g = S.hellAnim.ghosts[i];
       const ghostAlpha = 0.55 + Math.sin(now * 1.5 + i * 1.5) * 0.08;
-      drawSharkEntity(g, ghostAlpha);
+      drawSharkEntity(g, ghostAlpha, ghostFrozen);
     }
 
     // "HELL" title — slow gentle pulse

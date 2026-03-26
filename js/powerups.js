@@ -646,17 +646,12 @@ function activateClaude() {
 // ─── HELL ───
 function activateHell() {
   S.hellAnim = { startTime: Date.now() };
-  // Freeze game during 2s intro
-  S.gamePaused = true;
-  S.timerFrozen = true;
   stOn('hell', 's-hell');
   spawnParticles(S.fish.x, S.fish.y, '#ff0000', 20);
 
-  // After 2s intro, unfreeze and begin the 5s active (score-drain) phase
+  // After 2s intro animation, begin the active (score-drain) phase
   S.hellTO = clearTO(S.hellTO);
   S.hellTO = setTimeout(() => {
-    S.gamePaused = false;
-    S.timerFrozen = false;
     S.hellActive = true;
     S.hellStartTime = Date.now();
     S.hellTO = setTimeout(deactivateHell, HELL_DURATION);
