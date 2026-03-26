@@ -185,7 +185,7 @@ export function drawDecoy() {
   }
 }
 
-// ─── GHOST SHARK (for HELL active phase) — identical to real shark, semi-transparent ───
+// ─── GHOST SHARK (for HELL active phase) — identical to real shark, including smart eye ───
 function drawSharkEntity(e, frozen = false) {
   ctx.save();
   ctx.translate(e.x, e.y);
