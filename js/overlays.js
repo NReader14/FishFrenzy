@@ -447,42 +447,47 @@ const RARITY_CSS_CLASS = { 1: 'common', 2: 'uncommon', 3: 'rare', 4: 'epic', 5: 
 
 const PW_DESCRIPTIONS = {
   frenzy:    { name: 'FRENZY',    desc: '2x points + speed boost for 3s' },
-  ice:       { name: 'ICE',       desc: 'Slows the shark for 4s' },
+  ice:       { name: 'ICE',       desc: 'Slows the shark to 25% speed for 4s' },
   shield:    { name: 'SHIELD',    desc: 'Blocks one shark hit' },
   poison:    { name: 'POISON',    desc: 'Bad! Lose 3 seconds', bad: true },
-  goop:      { name: 'GOOP',      desc: 'Bad! Slows you for 4s', bad: true },
+  goop:      { name: 'GOOP',      desc: 'Bad! Slows you to half speed for 4s', bad: true },
   hourglass: { name: 'TIME STOP', desc: 'Freezes timer &amp; shark for 3.5s' },
-  buddy:     { name: 'BUDDY',     desc: 'Mirror fish collects treats for 3s' },
-  hook:      { name: 'HOOK',      desc: 'Grapple to the nearest treat' },
-  ghost:     { name: 'GHOST',     desc: 'Shark vanishes for 3s' },
-  bomb:      { name: 'BOMB',      desc: 'Blasts shark to farthest corner' },
-  decoy:     { name: 'DECOY',     desc: 'Fake fish distracts the shark' },
-  swap:      { name: 'SWAP',      desc: 'Swap places with the shark' },
-  star:      { name: 'STAR',      desc: 'Brief invincibility, shark bounces off' },
-  double:    { name: 'DOUBLE',    desc: 'Duplicates all treats on the field' },
-  magnet:    { name: 'MAGNET',    desc: 'Pulls all treats towards you' },
-  wave:      { name: 'WAVE',      desc: 'Pushes all treats to nearest wall' },
-  rainbow:   { name: 'RAINBOW',   desc: 'ULTRA! Activates Frenzy, Ice, Time Stop, Shield, Buddy, Decoy &amp; Star at once! (Lv6+)' },
-  prompt:    { name: 'PROMPT',    desc: 'Confuses the shark! Freezes it 1s then sends it wandering randomly for 5s' },
-  bodyswap:  { name: 'BODY SWAP', desc: 'YOU become the shark! Collect treats as the shark while the fish hunts you for 8s' },
+  buddy:     { name: 'BUDDY',     desc: 'A helper fish collects treats for you for 3s' },
+  hook:      { name: 'HOOK',      desc: 'Grapples you to the nearest treat instantly' },
+  ghost:     { name: 'GHOST',     desc: 'Shark loses track and wanders for 3s' },
+  bomb:      { name: 'BOMB',      desc: 'Blasts the shark to the far corner' },
+  decoy:     { name: 'DECOY',     desc: 'Spawns a fake fish to distract the shark for 4s' },
+  swap:      { name: 'SWAP',      desc: 'Teleports you and the shark to each other\'s positions' },
+  card:      { name: 'CARD',      desc: 'Draw a card — could be a bonus, a powerup, or your doom' },
+  star:      { name: 'STAR',      desc: '3s of invincibility — shark bounces off on contact' },
+  double:    { name: 'DOUBLE',    desc: 'Duplicates every treat currently on the field' },
+  magnet:    { name: 'MAGNET',    desc: 'Pulls all treats towards you for 1.5s' },
+  wave:      { name: 'WAVE',      desc: 'Blasts all treats to the nearest wall' },
+  bodyswap:  { name: 'BODY SWAP', desc: 'YOU become the shark for 8s — collect treats while the fish hunts you' },
+  prompt:    { name: 'PROMPT',    desc: 'Freezes the shark for 1s, then it swims back and forth helplessly for 5s' },
+  crazy:     { name: 'CRAZY',     desc: 'Floods the field with treats for 5s — then kills you instantly. (Lv9+)', bad: true, nameStyle: 'color:#ff00aa;' },
+  rainbow:   { name: 'RAINBOW',   desc: 'ULTRA! Activates Frenzy, Ice, Time Stop, Shield, Buddy, Decoy &amp; Star simultaneously', nameStyle: 'background:linear-gradient(90deg,#ff4444,#ff8800,#ffee00,#44ee44,#44aaff,#aa44ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;' },
+  claude:    { name: 'THE CLAUDE', desc: 'ULTIMATE! Auto-collects all treats &amp; freezes the shark. +500 bonus!', nameStyle: 'background:linear-gradient(90deg,#cc88ff,#ffcc44);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;' },
+  hell:      { name: 'HELL',      desc: 'Bad! Every treat drains your score for 10s. The screen bleeds. Survive for the achievement.', bad: true, nameStyle: 'color:#ff2200;' },
 };
 
 export function buildRulesHTML() {
   const container = document.getElementById('rules-powerups-dynamic');
   if (!container) return;
 
-  const groups = { 1: [], 2: [], 3: [], 4: [], 5: [] };
+  const groups = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
   for (const [key, cfg] of Object.entries(pwConfig)) {
-    if (cfg.rarity === 6) continue; // Legendary shown in own section
     const r = cfg.rarity;
-    if (r >= 1 && r <= 5) groups[r].push(key);
+    if (r >= 1 && r <= 6) groups[r].push(key);
   }
 
   let html = '';
-  for (let tier = 1; tier <= 5; tier++) {
+  for (let tier = 1; tier <= 6; tier++) {
     if (groups[tier].length === 0) continue;
     const cls = RARITY_CSS_CLASS[tier];
-    if (tier === 5) {
+    if (tier === 6) {
+      html += `<div class="rules-rarity-label rarity-legendary-label">${RARITY_STARS[tier]} ${RARITY_NAMES[tier].toUpperCase()}</div>`;
+    } else if (tier === 5) {
       html += `<div class="rules-rarity-label rules-rarity-mythical">${RARITY_STARS[tier]} ${RARITY_NAMES[tier].toUpperCase()}</div>`;
     } else {
       html += `<div class="rules-rarity-label" style="color:${RARITY_TAG_COLOURS[tier]};">${RARITY_STARS[tier]} ${RARITY_NAMES[tier].toUpperCase()}</div>`;
@@ -492,20 +497,12 @@ export function buildRulesHTML() {
       const pw = PW_DESCRIPTIONS[key];
       if (!pw) continue;
       const emoji = pwConfig[key].emoji;
-      const nameStyle = pw.bad ? ' style="color:#ff4444;"' : '';
+      const nameStyle = pw.nameStyle ? ` style="${pw.nameStyle}"` : pw.bad ? ' style="color:#ff4444;"' : '';
       html += `<div class="rules-pw rarity-${cls}"><span class="pw-icon">${emoji}</span><strong${nameStyle}>${pw.name}</strong> — ${pw.desc}</div>`;
     }
     html += '</div>';
   }
 
-  // Legendary tier (bodyswap is rarity 5 so already in the tier groups above)
-  html += `<div class="rules-rarity-label rarity-legendary-label">${RARITY_STARS[6]} ${RARITY_NAMES[6].toUpperCase()}</div>`;
-  html += `<div class="rules-powerup-grid">`;
-  html += `<div class="rules-pw rarity-legendary"><span class="pw-icon">🍄</span><strong style="color:#ff00aa;">CRAZY</strong> — Masses of treats for 5s, then game over! (Lv9+)</div>`;
-  html += `<div class="rules-pw rarity-legendary"><span class="pw-icon">🌈</span><strong style="background:linear-gradient(90deg,#ff4444,#ff8800,#ffee00,#44ee44,#44aaff,#aa44ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">RAINBOW</strong> — ULTRA! Activates Frenzy, Ice, Time Stop, Shield, Buddy, Decoy &amp; Star at once!</div>`;
-  html += `<div class="rules-pw rarity-legendary"><span class="pw-icon">✍️</span><strong style="color:#aa66ff;">PROMPT</strong> — Confuses the shark! Freezes it then sends it wandering for 5s.</div>`;
-  html += `<div class="rules-pw rarity-legendary"><span class="pw-icon">🤖</span><strong style="background:linear-gradient(90deg,#cc88ff,#ffcc44);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">THE CLAUDE</strong> — ULTIMATE! Auto-collects all treats &amp; freezes the shark. +500 bonus!</div>`;
-  html += `</div>`;
   container.innerHTML = html;
 }
 
