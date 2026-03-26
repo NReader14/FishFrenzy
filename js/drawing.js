@@ -186,56 +186,93 @@ export function drawDecoy() {
 }
 
 // ─── GHOST SHARK (for HELL active phase) — identical to real shark, semi-transparent ───
-function drawGhostSharkAt(x, y, angle, tailPhase, alpha) {
+function drawSharkEntity(e, alpha = 1) {
   ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(angle);
-  ctx.globalAlpha = alpha;
+  ctx.translate(e.x, e.y);
+  ctx.rotate(e.angle);
+  const _sm = mob(); ctx.scale(_sm, _sm);
+  if (alpha < 1) ctx.globalAlpha = alpha;
 
-  const tw = Math.round(Math.sin(tailPhase) * 4);
+  const bodyCol  = '#667788';
+  const darkCol  = '#555566';
+  const finCol   = '#556677';
+  const bellyCol = '#99aabb';
 
-  // Exact same pixel art as the real shark
-  ctx.fillStyle = '#556677';
-  ctx.fillRect(-30, -6 + tw, 8, 3);
-  ctx.fillRect(-34, -8 + tw, 5, 3);
-  ctx.fillRect(-30, 3 + tw, 8, 3);
-  ctx.fillRect(-34, 5 + tw, 5, 3);
-  ctx.fillStyle = '#555566';
-  ctx.fillRect(-24, -3 + tw, 6, 6);
-  ctx.fillStyle = '#667788';
-  ctx.fillRect(-18, -5, 36, 10);
-  ctx.fillRect(-14, -6, 28, 2);
-  ctx.fillRect(-14, 5, 28, 2);
-  ctx.fillStyle = '#99aabb';
-  ctx.fillRect(-14, 2, 28, 4);
-  ctx.fillStyle = '#667788';
+  const phase = e.tailPhase;
+  const tw  = Math.sin(phase) * 3.5;
+  const tw2 = Math.sin(phase - 0.35) * 2.2;
+  const tw3 = Math.sin(phase - 0.65) * 0.9;
+  const dw  = Math.sin(phase * 0.72 + 0.9) * 1.1;
+  const fw  = Math.sin(phase * 0.88 + 0.5) * 0.8;
+
+  ctx.fillStyle = finCol;
+  ctx.fillRect(-30, -6 + tw,  8, 3);
+  ctx.fillRect(-34, -8 + tw,  5, 3);
+  ctx.fillRect(-30,  3 + tw,  8, 3);
+  ctx.fillRect(-34,  5 + tw,  5, 3);
+
+  ctx.fillStyle = darkCol;
+  ctx.fillRect(-24, -3 + tw2, 6, 6);
+
+  ctx.fillStyle = bodyCol;
+  ctx.fillRect(-18, -5 + tw3, 10, 10);
+  ctx.fillRect(-18, -6 + tw3,  8,  2);
+  ctx.fillRect(-18,  5 + tw3,  8,  2);
+  ctx.fillStyle = bellyCol;
+  ctx.fillRect(-14,  2 + tw3,  6,  4);
+
+  ctx.fillStyle = bodyCol;
+  ctx.fillRect(-8, -5, 14, 10);
+  ctx.fillRect(-8, -6, 12,  2);
+  ctx.fillRect(-8,  5, 12,  2);
+  ctx.fillStyle = bellyCol;
+  ctx.fillRect(-8,  2, 12,  4);
+
+  ctx.fillStyle = bodyCol;
+  ctx.fillRect(6, -5, 10, 10);
+  ctx.fillRect(6, -6,  8,  2);
+  ctx.fillRect(6,  5,  8,  2);
+  ctx.fillStyle = bellyCol;
+  ctx.fillRect(6,  2,  8,  4);
+
+  ctx.fillStyle = bodyCol;
   ctx.fillRect(16, -4, 6, 8);
   ctx.fillRect(20, -3, 5, 6);
   ctx.fillRect(24, -2, 4, 4);
   ctx.fillRect(27, -1, 3, 2);
-  ctx.fillStyle = '#556677';
-  ctx.fillRect(-2, -12, 3, 7);
-  ctx.fillRect(-1, -16, 3, 5);
-  ctx.fillRect(0, -19, 2, 4);
-  ctx.fillRect(2, 6, 8, 3);
-  ctx.fillRect(4, 9, 5, 2);
+
+  ctx.fillStyle = finCol;
+  ctx.fillRect(-2, -12 + dw, 3, 7);
+  ctx.fillRect(-1, -16 + dw, 3, 5);
+  ctx.fillRect( 0, -19 + dw, 2, 4);
+  ctx.fillRect(2, 6 + fw, 8, 3);
+  ctx.fillRect(4, 9 + fw, 5, 2);
+
   ctx.fillStyle = '#ffee44';
   ctx.fillRect(12, -4, 5, 5);
   ctx.fillStyle = '#111';
   ctx.fillRect(14, -4, 2, 5);
   ctx.fillStyle = '#fff';
   ctx.fillRect(13, -3, 1, 1);
-  ctx.fillStyle = '#555566';
+
+  ctx.fillStyle = darkCol;
   ctx.fillRect(5, -3, 1, 6);
   ctx.fillRect(7, -3, 1, 6);
   ctx.fillRect(9, -3, 1, 6);
+
   ctx.fillStyle = '#ddeeff';
-  ctx.fillRect(18, 3, 2, 2);
-  ctx.fillRect(21, 3, 2, 2);
-  ctx.fillRect(24, 2, 2, 2);
+  ctx.fillRect(18,  3, 2, 2);
+  ctx.fillRect(21,  3, 2, 2);
+  ctx.fillRect(24,  2, 2, 2);
   ctx.fillRect(18, -5, 2, 2);
   ctx.fillRect(21, -5, 2, 2);
   ctx.fillRect(24, -4, 2, 2);
+
+  if (!frozen) {
+    ctx.beginPath(); ctx.ellipse(4, 0, 28, 18, 0, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,40,40,${0.06 + Math.sin(Date.now() * 0.005) * 0.03})`;
+    ctx.fill();
+  }
 
   ctx.restore();
 }
@@ -1107,30 +1144,43 @@ export function drawHellAnim() {
     // Initialize ghost sharks on first active frame
     if (!S.hellAnim.ghosts) {
       S.hellAnim.ghosts = [
-        { x: W * 0.1,  y: H * 0.15, angle: 0,          tailPhase: 0 },
-        { x: W * 0.9,  y: H * 0.15, angle: Math.PI,     tailPhase: 1.5 },
-        { x: W * 0.1,  y: H * 0.85, angle: 0,           tailPhase: 3 },
-        { x: W * 0.9,  y: H * 0.85, angle: Math.PI,     tailPhase: 4.5 },
+        { x: W * 0.1,  y: H * 0.15, angle: 0,          tailPhase: 0,   chaseTimer: 0 },
+        { x: W * 0.9,  y: H * 0.15, angle: Math.PI,     tailPhase: 1.5, chaseTimer: 1 },
+        { x: W * 0.1,  y: H * 0.85, angle: 0,           tailPhase: 3,   chaseTimer: 2 },
+        { x: W * 0.9,  y: H * 0.85, angle: Math.PI,     tailPhase: 4.5, chaseTimer: 3 },
       ];
     }
 
-    // Update and draw each ghost shark — they chase the fish
-    const ghostSpeed = 1.2 + S.level * 0.08;
+    // Update and draw each ghost shark — independent AI, same speed as real shark
+    const ghostSpeed = S.shark ? Math.max(0.3, S.shark.speed) : 2.0;
     for (let i = 0; i < S.hellAnim.ghosts.length; i++) {
       const g = S.hellAnim.ghosts[i];
       const tx = S.fish ? S.fish.x : cx;
       const ty = S.fish ? S.fish.y : cy;
       const dx = tx - g.x;
       const dy = ty - g.y;
-      const d = Math.sqrt(dx * dx + dy * dy);
+      const d  = Math.sqrt(dx * dx + dy * dy);
+
       if (d > 2) {
-        g.x += (dx / d) * ghostSpeed;
-        g.y += (dy / d) * ghostSpeed;
-        g.angle = Math.atan2(dy, dx);
+        g.chaseTimer += 0.02;
+        const a = Math.atan2(dy, dx);
+        const wallMargin  = Math.min(tx, W - tx, ty, H - ty);
+        const wobbleScale = Math.min(1, d / 80) * Math.min(1, wallMargin / 45);
+        const wobble      = Math.sin(g.chaseTimer * 3) * 0.4 * wobbleScale;
+        g.x += Math.cos(a + wobble) * ghostSpeed;
+        g.y += Math.sin(a + wobble) * ghostSpeed;
+        g.x = Math.max(20, Math.min(W - 20, g.x));
+        g.y = Math.max(20, Math.min(H - 20, g.y));
+
+        // Smooth angle interpolation — same as real shark
+        let diff = a - g.angle;
+        while (diff >  Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        g.angle += diff * 0.07;
       }
-      g.tailPhase += 0.1;
+      g.tailPhase += 0.12;
       const ghostAlpha = 0.55 + Math.sin(now * 1.5 + i * 1.5) * 0.08;
-      drawGhostSharkAt(g.x, g.y, g.angle, g.tailPhase, ghostAlpha);
+      drawSharkEntity(g, ghostAlpha);
     }
 
     // "HELL" title — slow gentle pulse
@@ -1229,12 +1279,12 @@ export function drawHellAnim() {
 // ─── TUTORIAL HINTS ───
 // dur: seconds this step lasts (null = wait for input, never fade out)
 const TUTORIAL_HINTS = [
-  { title: 'WELCOME!',      body: 'ARROW KEYS / WASD TO SWIM  \u2022  TAP & DRAG ON MOBILE',         dur: null },
-  { title: 'COLLECT',       body: 'EAT ALL THE TREATS BEFORE THE TIMER RUNS OUT!',                    dur: 6    },
-  { title: 'POWER-UPS!',    body: 'GLOWING ORBS GIVE BOOSTS \u2014 FRENZY MAGNET SHIELD & MORE!',    dur: 5    },
-  { title: 'DANGER ITEMS',  body: 'RED ORBS HURT YOU \u2014 POISON HOOK & GOOP \u2014 AVOID THEM!',  dur: 5    },
-  { title: 'THE SHARK!',    body: "IT'S CHASING YOU \u2014 DODGE IT OR IT'S GAME OVER!",              dur: 5    },
-  { title: 'ALL DONE!',     body: 'YOU ARE READY TO PLAY. HEADING BACK TO MENU...',                   dur: 3    },
+  { title: 'WELCOME!',     body: 'MOVE WITH ARROW KEYS / WASD  \u2022  TAP & DRAG ON MOBILE',              dur: null },
+  { title: 'COLLECT!',     body: 'SWIM OVER A TREAT TO EAT IT \u2014 EAT ONE TO CONTINUE',                  dur: null },
+  { title: 'KEEP GOING!',  body: 'GREAT! NOW EAT ALL THE TREATS TO CLEAR THE LEVEL',                        dur: null },
+  { title: 'POWER-UP!',    body: 'A GLOWING ORB APPEARED \u2014 SWIM INTO IT TO GRAB IT!',                  dur: null },
+  { title: 'THE SHARK!',   body: "THE SHARK IS FREE \u2014 DODGE IT OR IT'S GAME OVER! SURVIVE 5 SECONDS", dur: null },
+  { title: 'ALL DONE!',    body: 'YOU ARE READY TO PLAY. HEADING BACK TO MENU...',                          dur: 2    },
 ];
 
 export function drawTutorialHints() {

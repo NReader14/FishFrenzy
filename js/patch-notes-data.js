@@ -5,6 +5,19 @@
 
 export const NOTES = [
   {
+    v: 'v1.4', emoji: '👻', title: 'TEACH, HAUNT & TAUNT', date: 'MAR 2026',
+    items: [
+      '🎓 Tutorial added as a proper difficulty — sits alongside Easy, Normal and Hard',
+      '📖 Tutorial is now fully interactive — move, eat a treat, clear the level, grab a power-up, then survive',
+      '🏆 Tutorial achievement now unlocks when you finish the tutorial, not the moment you start it',
+      '👻 Hell ghost sharks now look exactly like the real shark — full ripple body, fins, tail and all',
+      '🧠 Each hell ghost has its own independent AI — they track you separately, no more clumping',
+      '⚡ Ghost sharks move at the same speed as the real shark, ghost still can\'t kill you',
+      '🔧 Admins can now enter Tester Mode during maintenance — play the game without taking it offline',
+      '🔴 A Tester Mode badge shows in the corner so you always know you\'re bypassing maintenance',
+    ]
+  },
+  {
     v: 'v1.3', emoji: '🦈', title: 'FAST FINS AND DEADLY GRINS', date: 'MAR 2026',
     items: [
       '🦈 Smart Shark now blocks your treats from level 5 — it was waiting until level 11 before',

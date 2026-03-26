@@ -344,6 +344,12 @@ export async function verifyAdminCredentials(email, password) {
   return cred.user;
 }
 
+// Signs in as admin and stays signed in — used by tester mode to bypass maintenance
+export async function signInAdmin(email, password) {
+  const cred = await signInWithEmailAndPassword(auth, email, password);
+  return cred.user;
+}
+
 export async function setMaintenance(enabled, email, password) {
   const adminCred = await signInWithEmailAndPassword(auth, email, password);
 

@@ -122,6 +122,8 @@ const S = {
   tutorialStep: 0,
   tutorialStepTime: 0,
   tutorialMoved: false,
+  tutorialTreatsCollected: 0,  // treats eaten since last step advance
+  tutorialPowerupGrabbed: false, // set true when any powerup grabbed during step 3
 };
 
 export default S;

@@ -10,10 +10,20 @@ import { sfxCollect, sfxCombo } from './audio.js';
 import { onTreatCollected as achTreat, onScoreUpdate as achScore, onComboReached as achCombo } from './achievements.js';
 
 const STREAK_MSGS = { 2: 'NICE!', 3: 'GREAT!', 4: 'UNSTOPPABLE!', 5: 'GODLIKE!' };
+
+export function getBaseMultiplier() {
+  const diff = S.settings.difficulty;
+  const diffMul       = diff === 'easy' ? 0.75 : diff === 'hard' ? 1.25 : 1;
+  const smartMul      = S.settings.smartShark   ? 1.25 : 1;
+  const mysteryMul    = S.settings.mysteryBlocks ? 1.05 : 1;
+  const fastTreatsMul = S.settings.fastTreats   ? 1.03 : 1;
+  return diffMul * smartMul * mysteryMul * fastTreatsMul;
+}
 const STREAK_COLS = { 2: '#88ddff', 3: '#44ee88', 4: '#ffdd44', 5: '#ff44ff' };
 
 export function collectTreat(t) {
   t.collected = true;
+  if (S.tutorialActive) S.tutorialTreatsCollected++;
   const now = Date.now();
 
   // Combo system
@@ -53,12 +63,8 @@ export function collectTreat(t) {
   }
   const basePts = S.frenzyActive ? 20 : 10;
   const starMul = S.starActive ? 2 : 1;
-  const smartMul   = S.settings.smartShark   ? 1.25 : 1;
-  const mysteryMul    = S.settings.mysteryBlocks ? 1.05 : 1;
-  const fastTreatsMul = S.settings.fastTreats   ? 1.03 : 1;
-  const diffMul = S.settings.difficulty === 'easy' ? 0.75 : S.settings.difficulty === 'hard' ? 1.25 : 1;
   const crazyMul = S.crazyMultiplier || 1;
-  const pts = Math.round(basePts * cm * (S.bodySwapActive ? 2 : 1) * starMul * smartMul * mysteryMul * fastTreatsMul * diffMul * crazyMul);
+  const pts = Math.round(basePts * cm * (S.bodySwapActive ? 2 : 1) * starMul * getBaseMultiplier() * crazyMul);
 
   if (S.hellActive) {
     // Hell: collecting treats drains score

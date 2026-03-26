@@ -26,7 +26,8 @@ import {
 import {
   loadRarities, trySpawnPowerups, updatePWItems,
   clearAllPowerupTimeouts, clearTO, useShield,
-  overlapsExisting, setEndGame, getCurrentFishSpeed
+  overlapsExisting, setEndGame, getCurrentFishSpeed,
+  spawnTutorialPowerup
 } from './js/powerups.js';
 import {
   drawWater, drawFish, drawBuddy, drawDecoy, drawShark,
@@ -36,7 +37,7 @@ import {
   drawClaudeOverlay, drawBodySwapAnim, drawBombAnim, drawHellAnim, drawCardAnim,
   drawLevelBanner, drawTutorialHints
 } from './js/drawing.js';
-import { collectTreat } from './js/scoring.js';
+import { collectTreat, getBaseMultiplier } from './js/scoring.js';
 import {
   showNameEntry, showScoreboard, showFullLeaderboard,
   showAdminError, hideAdminError, buildRulesHTML, openAdminPanel,
@@ -45,7 +46,7 @@ import {
 import { setupFeedbackForm } from './js/feedback.js';
 import {
   initAuth, fetchHighScores, fetchMaintenance, setMaintenance,
-  verifyAdminCredentials
+  verifyAdminCredentials, signInAdmin
 } from './firebase-config.js';
 import { initControls } from './js/controls.js';
 import { initAuthUI } from './js/auth.js';
@@ -54,7 +55,7 @@ import {
   initAchievements, onGameStart as achGameStart, onLevelStart as achLevelStart,
   onLevelComplete as achLevelComplete, onGameOver as achGameOver,
   onSharkDistanceFrame, onDeathCard as achDeathCard, onDeathWithCombo as achDeathWithCombo,
-  buildAchievementsHTML, buildStatsHTML
+  buildAchievementsHTML, buildStatsHTML, onTutorialComplete as achTutorialComplete
 } from './js/achievements.js';
 import { initCursor } from './js/cursor.js';
 import { initAudio, startMusic, stopMusic, sfxLevelUp, sfxGameOver, sfxSharkBite, sfxMenuClick, stopCardMusic, setMusicTempo } from './js/audio.js';
@@ -75,6 +76,8 @@ setInitGame(initGame);
 function advanceTutorial() {
   S.tutorialStep++;
   S.tutorialStepTime = Date.now();
+  S.tutorialTreatsCollected = 0;
+  S.tutorialPowerupGrabbed = false;
   if (S.tutorialStep === 4) S.sharkDelay = 90; // release shark at shark step
   if (S.tutorialStep >= 6) { endTutorial(); return; }
 }
@@ -86,6 +89,7 @@ function endTutorial() {
   cancelAnimationFrame(S.gameLoop);
   stopMusic();
   clearAllPowerupTimeouts();
+  achTutorialComplete();
   setTimeout(() => {
     winOverlay.classList.add('hidden');
     overlay.classList.remove('hidden');
@@ -106,11 +110,24 @@ function updateTutorial() {
       if (moving) advanceTutorial();
       break;
     }
-    case 1: if (elapsed >= 6) advanceTutorial(); break;
-    case 2: if (elapsed >= 5) advanceTutorial(); break;
-    case 3: if (elapsed >= 5) advanceTutorial(); break;
-    case 4: if (elapsed >= 5) advanceTutorial(); break;
-    case 5: if (elapsed >= 3) advanceTutorial(); break;
+    case 1: // collect first treat
+      if (S.tutorialTreatsCollected >= 1) advanceTutorial();
+      break;
+    case 2: // collect ALL treats — main trigger is inside endGame(won), safety timeout here
+      if (elapsed >= 25) advanceTutorial();
+      break;
+    case 3: { // grab a power-up (shield spawned nearby)
+      if (!S.tutorialPowerupGrabbed) spawnTutorialPowerup(); // keep one on field until grabbed
+      if (S.tutorialPowerupGrabbed) advanceTutorial();
+      else if (elapsed >= 9) advanceTutorial(); // auto-advance if ignored
+      break;
+    }
+    case 4: // shark is free — survive 5 seconds
+      if (elapsed >= 5) advanceTutorial();
+      break;
+    case 5: // all done
+      if (elapsed >= 2) advanceTutorial();
+      break;
   }
 }
 
@@ -119,7 +136,7 @@ const DIFFICULTY_PRESETS = {
   easy:     { sharkSpeedBase: -2.4, sharkSpeedPerLevel: 0.12, levelTimeBase: 45, levelTimeMin: 25, treatBase: 3, treatPerLevel: 1 },
   normal:   {},
   hard:     { sharkSpeedBase: -0.9, sharkSpeedPerLevel: 0.28, levelTimeBase: 26, levelTimeMin: 12, treatBase: 6, treatPerLevel: 3 },
-  tutorial: { sharkSpeedBase: -3.0, sharkSpeedPerLevel: 0.05, levelTimeBase: 120, levelTimeMin: 120, treatBase: 3, treatPerLevel: 0 },
+  tutorial: { sharkSpeedBase: -3.0, sharkSpeedPerLevel: 0.0,  levelTimeBase: 60, levelTimeMin: 60, treatBase: 3, treatPerLevel: 0 },
 };
 
 function refreshDifficultyUI() {
@@ -134,11 +151,7 @@ function refreshMultiplierHint() {
   if (!el) return;
   const diff = S.settings.difficulty;
   if (diff === 'tutorial') { el.style.display = 'none'; return; }
-  const diffMul    = diff === 'easy' ? 0.75 : diff === 'hard' ? 1.25 : 1;
-  const smartMul   = S.settings.smartShark   ? 1.25 : 1;
-  const mysteryMul    = S.settings.mysteryBlocks ? 1.05 : 1;
-  const fastTreatsMul = S.settings.fastTreats   ? 1.03 : 1;
-  const total         = diffMul * smartMul * mysteryMul * fastTreatsMul;
+  const total = getBaseMultiplier();
   const pct      = Math.round((total - 1) * 100);
   if (pct === 0) { el.style.display = 'none'; return; }
   const sign  = pct > 0 ? '+' : '';
@@ -161,13 +174,45 @@ function refreshMultiplierHint() {
 // BOOT — Firebase auth, maintenance check, welcome
 // ═══════════════════════════════════════════════════════════════
 
+async function launchGame(testerMode = false) {
+  const bootEl = document.getElementById('boot-screen');
+  if (bootEl) {
+    bootEl.classList.add('boot-fade');
+    setTimeout(() => bootEl.remove(), 320);
+  }
+
+  if (testerMode) {
+    const badge = document.createElement('div');
+    badge.id = 'tester-badge';
+    badge.textContent = '🔧 TESTER MODE';
+    badge.style.cssText = [
+      'position:fixed', 'top:8px', 'left:50%', 'transform:translateX(-50%)',
+      'background:rgba(20,0,0,0.85)', 'border:1px solid #ff4444',
+      'color:#ff4444', 'font-family:"Press Start 2P",monospace',
+      'font-size:7px', 'padding:4px 10px', 'letter-spacing:1px',
+      'pointer-events:none', 'z-index:9999',
+    ].join(';');
+    document.body.appendChild(badge);
+  }
+
+  if (!localStorage.getItem('fishFrenzyWelcomed')) showWelcomeOverlay();
+
+  try {
+    const scores = await fetchHighScores();
+    const best = scores.length > 0 ? scores[0].score : null;
+    const el = document.getElementById('global-hi-score');
+    if (el) el.textContent = best !== null ? best.toLocaleString() : '---';
+    S.globalHighScore = best ?? 0;
+    initHallOfFame(scores);
+  } catch (_) {}
+}
+
 (async function boot() {
   // Check maintenance FIRST — if under maintenance, show screen and stop before auth
   const maint = await fetchMaintenance();
   if (!maint) await initAuth();
 
   if (maint) {
-    // Replace boot screen with maintenance screen (still covering everything)
     const bootEl = document.getElementById('boot-screen');
     if (bootEl) {
       bootEl.innerHTML = `
@@ -185,41 +230,39 @@ function refreshMultiplierHint() {
           <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:#44ddff;margin-bottom:8px;">ADMIN LOGIN</div>
           <input type="email" id="maint-email" class="admin-input" placeholder="Email" autocomplete="email">
           <input type="password" id="maint-pass" class="admin-input" placeholder="Password" autocomplete="current-password">
-          <div id="maint-error" class="admin-error hidden" style="color:#ee5566;font-size:7px;margin:2px 0;"></div>
-          <button id="maint-login-btn" class="btn-primary" style="padding:10px 20px;font-size:9px;margin-top:4px;width:100%;">DISABLE MAINTENANCE</button>
+          <div id="maint-error" style="color:#ee5566;font-size:7px;font-family:'Press Start 2P',monospace;min-height:14px;"></div>
+          <button id="maint-tester-btn" class="btn-primary" style="padding:10px 20px;font-size:8px;width:100%;">🎮 ENTER TESTER MODE</button>
+          <button id="maint-disable-btn" class="btn-secondary" style="padding:8px 20px;font-size:7px;width:100%;">🔧 DISABLE MAINTENANCE</button>
         </div>`;
-      document.getElementById('maint-login-btn').addEventListener('click', async () => {
+
+      const showErr = msg => {
+        const e = document.getElementById('maint-error');
+        if (e) e.textContent = msg;
+      };
+
+      document.getElementById('maint-tester-btn').addEventListener('click', async () => {
+        const email = document.getElementById('maint-email').value;
+        const pass  = document.getElementById('maint-pass').value;
         try {
-          await setMaintenance(false, document.getElementById('maint-email').value, document.getElementById('maint-pass').value);
+          await signInAdmin(email, pass);
+          await initAuth();
+          await launchGame(true);
+        } catch (_) { showErr('LOGIN FAILED'); }
+      });
+
+      document.getElementById('maint-disable-btn').addEventListener('click', async () => {
+        const email = document.getElementById('maint-email').value;
+        const pass  = document.getElementById('maint-pass').value;
+        try {
+          await setMaintenance(false, email, pass);
           location.reload();
-        } catch (_) {
-          const e = document.getElementById('maint-error');
-          if (e) { e.textContent = 'LOGIN FAILED'; e.classList.remove('hidden'); }
-        }
+        } catch (_) { showErr('LOGIN FAILED'); }
       });
     });
     return;
   }
 
-  // Not in maintenance — fade out boot screen to reveal the game
-  const bootEl = document.getElementById('boot-screen');
-  if (bootEl) {
-    bootEl.classList.add('boot-fade');
-    setTimeout(() => bootEl.remove(), 320);
-  }
-  if (!localStorage.getItem('fishFrenzyWelcomed')) {
-    showWelcomeOverlay();
-  }
-
-  // Show global high score in top bar + Hall of Fame banner
-  try {
-    const scores = await fetchHighScores();
-    const best = scores.length > 0 ? scores[0].score : null;
-    const el = document.getElementById('global-hi-score');
-    if (el) el.textContent = best !== null ? best.toLocaleString() : '---';
-    S.globalHighScore = best ?? 0;
-    initHallOfFame(scores);
-  } catch (_) {}
+  await launchGame(false);
 })();
 
 function showWelcomeOverlay() {
@@ -377,6 +420,8 @@ function startLevel() {
   S.crazyTO = clearTO(S.crazyTO); S.decoyTO = clearTO(S.decoyTO);
   S.starTO = clearTO(S.starTO); S.goopTO = clearTO(S.goopTO);
   S.rainbowTO = clearTO(S.rainbowTO);
+  S.magnetTO = clearTO(S.magnetTO); S.promptTO = clearTO(S.promptTO); S.promptTO2 = clearTO(S.promptTO2);
+  S.claudeTO = clearTO(S.claudeTO);
 
   for (const s of Object.values(st)) {
     s.classList.remove('s-on', 's-frenzy', 's-ice', 's-shield', 's-magnet',
@@ -391,6 +436,9 @@ function startLevel() {
   achLevelStart(S.level);
   if (S.level > 1) sfxLevelUp();
   S.levelBanner = { text: `LEVEL ${S.level}`, sub: S.level > 1 ? 'LEVEL UP!' : null, startTime: Date.now() };
+
+  S.tutorialTreatsCollected = 0;
+  S.tutorialPowerupGrabbed = false;
 
   if (S.settings.difficulty === 'tutorial' && S.level === 1) {
     S.tutorialActive = true;
@@ -424,6 +472,7 @@ function endGame(won, msg) {
   // Only restart the tutorial if the player actually dies.
   if (S.settings.difficulty === 'tutorial') {
     if (won) {
+      if (S.tutorialActive && S.tutorialStep === 2) advanceTutorial();
       for (let i = 0; i < 3; i++) spawnTreat();
       treatsLeftEl.textContent = S.treats.length;
       return;

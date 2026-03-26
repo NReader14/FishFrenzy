@@ -47,6 +47,9 @@ let _claudeTypewriterTOs = [];
 // Tracked timeouts for body-swap end countdown (cleared on game end)
 let _bodySwapCountdownTOs = [];
 
+// Tracked timeouts for card rage bonus reset (cleared on game end)
+let _cardRageTOs = [];
+
 // ─── FRENZY ───
 function activateFrenzy() {
   S.frenzyActive = true;
@@ -725,7 +728,7 @@ const CARD_POOL = [
   { label: '-7 SECONDS',  emoji: '⌛', good: false, fn: () => { S.timeLeft = Math.max(1, S.timeLeft - 7); timerEl.textContent = S.timeLeft; } },
   { label: 'GOOPED',      emoji: '🧪', good: false, fn: () => activateGoop() },
   { label: 'POISONED',    emoji: '☠', good: false, fn: () => activatePoison() },
-  { label: 'SHARK RAGE',  emoji: '😡', good: false, fn: () => { S.shark.rageBonus = (S.shark.rageBonus || 0) + 0.8; setTimeout(() => { if (S.shark) S.shark.rageBonus = 0; }, 5000); } },
+  { label: 'SHARK RAGE',  emoji: '😡', good: false, fn: () => { S.shark.rageBonus = (S.shark.rageBonus || 0) + 0.8; _cardRageTOs.push(setTimeout(() => { if (S.shark) S.shark.rageBonus = 0; }, 5000)); } },
 ];
 
 function makeCard() {
@@ -824,8 +827,18 @@ function spawnPW(type) {
   return { x, y, r: 16, bobPhase: rand(0, Math.PI * 2), spawnTime: Date.now(), lifetime: lt, type };
 }
 
+export function spawnTutorialPowerup() {
+  if (S.pwItems.shield || S.pwItems.frenzy) return; // one already on field
+  const angle = Math.random() * Math.PI * 2;
+  const d = 80 + Math.random() * 60;
+  const x = Math.max(50, Math.min(W - 50, S.fish.x + Math.cos(angle) * d));
+  const y = Math.max(50, Math.min(H - 50, S.fish.y + Math.sin(angle) * d));
+  S.pwItems.shield = { x, y, r: 16, bobPhase: 0, spawnTime: Date.now(), lifetime: 20000, type: 'shield' };
+}
+
 export function trySpawnPowerups() {
   if (S.gamePaused) return;
+  if (S.tutorialActive) return; // tutorial controls its own spawning
 
   // Item test: force one copy of each selected type on the field
   if (S.forcedItems && S.forcedItems.size > 0) {
@@ -887,6 +900,7 @@ export function updatePWItems() {
         cfg.fn();
         achPowerup(k);
       }
+      if (S.tutorialActive && S.tutorialStep === 3) S.tutorialPowerupGrabbed = true;
       S.pwItems[k] = null;
       continue;
     }
@@ -904,4 +918,7 @@ export function clearAllPowerupTimeouts() {
   _claudeTypewriterTOs = [];
   _bodySwapCountdownTOs.forEach(clearTO);
   _bodySwapCountdownTOs = [];
+  _cardRageTOs.forEach(clearTO);
+  _cardRageTOs = [];
+  if (S.shark) S.shark.rageBonus = 0;
 }

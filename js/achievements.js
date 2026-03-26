@@ -465,7 +465,7 @@ export function onLevelComplete(level, timeLeft) {
   if (diff === 'hard'     && level >= 7)  unlock('level_hard_7');
   if (diff === 'hard'     && level >= 10) unlock('hard_level_10');
   if (diff === 'hard'     && level >= 20) unlock('hard_20');
-  if (diff === 'tutorial')                unlock('tutorial_complete');
+  // tutorial_complete is unlocked by onTutorialComplete() when the player finishes the full tutorial
   if (diff === 'hard' && S.settings.smartShark && level >= 5) unlock('daredevil');
 
   // Powerup-free runs
@@ -558,6 +558,10 @@ export function onGameOver(_score, _level) {
 
 export function onDeathWithCombo(combo) {
   if (combo >= 5) unlock('secret_kamikaze');
+}
+
+export function onTutorialComplete() {
+  unlock('tutorial_complete');
 }
 
 export function onSignIn() {

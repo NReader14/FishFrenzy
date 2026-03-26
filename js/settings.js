@@ -18,7 +18,7 @@ function load() {
       if (typeof saved.mysteryBlocks === 'boolean') S.settings.mysteryBlocks = saved.mysteryBlocks;
       if (typeof saved.smartShark    === 'boolean') S.settings.smartShark    = saved.smartShark;
       if (typeof saved.skin          === 'number')  S.settings.skin          = saved.skin;
-      if (typeof saved.difficulty    === 'string' && ['easy','normal','hard'].includes(saved.difficulty))
+      if (typeof saved.difficulty    === 'string' && ['easy','normal','hard','tutorial'].includes(saved.difficulty))
         S.settings.difficulty = saved.difficulty;
       if (typeof saved.tutorial === 'boolean') S.settings.tutorial = saved.tutorial;
       if (typeof saved.music       === 'boolean') S.settings.music       = saved.music;
@@ -60,7 +60,6 @@ function updateToggle(id, active) {
 function refreshUI() {
   updateToggle('toggle-mystery-btn',    S.settings.mysteryBlocks);
   updateToggle('toggle-smart-shark-btn',S.settings.smartShark);
-  updateToggle('toggle-tutorial-btn',   S.settings.tutorial);
   updateToggle('toggle-music-btn',      S.settings.music);
   updateToggle('toggle-sfx-btn',        S.settings.sfx);
   updateToggle('toggle-shark-quips-btn',  S.settings.sharkQuips);
@@ -273,12 +272,6 @@ export function initSettings() {
     save();
     refreshUI();
     window.dispatchEvent(new Event('settingsMultiplierChanged'));
-  });
-
-  document.getElementById('toggle-tutorial-btn')?.addEventListener('click', () => {
-    S.settings.tutorial = !S.settings.tutorial;
-    save();
-    refreshUI();
   });
 
   document.getElementById('toggle-music-btn')?.addEventListener('click', () => {
