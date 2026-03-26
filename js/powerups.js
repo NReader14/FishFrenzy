@@ -787,8 +787,8 @@ function getFieldBudget() {
   const lv = Math.max(1, S.level) - 1;
   const diff = S.settings.difficulty;
   if (diff === 'easy') return Math.min(20, Math.floor(12 + lv * (8 / 14)));
-  if (diff === 'hard') return Math.min(15, Math.floor(7 + lv * (8 / 14)));
-  return Math.min(15, Math.floor(7 + lv * (8 / 14)));
+  if (diff === 'hard') return Math.min(20, Math.floor(7 + lv * (8 / 14)));
+  return Math.min(20, Math.floor(7 + lv * (8 / 14)));
 }
 
 function getFieldCost() {
