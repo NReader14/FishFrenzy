@@ -5,6 +5,19 @@
 
 export const NOTES = [
   {
+    v: 'v1.3', emoji: '🦈', title: 'FAST FINS AND DEADLY GRINS', date: 'MAR 2026',
+    items: [
+      '🦈 Smart Shark now blocks your treats from level 5 — it was waiting until level 11 before',
+      '🎯 Intercept strength massively increased — the shark plants itself between you and what you want',
+      '🔍 Tier 3 detection range extended — it reads the field further ahead and cuts off wider angles',
+      '🧱 Fixed wall-corner freakout — shark no longer thrashes when you\'re cornered, it just closes in',
+      '🐢 Shark is slower overall — base speed reduced and per-level ramp trimmed for a fairer climb',
+      '🌊 Shark body now ripples as it swims — tail swings full, head stays steady, fins drift independently',
+      '↩️ Smoother turning — shark (and body-swap) interpolates heading gradually instead of snapping',
+      '⚙️ Firebase shark speed slider now reaches −5.0 for full difficulty control',
+    ]
+  },
+  {
     v: 'v1.2', emoji: '🏆', title: 'ACHIEVE & BELIEVE', date: 'MAR 2026',
     items: [
       '🏆 62 Achievements added — from first treat to 100,000 points',
