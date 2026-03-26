@@ -1157,12 +1157,14 @@ export function drawHellAnim() {
 
     // Initialize ghost sharks on first active frame
     if (!S.hellAnim.ghosts) {
-      S.hellAnim.ghosts = [
-        { x: W * 0.1,  y: H * 0.15, angle: 0,          tailPhase: 0,   chaseTimer: 0 },
-        { x: W * 0.9,  y: H * 0.15, angle: Math.PI,     tailPhase: 1.5, chaseTimer: 1 },
-        { x: W * 0.1,  y: H * 0.85, angle: 0,           tailPhase: 3,   chaseTimer: 2 },
-        { x: W * 0.9,  y: H * 0.85, angle: Math.PI,     tailPhase: 4.5, chaseTimer: 3 },
-      ];
+      const margin = 40;
+      S.hellAnim.ghosts = Array.from({ length: 4 }, (_, i) => ({
+        x: margin + Math.random() * (W - margin * 2),
+        y: margin + Math.random() * (H - margin * 2),
+        angle: Math.random() * Math.PI * 2,
+        tailPhase: i * 1.5,
+        chaseTimer: i,
+      }));
     }
 
     // Update and draw each ghost shark — independent AI, same speed as real shark
