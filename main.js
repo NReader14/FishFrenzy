@@ -347,6 +347,7 @@ function startLevel() {
   S.treats = [];
   const treatCount = Math.max(1, gameVars.treatBase + S.level * gameVars.treatPerLevel);
   for (let i = 0; i < treatCount; i++) spawnTreat();
+  if (S.level === 1) S.treats[Math.floor(Math.random() * S.treats.length)].nice = true;
   treatsLeftEl.textContent = S.treats.length;
 
   S.particles = []; S.bubbles = []; S.scorePopups = [];

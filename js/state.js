@@ -34,7 +34,7 @@ const S = {
     ghost: null, hourglass: null, buddy: null, bomb: null, crazy: null,
     decoy: null, swap: null, star: null, double: null,
     wave: null, poison: null, hook: null, goop: null, rainbow: null,
-    prompt: null, claude: null, bodyswap: null, hell: null, card: null
+    prompt: null, claude: null, bodyswap: null, hell: null, card: null, nice: null
   },
 
   // Active power-up states

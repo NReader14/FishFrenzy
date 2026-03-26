@@ -43,6 +43,14 @@ export function collectTreat(t) {
   }
 
   // Calculate points
+  if (t.nice) {
+    S.score += 69;
+    scoreEl.textContent = S.score;
+    spawnParticles(t.x, t.y, '#ff88cc', 14);
+    S.scorePopups.push({ x: t.x, y: t.y - 14, pts: '69 😏', life: 1.4, decay: 0.02 });
+    achScore(S.score);
+    return;
+  }
   const basePts = S.frenzyActive ? 20 : 10;
   const starMul = S.starActive ? 2 : 1;
   const smartMul   = S.settings.smartShark   ? 1.25 : 1;

@@ -458,7 +458,7 @@ const PW_DESCRIPTIONS = {
   bomb:      { name: 'BOMB',      desc: 'Blasts the shark to the far corner' },
   decoy:     { name: 'DECOY',     desc: 'Spawns a fake fish to distract the shark for 4s' },
   swap:      { name: 'SWAP',      desc: 'Teleports you and the shark to each other\'s positions' },
-  card:      { name: 'CARD',      desc: 'Draw a card — could be a bonus, a powerup, or your doom' },
+  card:      { name: 'CARD',      desc: 'Draw a random card — bonus points, a powerup, extra time, or your doom' },
   star:      { name: 'STAR',      desc: '3s of invincibility — shark bounces off on contact' },
   double:    { name: 'DOUBLE',    desc: 'Duplicates every treat currently on the field' },
   magnet:    { name: 'MAGNET',    desc: 'Pulls all treats towards you for 1.5s' },
@@ -469,6 +469,7 @@ const PW_DESCRIPTIONS = {
   rainbow:   { name: 'RAINBOW',   desc: 'ULTRA! Activates Frenzy, Ice, Time Stop, Shield, Buddy, Decoy &amp; Star simultaneously', nameStyle: 'background:linear-gradient(90deg,#ff4444,#ff8800,#ffee00,#44ee44,#44aaff,#aa44ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;' },
   claude:    { name: 'THE CLAUDE', desc: 'ULTIMATE! Auto-collects all treats &amp; freezes the shark. +500 bonus!', nameStyle: 'background:linear-gradient(90deg,#cc88ff,#ffcc44);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;' },
   hell:      { name: 'HELL',      desc: 'Bad! Every treat drains your score for 10s. The screen bleeds. Survive for the achievement.', bad: true, nameStyle: 'color:#ff2200;' },
+  nice:      { name: 'NICE',      desc: '+69 points. That\'s it. That\'s the item.' },
 };
 
 export function buildRulesHTML() {

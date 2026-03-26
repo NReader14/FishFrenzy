@@ -318,6 +318,14 @@ function deactivateStar() {
   S.starTO = null;
 }
 
+// ─── NICE ───
+function activateNice() {
+  S.score += 69;
+  scoreEl.textContent = S.score;
+  spawnParticles(S.fish.x, S.fish.y, '#ff88cc', 14);
+  S.scorePopups.push({ x: S.fish.x, y: S.fish.y - 20, pts: '+69 😏', life: 1.4, decay: 0.02 });
+}
+
 // ─── DOUBLE ───
 function activateDouble() {
   const currentTreats = [...S.treats];
@@ -686,12 +694,14 @@ export const pwConfig = {
   prompt:    { emoji: '✍️', glow: '#aa66ff', fn: activatePrompt,   rarity: 3, ok: () => !S.promptActive },
   claude:    { emoji: '🤖', glow: '#cc88ff', fn: activateClaude,   rarity: 6, ok: () => !S.claudeActive && S.treats.length > 0, life: CLAUDE_ITEM_LIFETIME },
   hell:      { emoji: '👹', glow: '#ff0000', fn: activateHell,     rarity: 6, ok: () => !S.hellActive && !S.hellAnim, life: 5000 },
-  card:      { emoji: '🃏', glow: '#bb88ff', fn: activateCard,     rarity: 4, ok: () => !S.cardAnim, life: 4000 }
+  card:      { emoji: '🃏', glow: '#bb88ff', fn: activateCard,     rarity: 4, ok: () => !S.cardAnim, life: 4000 },
+  nice:      { emoji: '😏', glow: '#ff88cc', fn: activateNice,     rarity: 5, ok: () => true, life: 3000 },
 };
 
 // ─── CARD MINI-GAME ───
 const CARD_POOL = [
   // Good
+  { label: '+69 PTS',     emoji: '😏', good: true,  fn: () => { S.score += 69;  scoreEl.textContent = S.score; } },
   { label: '+30 PTS',     emoji: '💰', good: true,  fn: () => { S.score += 30;  scoreEl.textContent = S.score; } },
   { label: '+75 PTS',     emoji: '💎', good: true,  fn: () => { S.score += 75;  scoreEl.textContent = S.score; } },
   { label: '+150 PTS',    emoji: '🏆', good: true,  fn: () => { S.score += 150; scoreEl.textContent = S.score; } },
