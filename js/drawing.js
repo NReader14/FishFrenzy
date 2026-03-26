@@ -186,13 +186,12 @@ export function drawDecoy() {
 }
 
 // ─── GHOST SHARK (for HELL active phase) — identical to real shark, semi-transparent ───
-function drawSharkEntity(e, alpha = 1, frozen = false) {
+function drawSharkEntity(e, frozen = false) {
   ctx.save();
   ctx.translate(e.x, e.y);
   ctx.rotate(e.angle);
   const _sm = mob(); ctx.scale(_sm, _sm);
-  const effectiveAlpha = frozen ? Math.min(alpha, 0.6) : alpha;
-  if (effectiveAlpha < 1) ctx.globalAlpha = effectiveAlpha;
+  if (frozen) ctx.globalAlpha = 0.6;
 
   const bodyCol  = frozen ? '#556688' : '#667788';
   const darkCol  = frozen ? '#445566' : '#555566';
@@ -249,12 +248,19 @@ function drawSharkEntity(e, alpha = 1, frozen = false) {
   ctx.fillRect(2, 6 + fw, 8, 3);
   ctx.fillRect(4, 9 + fw, 5, 2);
 
-  ctx.fillStyle = frozen ? '#aabbcc' : '#ffee44';
+  const smart = S.settings.smartShark;
+  ctx.fillStyle = frozen ? '#aabbcc' : smart ? '#00ff88' : '#ffee44';
   ctx.fillRect(12, -4, 5, 5);
   ctx.fillStyle = '#111';
   ctx.fillRect(14, -4, 2, 5);
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = smart ? '#aaffcc' : '#fff';
   ctx.fillRect(13, -3, 1, 1);
+
+  if (smart) {
+    const scan = Math.floor(Date.now() / 300) % 5;
+    ctx.fillStyle = '#00ff88';
+    ctx.fillRect(12, -4 + scan, 5, 1);
+  }
 
   ctx.fillStyle = darkCol;
   ctx.fillRect(5, -3, 1, 6);
@@ -1211,9 +1217,7 @@ export function drawHellAnim() {
     }
 
     for (let i = 0; i < S.hellAnim.ghosts.length; i++) {
-      const g = S.hellAnim.ghosts[i];
-      const ghostAlpha = 0.55 + Math.sin(now * 1.5 + i * 1.5) * 0.08;
-      drawSharkEntity(g, ghostAlpha, ghostFrozen);
+      drawSharkEntity(S.hellAnim.ghosts[i], ghostFrozen);
     }
 
     // "HELL" title — slow gentle pulse

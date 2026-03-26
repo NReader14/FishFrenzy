@@ -530,6 +530,27 @@
   line-height: 2.4;
   letter-spacing: .5px;
 }
+.rules-speed-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8px;
+  color: #aaccdd;
+}
+.rules-speed-table th {
+  color: #ffdd44;
+  letter-spacing: 1px;
+  padding: 4px 8px;
+  border-bottom: 1px solid #334455;
+  text-align: left;
+}
+.rules-speed-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid #1a2a3a;
+}
+.rules-speed-table tr:last-child td {
+  border-bottom: none;
+}
+
 .rules-fine-print {
   font-size: 5px;
   color: #2a3a4a;

@@ -274,6 +274,484 @@ const ADS = [
       render();
     },
   },
+  // ── MOBILE GAME PARODY ADS ─────────────────────────────────────────────────
+  {
+    brand:   'KINGDOM SIEGE™',
+    tagline: 'GENERAL. THEY ARE AT THE GATES.',
+    body:    'Your kingdom is under attack. Tap to send reinforcements. The gate will hold — if you act now.',
+    cta:     'DOWNLOAD NOW — FREE',
+    fine:    '*Kingdom Siege contains mild peril, heavy microtransactions, and a general who cannot read a map.',
+    color:   '#cc4422',
+    emoji:   '⚔️',
+    anim(el) {
+      let hp = 100;
+      let locked = false;
+      const DRAIN_MS = 22000;
+      const startTime = Date.now();
+
+      function render() {
+        const pct = Math.max(0, Math.min(100, hp));
+        const barColor = pct <= 20 ? '#ff2200' : pct <= 50 ? '#ffaa00' : '#44cc44';
+        const status = pct > 60 ? 'HOLDING...' : pct > 30 ? "THEY'RE BREAKING THROUGH!" : 'ONE MORE HIT AND IT\'S OVER!';
+        el.innerHTML = `
+          <div style="font-size:7px;color:#cc4422;margin-bottom:4px;letter-spacing:1px">GATE HEALTH</div>
+          <div style="background:#333;border-radius:4px;height:14px;width:100%;margin-bottom:6px;overflow:hidden">
+            <div id="ad-ks-bar" style="height:100%;width:${pct}%;background:${barColor};transition:width 0.3s;border-radius:4px"></div>
+          </div>
+          <div id="ad-ks-pct" style="font-size:11px;color:#fff;margin-bottom:6px">${Math.round(pct)}%</div>
+          <div id="ad-ks-status" style="font-size:8px;color:#ffcc88;margin-bottom:8px;height:12px">${locked ? '<span style="color:#ff3300;font-weight:bold">DOWNLOAD TO SAVE YOUR KINGDOM</span>' : status}</div>
+          <button id="ad-ks-btn" style="background:${locked?'#444':'#cc4422'};color:${locked?'#888':'#fff'};border:none;padding:5px 12px;border-radius:4px;cursor:${locked?'default':'pointer'};font-size:9px;font-weight:bold;letter-spacing:1px">${locked ? 'REINFORCEMENTS BLOCKED' : '⚔️ REINFORCE (+5%)'}</button>`;
+        if (!locked) {
+          const btn = el.querySelector('#ad-ks-btn');
+          if (btn) btn.addEventListener('click', () => {
+            hp = Math.min(100, hp + 5);
+            render();
+          });
+        }
+      }
+
+      render();
+
+      const iv = setInterval(() => {
+        if (locked) return;
+        const elapsed = Date.now() - startTime;
+        const natural = 100 - (elapsed / DRAIN_MS) * 100;
+        if (natural < hp) hp = Math.max(1, natural);
+        if (hp <= 1 && !locked) {
+          locked = true;
+          render();
+          // flash red border
+          let flashes = 0;
+          const flashIv = setInterval(() => {
+            el.style.boxShadow = flashes % 2 === 0 ? '0 0 12px #ff2200' : 'none';
+            flashes++;
+            if (flashes > 6) clearInterval(flashIv);
+          }, 300);
+        } else {
+          render();
+        }
+      }, 200);
+
+      // cleanup when ad removed
+      const obs = new MutationObserver(() => { if (!el.isConnected) { clearInterval(iv); obs.disconnect(); } });
+      obs.observe(document.body, { childList: true, subtree: true });
+    },
+  },
+  {
+    brand:   'CANDY SMASH LEGENDS',
+    tagline: 'JUST ONE MORE LEVEL',
+    body:    'One move left. One match away. This is the one. You can feel it.',
+    cta:     'PLAY FREE (THEN PAY)',
+    fine:    '*"Free" ends after 5 lives. Lives cost £1.99 each. The experts did not say that.',
+    color:   '#ff66cc',
+    emoji:   '🍬',
+    anim(el) {
+      let level = 1;
+      let solves = 0;
+      let phase = 'ready'; // ready | matched | paywall
+      const CANDIES = ['🍭', '🍬'];
+
+      function render() {
+        let statusHtml = '';
+        if (phase === 'paywall') {
+          statusHtml = `<div style="color:#ffcc00;font-size:8px;font-weight:bold">LEVEL COMPLETE! Loading reward...</div>
+            <div id="ad-cs-paywall" style="color:#ff3399;font-size:8px;margin-top:3px">CONTINUE FOR £1.99</div>`;
+        } else if (phase === 'matched') {
+          statusHtml = `<div style="font-size:16px">🎉✨🎊</div>`;
+        } else {
+          statusHtml = `<div style="font-size:8px;color:#ff88cc">LAST MATCH ✨</div>`;
+        }
+
+        const pct = phase === 'paywall' ? 99 : Math.min(99, (solves > 0 ? 40 : 0));
+        const barColor = '#ff66cc';
+
+        el.innerHTML = `
+          <div style="font-size:7px;color:#ff66cc;margin-bottom:3px;letter-spacing:1px">LEVEL ${level} — MOVES LEFT: 1</div>
+          <div style="background:#333;border-radius:4px;height:10px;width:100%;margin-bottom:5px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${barColor};border-radius:4px;transition:width 0.4s"></div>
+          </div>
+          <div style="margin-bottom:5px;min-height:24px">${statusHtml}</div>
+          <div style="display:flex;gap:10px;justify-content:center;margin-bottom:6px">
+            ${CANDIES.map((c, i) => `<div id="ad-candy-${i}" style="font-size:28px;cursor:pointer;border-radius:8px;padding:4px;transition:all 0.15s;border:2px solid ${phase==='ready'?'#ff66cc':'transparent'}">${c}</div>`).join('')}
+          </div>
+          <div style="font-size:7px;color:#ffaadd">SOLVES: ${solves}</div>`;
+
+        if (phase === 'ready') {
+          let picked = false;
+          CANDIES.forEach((_, i) => {
+            const candy = el.querySelector(`#ad-candy-${i}`);
+            if (!candy) return;
+            candy.addEventListener('click', () => {
+              if (!picked) {
+                picked = true;
+                candy.style.background = '#ff66cc44';
+                candy.style.transform = 'scale(1.2)';
+              } else {
+                // second click = match
+                phase = 'matched';
+                render();
+                setTimeout(() => {
+                  solves++;
+                  level++;
+                  phase = 'paywall';
+                  render();
+                  setTimeout(() => {
+                    phase = 'ready';
+                    render();
+                  }, 2500);
+                }, 600);
+              }
+            });
+          });
+        }
+      }
+      render();
+    },
+  },
+  {
+    brand:   'COIN BLASTER 3000',
+    tagline: 'SPIN. WIN. REPEAT. SPEND MORE.',
+    body:    'JACKPOT: £47,000. Nobody has won it. One spin could change that. This spin. Right now.',
+    cta:     'FINAL FREE SPIN',
+    fine:    '*Jackpot odds: 1 in 47,000. This was not your spin. The next one might be. (£2.99)',
+    color:   '#ffdd00',
+    emoji:   '🎰',
+    anim(el) {
+      const SYMBOLS = ['🍋','🍊','🍇','🔔','⭐','💎'];
+      let spinCount = 0;
+      let spinning = false;
+
+      // near-miss results: first two match, third is one off
+      function getResult(isJackpot) {
+        if (isJackpot) return ['💎', '💎', '🍋']; // tantalizingly close
+        const pairs = [['🍇','🍇','🔔'],['🔔','🔔','⭐'],['⭐','⭐','🍊']];
+        return pairs[spinCount % pairs.length];
+      }
+
+      function render(reels, label, btnEnabled) {
+        el.innerHTML = `
+          <div style="font-size:7px;color:#ffdd00;margin-bottom:6px;letter-spacing:1px">${label}</div>
+          <div style="display:flex;gap:8px;justify-content:center;margin-bottom:8px">
+            ${reels.map(r => `<div style="background:#222;border:2px solid #ffdd00;border-radius:6px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:20px">${r}</div>`).join('')}
+          </div>
+          <button id="ad-slot-btn" style="background:${btnEnabled?'#ffdd00':'#555'};color:${btnEnabled?'#222':'#888'};border:none;padding:5px 16px;border-radius:4px;cursor:${btnEnabled?'pointer':'default'};font-size:9px;font-weight:bold">${spinning ? 'SPINNING...' : '🎰 SPIN'}</button>`;
+
+        if (btnEnabled && !spinning) {
+          const btn = el.querySelector('#ad-slot-btn');
+          if (btn) btn.addEventListener('click', () => doSpin());
+        }
+      }
+
+      function doSpin() {
+        if (spinning) return;
+        spinning = true;
+        spinCount++;
+        const isJackpot = spinCount >= 4;
+        const fast = !isJackpot;
+        const final = getResult(isJackpot);
+
+        render(['❓','❓','❓'], isJackpot ? '🌟 JACKPOT SPIN 🌟' : `SPIN #${spinCount}`, false);
+
+        // resolve reels 1 and 2 quickly
+        const resolveTime = fast ? 500 : 1200;
+        setTimeout(() => {
+          render([final[0],'❓','❓'], isJackpot ? '🌟 JACKPOT SPIN 🌟' : `SPIN #${spinCount}`, false);
+          setTimeout(() => {
+            render([final[0], final[1],'❓'], isJackpot ? '🌟 JACKPOT SPIN 🌟' : `SPIN #${spinCount}`, false);
+
+            if (isJackpot) {
+              // slow third reel crawl
+              let tickIdx = 0;
+              const tickIv = setInterval(() => {
+                const sym = SYMBOLS[tickIdx % SYMBOLS.length];
+                render([final[0], final[1], sym], '🌟 JACKPOT SPIN 🌟', false);
+                tickIdx++;
+                if (tickIdx >= SYMBOLS.length + 3) {
+                  clearInterval(tickIv);
+                  render([final[0], final[1], final[2]], '💔 SO CLOSE. £47,000 MISSED BY ONE SYMBOL.', false);
+                  spinning = false;
+                  setTimeout(() => render([final[0], final[1], final[2]], '💔 SO CLOSE. £47,000 MISSED BY ONE SYMBOL.', true), 1200);
+                }
+              }, 400);
+            } else {
+              setTimeout(() => {
+                render(final, `SPIN #${spinCount} — NOT YOUR LUCKY SPIN`, false);
+                spinning = false;
+                setTimeout(() => render(final, `SPIN #${spinCount} — NOT YOUR LUCKY SPIN`, true), 800);
+              }, fast ? 300 : 600);
+            }
+          }, resolveTime);
+        }, resolveTime);
+      }
+
+      render(['🎰','🎰','🎰'], 'TAP SPIN TO TRY YOUR LUCK', true);
+    },
+  },
+  {
+    brand:   'HERO WARS: FISH EDITION',
+    tagline: 'ONLY 3% OF PLAYERS CAN SOLVE THIS',
+    body:    'Answer 5 questions correctly. Nobody has done it. The prize is real. Probably.',
+    cta:     'CLAIM YOUR PRIZE',
+    fine:    '*Prize not confirmed. Questions designed by the general. The general got 0/5.',
+    color:   '#ffaa22',
+    emoji:   '🏆',
+    anim(el) {
+      const QUESTIONS = [
+        { q: 'What is 1 + 1?',         opts: ['2', '3'],        outrage: 'INCORRECT' },
+        { q: 'What colour is the sky?', opts: ['Blue', 'Red'],   outrage: 'STILL WRONG' },
+        { q: 'How many sides on a square?', opts: ['4', '5'],    outrage: 'HOW' },
+        { q: 'What sound does a cat make?',  opts: ['Meow', 'Woof'], outrage: 'GENERALS WEEP' },
+        { q: 'What fish are YOU?',       opts: ['A fish', 'Also a fish'], final: true },
+      ];
+      let idx = 0;
+      let awaitingFinal = false;
+      let calculating = false;
+      let dotCount = 0;
+      let dotIv = null;
+
+      function render() {
+        if (calculating) {
+          el.innerHTML = `
+            <div style="font-size:9px;color:#ffaa22;margin-bottom:8px">QUESTION 5 / 5</div>
+            <div style="font-size:9px;color:#fff;margin-bottom:12px">CALCULATING YOUR RESULT<span id="ad-hw-dots"></span></div>
+            <div style="color:#888;font-size:7px">This may take a moment...</div>`;
+          const dotsEl = el.querySelector('#ad-hw-dots');
+          if (dotIv) clearInterval(dotIv);
+          dotIv = setInterval(() => {
+            dotCount++;
+            if (dotsEl) dotsEl.textContent = '.'.repeat((dotCount % 3) + 1);
+          }, 500);
+          setTimeout(() => {
+            if (dotIv) clearInterval(dotIv);
+            if (!el.isConnected) return;
+            el.innerHTML = `
+              <div style="font-size:9px;color:#ffaa22;margin-bottom:6px">RESULT READY</div>
+              <div style="color:#ff4400;font-size:9px;font-weight:bold;margin-bottom:8px">DOWNLOAD TO CONFIRM YOUR ANSWER</div>
+              <div style="color:#888;font-size:7px">Your score has been calculated. Probably 100%.</div>`;
+          }, 3000);
+          return;
+        }
+
+        const q = QUESTIONS[idx];
+        const qNum = idx + 1;
+        const isFinal = !!q.final;
+
+        if (isFinal && awaitingFinal) {
+          // dramatic pause with dots
+          el.innerHTML = `
+            <div style="font-size:9px;color:#ffaa22;margin-bottom:6px">⚠️ FINAL QUESTION ⚠️</div>
+            <div style="color:#ffcc66;font-size:9px;margin-bottom:10px">Preparing final challenge<span id="ad-hw-fdots"></span></div>`;
+          if (dotIv) clearInterval(dotIv);
+          const fDotsEl = el.querySelector('#ad-hw-fdots');
+          dotIv = setInterval(() => {
+            dotCount++;
+            if (fDotsEl) fDotsEl.textContent = '.'.repeat((dotCount % 3) + 1);
+          }, 400);
+          setTimeout(() => {
+            if (dotIv) clearInterval(dotIv);
+            awaitingFinal = false;
+            render();
+          }, 2000);
+          return;
+        }
+
+        el.innerHTML = `
+          <div style="font-size:7px;color:#ffaa22;margin-bottom:4px;letter-spacing:1px">QUESTION ${qNum} / 5${isFinal ? ' — FINAL' : ''}</div>
+          <div style="font-size:9px;color:#fff;margin-bottom:8px">${q.q}</div>
+          <div style="display:flex;gap:8px;justify-content:center">
+            ${q.opts.map((o, i) => `<button id="ad-hw-opt-${i}" style="background:#333;color:#fff;border:1px solid #ffaa22;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:8px">${o}</button>`).join('')}
+          </div>
+          <div id="ad-hw-verdict" style="min-height:14px;margin-top:6px;font-size:8px;color:#ff4400"></div>`;
+
+        q.opts.forEach((_, i) => {
+          const btn = el.querySelector(`#ad-hw-opt-${i}`);
+          if (!btn) return;
+          btn.addEventListener('click', () => {
+            if (isFinal) {
+              calculating = true;
+              render();
+              return;
+            }
+            const v = el.querySelector('#ad-hw-verdict');
+            if (v) { v.textContent = q.outrage; v.style.color = '#ff4400'; }
+            // disable both buttons
+            q.opts.forEach((__, j) => {
+              const b = el.querySelector(`#ad-hw-opt-${j}`);
+              if (b) b.disabled = true;
+            });
+            setTimeout(() => {
+              idx++;
+              if (idx === 4) awaitingFinal = true;
+              render();
+            }, 700);
+          });
+        });
+      }
+
+      render();
+      const obs = new MutationObserver(() => { if (!el.isConnected) { if (dotIv) clearInterval(dotIv); obs.disconnect(); } });
+      obs.observe(document.body, { childList: true, subtree: true });
+    },
+  },
+  {
+    brand:   'RISE OF GENERALS™',
+    tagline: 'SHE NEEDS YOUR HELP. THE KINGDOM IS FALLING.',
+    body:    'Train your army. The final battle begins in 20 seconds. Will you be ready?',
+    cta:     'SAVE THE KINGDOM',
+    fine:    '*The kingdom cannot be saved without premium troops. She is not real. Timer: 847 days.',
+    color:   '#884422',
+    emoji:   '👑',
+    anim(el) {
+      let army = 30;
+      let deploys = 0;
+      const PRICES = ['£4.99', '£9.99', '£19.99', '£39.99'];
+      let lastMsg = '';
+      let autoIv = null;
+
+      function render() {
+        const pct = Math.min(100, army);
+        const barColor = pct >= 95 ? '#ffdd00' : pct >= 70 ? '#44cc44' : '#aa4422';
+        const status = lastMsg ? lastMsg :
+          pct >= 97 ? "ARMY AT 97%! PUSH!" :
+          pct >= 70 ? 'ALMOST READY...' : 'TRAINING...';
+        const btnLabel = pct >= 98 ? '⚔️ DEPLOY' : '🪖 RECRUIT TROOPS (+8%)';
+        const btnColor = pct >= 98 ? '#ffdd00' : '#884422';
+        const btnTextColor = pct >= 98 ? '#222' : '#fff';
+
+        el.innerHTML = `
+          <div style="font-size:7px;color:#884422;margin-bottom:4px;letter-spacing:1px">ARMY STRENGTH</div>
+          <div style="background:#333;border-radius:4px;height:14px;width:100%;margin-bottom:4px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${barColor};border-radius:4px;transition:width 0.2s"></div>
+          </div>
+          <div style="font-size:9px;color:#fff;margin-bottom:4px">${Math.round(pct)}%</div>
+          <div style="font-size:7px;color:#ffcc88;margin-bottom:6px;min-height:12px">${status}</div>
+          <button id="ad-rog-btn" style="background:${btnColor};color:${btnTextColor};border:none;padding:5px 12px;border-radius:4px;cursor:pointer;font-size:9px;font-weight:bold">${btnLabel}</button>`;
+
+        const btn = el.querySelector('#ad-rog-btn');
+        if (btn) btn.addEventListener('click', () => {
+          if (army >= 98) {
+            // DEPLOY
+            deploys++;
+            const price = PRICES[Math.min(deploys - 1, PRICES.length - 1)];
+            lastMsg = `ENEMY REINFORCED — UPGRADE FOR ${price}`;
+            army = 80;
+            render();
+            setTimeout(() => { lastMsg = ''; render(); }, 2000);
+          } else {
+            lastMsg = '';
+            army = Math.min(100, army + 8);
+            render();
+          }
+        });
+      }
+
+      render();
+
+      autoIv = setInterval(() => {
+        if (army < 98) {
+          army = Math.min(98, army + 1);
+          if (!lastMsg) render();
+        }
+      }, 1000);
+
+      const obs = new MutationObserver(() => { if (!el.isConnected) { clearInterval(autoIv); obs.disconnect(); } });
+      obs.observe(document.body, { childList: true, subtree: true });
+    },
+  },
+  {
+    brand:   'WORDMASTER PRO™',
+    tagline: "I BET YOU CAN'T SOLVE LEVEL 1",
+    body:    '4 letters. One word. £10,000 prize for the first person to complete Level 1.',
+    cta:     'CLAIM £10,000',
+    fine:    '*£10,000 prize requires proof of completion, notarised ID, and a Premium subscription (£19.99/month).',
+    color:   '#44aaff',
+    emoji:   '🔤',
+    anim(el) {
+      let solves = 0;
+      let selected = [];
+      let phase = 'play'; // play | correct | paywall
+      const WORD = ['F', 'I', 'S', 'H'];
+
+      function scramble(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+      }
+
+      let tiles = scramble(WORD);
+
+      function render() {
+        const answer = selected.join('');
+        const pct = phase === 'paywall' ? 99 : (solves > 0 ? 99 : 0);
+        const barColor = '#44aaff';
+        let statusHtml = '';
+        if (phase === 'paywall') {
+          statusHtml = `<div style="color:#ff4400;font-size:7px;font-weight:bold">LOADING PRIZE TRANSFER...<br>VERIFICATION REQUIRED — DOWNLOAD TO CONFIRM</div>`;
+        } else if (phase === 'correct') {
+          statusHtml = `<div style="color:#44ff88;font-size:10px;font-weight:bold">FISH ✓ CORRECT!</div>`;
+        } else {
+          statusHtml = `<div style="font-size:7px;color:#44aaff">TAP TILES TO SPELL THE WORD</div>`;
+        }
+
+        el.innerHTML = `
+          <div style="font-size:7px;color:#44aaff;margin-bottom:3px;letter-spacing:1px">LEVEL 1 — £10,000 PRIZE</div>
+          <div style="background:#333;border-radius:4px;height:10px;width:100%;margin-bottom:4px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${barColor};border-radius:4px;transition:width 0.4s"></div>
+          </div>
+          <div style="min-height:22px;margin-bottom:4px">${statusHtml}</div>
+          <div style="display:flex;gap:6px;justify-content:center;margin-bottom:5px">
+            ${tiles.map((t, i) => {
+              const used = selected.includes(t) && selected.indexOf(t) === selected.lastIndexOf(t) ? selected.indexOf(t) : -1;
+              const isSelected = selected.indexOf(t) !== -1;
+              return `<button id="ad-wm-tile-${i}" data-idx="${i}" style="background:${isSelected?'#44aaff44':'#333'};color:${isSelected?'#aaddff':'#fff'};border:2px solid ${isSelected?'#44aaff':'#556'};width:32px;height:32px;border-radius:6px;cursor:${(phase!=='play'||isSelected)?'default':'pointer'};font-size:14px;font-weight:bold">${t}</button>`;
+            }).join('')}
+          </div>
+          <div style="background:#111;border-radius:4px;height:26px;display:flex;gap:4px;align-items:center;justify-content:center;margin-bottom:5px;padding:0 8px">
+            ${WORD.map((_, i) => `<div style="width:22px;height:20px;border-bottom:2px solid ${selected[i]?'#44aaff':'#444'};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:bold;color:#44aaff">${selected[i]||''}</div>`).join('')}
+          </div>
+          <div style="font-size:7px;color:#8899aa">SOLVES: ${solves}</div>`;
+
+        if (phase === 'play') {
+          tiles.forEach((t, i) => {
+            const btn = el.querySelector(`#ad-wm-tile-${i}`);
+            if (!btn || selected.length >= 4) return;
+            if (selected.includes(t)) return;
+            btn.addEventListener('click', () => {
+              selected.push(t);
+              if (selected.length === 4) {
+                if (selected.join('') === 'FISH') {
+                  phase = 'correct';
+                  render();
+                  setTimeout(() => {
+                    solves++;
+                    phase = 'paywall';
+                    render();
+                    setTimeout(() => {
+                      phase = 'play';
+                      selected = [];
+                      tiles = scramble(WORD);
+                      render();
+                    }, 2500);
+                  }, 700);
+                } else {
+                  // wrong order — reset
+                  selected = [];
+                  render();
+                }
+              } else {
+                render();
+              }
+            });
+          });
+        }
+      }
+
+      render();
+    },
+  },
 ];
 
 let _resolve = null;

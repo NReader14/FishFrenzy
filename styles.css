@@ -502,6 +502,20 @@ canvas {
   border-color: #55aacc;
 }
 
+.btn-discord {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: #c9d1f5;
+  border-color: #5865F2;
+}
+.btn-discord:hover {
+  background: #5865F2;
+  color: #fff;
+  border-color: #7289da;
+}
+
 .btn-danger {
   padding: 10px 14px;
   font-family: 'Press Start 2P', monospace;

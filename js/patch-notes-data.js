@@ -13,8 +13,15 @@ export const NOTES = [
       '👻 Hell ghost sharks now look exactly like the real shark — full ripple body, fins, tail and all',
       '🧠 Each hell ghost has its own independent AI — they track you separately, no more clumping',
       '⚡ Ghost sharks move at the same speed as the real shark, ghost still can\'t kill you',
+      '❄️ Ghost sharks freeze on ice and hourglass — they stop moving exactly when the real shark does',
+      '💥 Ghost sharks now bump into each other — they have hitboxes and push apart, still can\'t kill',
       '🔧 Admins can now enter Tester Mode during maintenance — play the game without taking it offline',
       '🔴 A Tester Mode badge shows in the corner so you always know you\'re bypassing maintenance',
+      '🎵 Ice, hourglass and goop now slow the music down — it was accidentally speeding it up before',
+      '📋 Rules tab now shows shark speed at key levels — expressed as a multiple of fish speed',
+      '🧠 Smart shark dialled back — less defensive, less prediction, easier to outmanoeuvre',
+      '💬 Discord button added to the main menu',
+      '📱 6 mobile game parody ads added — fully interactive, each one gets increasingly cruel right before the paywall',
     ]
   },
   {

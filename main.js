@@ -821,11 +821,11 @@ function updateShark(dt = 1) {
     const hist = S.smartSharkHistory;
     const n    = hist.length;
     const lv   = S.level;
-    const tier = Math.min(3, Math.floor((lv - 1) / 4));        // 0–3, now ramps every 4 levels
-    const tp   = Math.min(1, ((lv - 1) % 4) / 3);             // 0→1 within tier
+    const tier = Math.min(3, Math.floor((lv - 1) / 6));        // 0–3, ramps every 6 levels
+    const tp   = Math.min(1, ((lv - 1) % 6) / 5);             // 0→1 within tier
 
     // 1. Velocity — smaller window at higher tiers for faster reaction
-    const velWin = Math.max(2, Math.round(8 - tier * 2 - tp));
+    const velWin = Math.max(2, Math.round(10 - tier * 2 - tp));
     const cur    = hist[n - 1];
     const older  = hist[Math.max(0, n - 1 - velWin)];
     const vx = (cur.x - older.x) / velWin;
@@ -843,8 +843,8 @@ function updateShark(dt = 1) {
     }
 
     // 3. Noise — shrinks with tier and within-tier progress
-    const noiseBase  = [18, 7, 2, 0][tier];
-    const noiseScale = noiseBase * (1 - tp * 0.7);
+    const noiseBase  = [24, 12, 6, 2][tier];
+    const noiseScale = noiseBase * (1 - tp * 0.6);
     const nx = (Math.random() - 0.5) * 2 * noiseScale;
     const ny = (Math.random() - 0.5) * 2 * noiseScale;
 
@@ -863,7 +863,7 @@ function updateShark(dt = 1) {
       const a   = vx * vx + vy * vy - spd * spd;
       const b   = 2 * (dx * vx + dy * vy);
       const c   = dx * dx + dy * dy;
-      const maxLook = [0, 60, 90, 130][tier] + tp * 20;
+      const maxLook = [0, 40, 65, 95][tier] + tp * 15;
 
       let t = 0;
       if (Math.abs(a) < 0.01) {
@@ -887,11 +887,11 @@ function updateShark(dt = 1) {
     // 4. Treat-path blocking (tier 1+)
     // Detect which treat the fish is heading toward and cut off the path.
     if (tier >= 1 && S.treats?.length) {
-      const treatBlend = tier === 1 ? (0.18 + tp * 0.08)
-                       : tier === 2 ? (0.44 + tp * 0.12)
-                       :              (0.44 + tp * 0.12 + 0.34); // tier 3
-      const detectR = tier >= 3 ? 360 : 280;
-      const dotThresh = tier >= 3 ? 0.15 : 0.25;
+      const treatBlend = tier === 1 ? (0.10 + tp * 0.06)
+                       : tier === 2 ? (0.28 + tp * 0.08)
+                       :              (0.28 + tp * 0.08 + 0.20); // tier 3
+      const detectR = tier >= 3 ? 280 : 200;
+      const dotThresh = tier >= 3 ? 0.25 : 0.35;
       let bestTreat = null, bestScore = -Infinity;
       const speed = Math.hypot(vx, vy) || 0.01;
       for (const tr of S.treats) {
@@ -907,7 +907,7 @@ function updateShark(dt = 1) {
       }
       if (bestTreat) {
         // Cut point: intercept between fish and the treat (deeper at higher tiers)
-        const cutDepth = tier >= 3 ? 0.58 : tier === 2 ? 0.52 : 0.42;
+        const cutDepth = tier >= 3 ? 0.45 : tier === 2 ? 0.38 : 0.28;
         const cutX = target.x + (bestTreat.x - target.x) * cutDepth;
         const cutY = target.y + (bestTreat.y - target.y) * cutDepth;
         targetX = targetX * (1 - treatBlend) + cutX * treatBlend;

@@ -82,7 +82,7 @@ function restoreSharkSpeed() {
 function activateIce() {
   S.iceActive = true;
   S.iceStartTime = Date.now();
-  setMusicTempo(1.8);
+  setMusicTempo(0.6);
   // If hourglass already has the shark stopped, grant bonus time instead of wasting the slow
   if (S.hourglassActive) {
     S.timeLeft = Math.min(S.maxTime, S.timeLeft + 4);
@@ -161,7 +161,7 @@ function activateHourglass() {
   S.timerFrozen = true;
   S.hourglassStartTime = Date.now();
   S.shark.speed = 0;
-  setMusicTempo(1.8);
+  setMusicTempo(0.6);
   timerBar.classList.add('frozen');
   stOn('time', 's-time');
   S.scorePopups.push({ x: W / 2, y: H / 2, pts: 'TIME STOP!', life: 1.2, decay: 0.025 });
@@ -448,7 +448,7 @@ function activateRainbow() {
 function activateGoop() {
   S.goopActive = true;
   S.goopStartTime = Date.now();
-  setMusicTempo(1.8);
+  setMusicTempo(0.6);
   stOn('goop', 's-goop');
   spawnParticles(S.fish.x, S.fish.y, '#66cc44', 16);
   S.scorePopups.push({ x: S.fish.x, y: S.fish.y - 20, pts: 'GOOPED!', life: 1.5, decay: 0.02 });

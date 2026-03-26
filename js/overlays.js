@@ -505,6 +505,32 @@ export function buildRulesHTML() {
   }
 
   container.innerHTML = html;
+
+  // ── Shark speed table ──
+  const speedEl = document.getElementById('rules-shark-speed-dynamic');
+  if (speedEl) {
+    const diff   = S.settings.difficulty;
+    const base   = gameVars.sharkSpeedBase;
+    const perLv  = gameVars.sharkSpeedPerLevel;
+    const fish   = gameVars.fishSpeed;
+    const rows   = [1, 5, 10, 15, 20].map(lv => {
+      const spd   = Math.max(0, (fish + base) + perLv * Math.sqrt(lv * 2));
+      const ratio = (spd / fish).toFixed(2);
+      return `<tr><td>Level ${lv}</td><td>${ratio}× fish speed</td></tr>`;
+    }).join('');
+    speedEl.innerHTML = `
+      <p class="rules-text" style="margin-bottom:8px;">
+        Speed formula: <code>fishSpeed + offset + rampPerLevel × √(level × 2)</code><br>
+        Current difficulty: <strong style="color:#ffcc44;">${diff.toUpperCase()}</strong>
+      </p>
+      <table class="rules-speed-table">
+        <thead><tr><th>LEVEL</th><th>SHARK SPEED</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <p class="rules-text" style="margin-top:8px;color:#88aabb;">
+        Base offset: ${base > 0 ? '+' : ''}${base} &nbsp;|&nbsp; Ramp: +${perLv}/level &nbsp;|&nbsp; Fish speed: ${fish}
+      </p>`;
+  }
 }
 
 
