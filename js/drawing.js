@@ -268,7 +268,7 @@ function drawSharkEntity(e, alpha = 1) {
   ctx.fillRect(21, -5, 2, 2);
   ctx.fillRect(24, -4, 2, 2);
 
-  if (!frozen) {
+  if (!(S.iceActive || S.hourglassActive)) {
     ctx.beginPath(); ctx.ellipse(4, 0, 28, 18, 0, 0, Math.PI * 2);
     ctx.fillStyle = `rgba(255,40,40,${0.06 + Math.sin(Date.now() * 0.005) * 0.03})`;
     ctx.fill();
