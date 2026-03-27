@@ -531,7 +531,7 @@ function activateBodySwap() {
   S.bodySwapAnim = { startTime: Date.now(), duration: 1100, fishX: S.fish.x, fishY: S.fish.y, sharkX: S.shark.x, sharkY: S.shark.y };
   // Zero out fish velocity so AI starts fresh
   S.fish.vx = 0; S.fish.vy = 0;
-  // Boost shark speed for agility
+  // Boost shark speed for agility as player controls it
   S.shark.speed = getCurrentFishSpeed() + 1;
   stOn('bodyswap', 's-bodyswap');
   spawnParticles(S.fish.x, S.fish.y, '#ff4488', 20);

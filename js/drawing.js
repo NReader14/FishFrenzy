@@ -1169,7 +1169,7 @@ export function drawHellAnim() {
 
     // Update and draw each ghost shark — independent AI, same speed as real shark
     const ghostFrozen = !!(S.iceActive || S.hourglassActive);
-    const ghostSpeed  = (!ghostFrozen && S.shark) ? Math.max(0.3, S.shark.speed) : 0;
+    const ghostSpeed  = S.shark ? S.shark.speed : 0;
 
     for (let i = 0; i < S.hellAnim.ghosts.length; i++) {
       const g = S.hellAnim.ghosts[i];

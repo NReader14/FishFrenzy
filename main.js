@@ -579,7 +579,7 @@ function updateFish(dt = 1) {
 
   // Body swap: fish becomes an AI predator chasing the shark
   if (S.bodySwapActive) {
-    const chaseSpeed = S.shark.speed * 0.75;
+    const chaseSpeed = S.shark.speed * 0.5;
     const a = Math.atan2(S.shark.y - S.fish.y, S.shark.x - S.fish.x);
     const wobble = Math.sin(Date.now() * 0.003) * 0.3;
     S.fish.vx = Math.cos(a + wobble) * chaseSpeed;

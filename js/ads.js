@@ -784,41 +784,15 @@ export function showAd() {
     el.classList.remove('hidden');
 
     const DURATION = 20000;
-    let remaining = DURATION;
-    let startedAt = Date.now();
-    let autoTO = null;
     const fill = document.getElementById('ad-timer-fill');
-
-    function startTimer() {
-      if (fill) {
-        fill.style.transition = 'none';
-        fill.style.width = (remaining / DURATION * 100) + '%';
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-          fill.style.transition = `width ${remaining / 1000}s linear`;
-          fill.style.width = '0%';
-        }));
-      }
-      startedAt = Date.now();
-      autoTO = setTimeout(closeAd, remaining);
+    if (fill) {
+      fill.style.transition = 'none';
+      fill.style.width = '100%';
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        fill.style.transition = `width ${DURATION / 1000}s linear`;
+        fill.style.width = '0%';
+      }));
     }
-
-    function pauseTimer() {
-      clearTimeout(autoTO);
-      remaining -= Date.now() - startedAt;
-      if (fill) {
-        const computed = getComputedStyle(fill).width;
-        fill.style.transition = 'none';
-        fill.style.width = computed;
-      }
-    }
-
-    function onVisibilityChange() {
-      if (document.hidden) pauseTimer();
-      else startTimer();
-    }
-
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    startTimer();
 
     // Run the per-ad interactive animation
     const animEl = document.getElementById('ad-anim');
@@ -878,9 +852,7 @@ export function showAd() {
 
     skipBtn?.addEventListener('click', e => {
       e.stopPropagation();
-      clearTimeout(autoTO);
       clearTimeout(wanderTO);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
       closeAd();
     });
 
@@ -893,7 +865,6 @@ export function showAd() {
 
     // Store cleanup so closeAd can remove the listener on auto-dismiss too
     _cleanup = () => {
-      document.removeEventListener('visibilitychange', onVisibilityChange);
       document.removeEventListener('mousemove', onMouseMove);
       clearTimeout(wanderTO);
     };
