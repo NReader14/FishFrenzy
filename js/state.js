@@ -89,8 +89,8 @@ const S = {
   // Logged-in user (null = anonymous)
   currentUser: null,
 
-  // Admin credentials (temporary)
-  adminCredentials: null,
+  // Admin user (Firebase User object, set on admin login, cleared on logout)
+  adminUser: null,
 
   // Last player name entered (for scoreboard highlight)
   lastPlayerName: null,

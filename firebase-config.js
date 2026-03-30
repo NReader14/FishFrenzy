@@ -313,24 +313,33 @@ export async function saveHighScore(name, sc, lv, skinSnapshot = null) {
 
 // ─── ADMIN ───
 
-export async function adminWipeScores(email, password) {
+// Signs in as admin and stays signed in for the duration of the admin session.
+// Call adminLogout() when the session ends.
+export async function signInAdmin(email, password) {
+  const cred = await signInWithEmailAndPassword(auth, email, password);
+  return cred.user;
+}
+
+// Ends the admin session and re-establishes anonymous auth.
+export async function adminLogout() {
+  await signOut(auth);
   try {
-    const adminCred = await signInWithEmailAndPassword(auth, email, password);
-    DEBUG && console.log("[Firebase] Admin login successful, UID:", adminCred.user.uid);
+    const result = await signInAnonymously(auth);
+    currentUser = result.user;
+  } catch (_) {}
+}
 
+export async function adminWipeScores() {
+  const uid = auth.currentUser?.uid;
+  if (!uid) throw new Error("Not authenticated as admin");
+  try {
     const snapshot = await getDocs(collection(db, SCORES_COLLECTION));
-
     const deletePromises = [];
     snapshot.forEach((docSnap) => {
       deletePromises.push(deleteDoc(doc(db, SCORES_COLLECTION, docSnap.id)));
     });
     await Promise.all(deletePromises);
-
     DEBUG && console.log("[Firebase] All scores wiped by admin.");
-
-    await signOut(auth);
-    currentUser = null;
-
     return true;
   } catch (err) {
     console.error("[Firebase] Admin wipe failed:", err.message);
@@ -338,28 +347,14 @@ export async function adminWipeScores(email, password) {
   }
 }
 
-export async function verifyAdminCredentials(email, password) {
-  const cred = await signInWithEmailAndPassword(auth, email, password);
-  await signOut(auth);
-  return cred.user;
-}
-
-// Signs in as admin and stays signed in — used by tester mode to bypass maintenance
-export async function signInAdmin(email, password) {
-  const cred = await signInWithEmailAndPassword(auth, email, password);
-  return cred.user;
-}
-
-export async function setMaintenance(enabled, email, password) {
-  const adminCred = await signInWithEmailAndPassword(auth, email, password);
-
+export async function setMaintenance(enabled) {
+  const uid = auth.currentUser?.uid;
+  if (!uid) throw new Error("Not authenticated as admin");
   await setDoc(doc(db, "config", "maintenance"), {
     enabled,
-    updatedBy: adminCred.user.uid,
+    updatedBy: uid,
     timestamp: serverTimestamp()
   });
-
-  await signOut(auth);
   return true;
 }
 
@@ -390,28 +385,19 @@ export async function fetchGameConfig() {
   }
 }
 
-export async function saveGameConfig(config, email, password) {
-  let adminCred;
-
+export async function saveGameConfig(config) {
+  const uid = auth.currentUser?.uid;
+  if (!uid) throw new Error("Not authenticated as admin");
   try {
-    adminCred = await signInWithEmailAndPassword(auth, email, password);
-
     await setDoc(doc(db, "config", "game"), {
       ...config,
-      updatedBy: adminCred.user.uid,
+      updatedBy: uid,
       timestamp: serverTimestamp()
     }, { merge: true });
-
     return true;
   } catch (err) {
     console.error("[Firebase] saveGameConfig failed:", err.message);
     throw err;
-  } finally {
-    try {
-      await signOut(auth);
-    } catch (_) {
-      /* ignore */
-    }
   }
 }
 
@@ -493,14 +479,14 @@ export async function fetchPatchNotes() {
   }
 }
 
-export async function savePatchNotes(notesJson, email, password) {
-  const adminCred = await signInWithEmailAndPassword(auth, email, password);
+export async function savePatchNotes(notesJson) {
+  const uid = auth.currentUser?.uid;
+  if (!uid) throw new Error("Not authenticated as admin");
   await setDoc(doc(db, 'config', 'patchNotes'), {
     notes: notesJson,
-    updatedBy: adminCred.user.uid,
+    updatedBy: uid,
     timestamp: serverTimestamp(),
   });
-  await signOut(auth);
   return true;
 }
 
@@ -515,23 +501,19 @@ export async function saveFeedback(type, message) {
   });
 }
 
-export async function deleteFeedback(email, password, id) {
-  let adminCred = null;
+export async function deleteFeedback(id) {
+  if (!auth.currentUser?.uid) throw new Error("Not authenticated as admin");
   try {
-    adminCred = await signInWithEmailAndPassword(auth, email, password);
     await deleteDoc(doc(db, 'feedback', id));
   } catch (err) {
     console.warn('[Firebase] Could not delete feedback:', err.message);
     throw err;
-  } finally {
-    if (adminCred) await signOut(auth);
   }
 }
 
-export async function fetchFeedback(email, password, max = 30) {
-  let adminCred = null;
+export async function fetchFeedback(max = 30) {
+  if (!auth.currentUser?.uid) throw new Error("Not authenticated as admin");
   try {
-    adminCred = await signInWithEmailAndPassword(auth, email, password);
     const q = query(
       collection(db, 'feedback'),
       orderBy('timestamp', 'desc'),
@@ -544,7 +526,5 @@ export async function fetchFeedback(email, password, max = 30) {
   } catch (err) {
     console.warn('[Firebase] Could not fetch feedback:', err.message);
     return [];
-  } finally {
-    if (adminCred) await signOut(auth);
   }
 }

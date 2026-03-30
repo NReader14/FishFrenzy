@@ -16,7 +16,7 @@ import {
   fetchHighScores, fetchAllScores, saveHighScore, isFirebaseOnline,
   adminWipeScores, fetchMaintenance, setMaintenance,
   saveGameConfig, fetchPatchNotes, savePatchNotes, fetchFeedback, deleteFeedback,
-  fetchAchievementLeaders
+  fetchAchievementLeaders, adminLogout
 } from '../firebase-config.js';
 import { pwConfig, clearTO } from './powerups.js';
 import { setupItemTestEvents } from './admin.js';
@@ -651,13 +651,13 @@ export function setupAdminEvents() {
 
   // Maintenance toggle
   document.getElementById('maint-toggle-btn')?.addEventListener('click', async () => {
-    if (!S.adminCredentials) { showPanelMsg('NOT LOGGED IN', true); return; }
+    if (!S.adminUser) { showPanelMsg('NOT LOGGED IN', true); return; }
     const statusEl = document.getElementById('maint-status');
     const isCurrentlyOn = statusEl.classList.contains('on');
     statusEl.textContent = 'UPDATING...';
 
     try {
-      await setMaintenance(!isCurrentlyOn, S.adminCredentials.email, S.adminCredentials.password);
+      await setMaintenance(!isCurrentlyOn);
       if (!isCurrentlyOn) {
         statusEl.textContent = 'ON — SITE IS DOWN'; statusEl.className = 'admin-status on';
       } else {
@@ -672,10 +672,10 @@ export function setupAdminEvents() {
 
   // Wipe
   document.getElementById('admin-wipe-btn')?.addEventListener('click', async () => {
-    if (!S.adminCredentials) { showPanelMsg('NOT LOGGED IN', true); return; }
+    if (!S.adminUser) { showPanelMsg('NOT LOGGED IN', true); return; }
     if (!confirm('Are you sure? This permanently deletes ALL scores.')) return;
     try {
-      await adminWipeScores(S.adminCredentials.email, S.adminCredentials.password);
+      await adminWipeScores();
       showPanelMsg('SCOREBOARD WIPED', false);
     } catch (err) {
       showPanelMsg('WIPE FAILED: ' + (err.message || 'UNKNOWN'), true);
@@ -684,7 +684,7 @@ export function setupAdminEvents() {
 
   // Save config
   document.getElementById('admin-save-config-btn')?.addEventListener('click', async function() {
-    if (!S.adminCredentials) { showPanelMsg('NOT LOGGED IN', true, this); return; }
+    if (!S.adminUser) { showPanelMsg('NOT LOGGED IN', true, this); return; }
     const grid = document.getElementById('admin-var-editor');
     const config = {};
     grid.querySelectorAll('.admin-var-input').forEach(inp => {
@@ -693,7 +693,7 @@ export function setupAdminEvents() {
       config[key] = val;
     });
     try {
-      await saveGameConfig({ rarities: config }, S.adminCredentials.email, S.adminCredentials.password);
+      await saveGameConfig({ rarities: config });
       for (const [key, rarity] of Object.entries(config)) {
         if (pwConfig[key]) pwConfig[key].rarity = rarity;
       }
@@ -714,7 +714,7 @@ export function setupAdminEvents() {
 
   // Save game vars
   document.getElementById('admin-save-gamevars-btn')?.addEventListener('click', async function() {
-    if (!S.adminCredentials) { showPanelMsg('NOT LOGGED IN', true, this); return; }
+    if (!S.adminUser) { showPanelMsg('NOT LOGGED IN', true, this); return; }
     const grid = document.getElementById('admin-gamevar-editor');
     const config = {};
     grid.querySelectorAll('.admin-gv-slider').forEach(inp => {
@@ -725,7 +725,7 @@ export function setupAdminEvents() {
       config[key] = val;
     });
     try {
-      await saveGameConfig({ gameVars: config }, S.adminCredentials.email, S.adminCredentials.password);
+      await saveGameConfig({ gameVars: config });
       for (const [key, val] of Object.entries(config)) gameVars[key] = val;
       showPanelMsg('GAME VARS SAVED & APPLIED', false, this);
     } catch (err) {
@@ -758,7 +758,7 @@ export function setupAdminEvents() {
   document.getElementById('admin-save-patch-btn')?.addEventListener('click', async () => {
     const ta = document.getElementById('admin-patch-notes-ta');
     const statusEl = document.getElementById('admin-patch-status');
-    if (!ta || !S.adminCredentials) return;
+    if (!ta || !S.adminUser) return;
     // Validate JSON before saving
     try { JSON.parse(ta.value); } catch (_) {
       if (statusEl) { statusEl.textContent = '✗ INVALID JSON'; statusEl.style.color = '#ee5566'; }
@@ -767,7 +767,7 @@ export function setupAdminEvents() {
     }
     if (statusEl) statusEl.textContent = 'SAVING...';
     try {
-      await savePatchNotes(ta.value, S.adminCredentials.email, S.adminCredentials.password);
+      await savePatchNotes(ta.value);
       if (statusEl) { statusEl.textContent = '✓ SAVED'; statusEl.style.color = '#44ff88'; }
     } catch (err) {
       if (statusEl) { statusEl.textContent = '✗ ERROR'; statusEl.style.color = '#ee5566'; }
@@ -781,7 +781,7 @@ export function setupAdminEvents() {
     const count = document.getElementById('admin-feedback-count');
     if (!list) return;
     list.textContent = 'LOADING...';
-    const entries = await fetchFeedback(S.adminCredentials.email, S.adminCredentials.password, 30);
+    const entries = await fetchFeedback(30);
     if (!entries.length) { list.textContent = 'NO FEEDBACK YET'; count.textContent = ''; return; }
     count.textContent = `${entries.length} ENTR${entries.length === 1 ? 'Y' : 'IES'}`;
     const renderList = (data) => {
@@ -804,7 +804,7 @@ export function setupAdminEvents() {
           btn.disabled = true;
           btn.textContent = '…';
           try {
-            await deleteFeedback(S.adminCredentials.email, S.adminCredentials.password, id);
+            await deleteFeedback(id);
             list.querySelector(`[data-fb-id="${id}"]`)?.remove();
             const remaining = list.querySelectorAll('[data-fb-id]').length;
             count.textContent = remaining ? `${remaining} ENTR${remaining === 1 ? 'Y' : 'IES'}` : '';
@@ -817,9 +817,10 @@ export function setupAdminEvents() {
   });
 
   // Close admin panel
-  document.getElementById('admin-panel-close-btn')?.addEventListener('click', () => {
+  document.getElementById('admin-panel-close-btn')?.addEventListener('click', async () => {
     document.getElementById('admin-panel-overlay')?.classList.add('hidden');
-    S.adminCredentials = null;
+    S.adminUser = null;
+    await adminLogout();
     overlay.classList.remove('hidden');
   });
 

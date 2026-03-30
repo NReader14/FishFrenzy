@@ -46,7 +46,7 @@ import {
 import { setupFeedbackForm } from './js/feedback.js';
 import {
   initAuth, fetchHighScores, fetchMaintenance, setMaintenance,
-  verifyAdminCredentials, signInAdmin
+  signInAdmin
 } from './firebase-config.js';
 import { initControls } from './js/controls.js';
 import { initAuthUI } from './js/auth.js';
@@ -1294,8 +1294,7 @@ adminLoginBtn.addEventListener('click', async () => {
   hideAdminError();
 
   try {
-    await verifyAdminCredentials(email, password);
-    S.adminCredentials = { email, password };
+    S.adminUser = await signInAdmin(email, password);
     const maint = await fetchMaintenance();
     adminOverlay.classList.add('hidden');
     openAdminPanel(maint);
