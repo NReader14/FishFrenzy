@@ -5,6 +5,14 @@
 
 export const NOTES = [
   {
+    v: 'v1.6', emoji: '🏆', title: 'SORTED', date: 'MAY 2026',
+    items: [
+      '🏆 Leaderboard difficulty filters now show the actual top scores per difficulty — not just the top 5 overall filtered down',
+      '🧮 Old scores with no difficulty tag are now classified automatically using the score and level they ended on',
+      '⏸️ Pause screen now has a Main Menu button',
+    ]
+  },
+  {
     v: 'v1.5', emoji: '📱', title: 'SPIN, WIN & BEGIN AGAIN', date: 'MAR 2026',
     items: [
       '📱 6 mobile game parody ads added — fully interactive, each one gets increasingly cruel right before the paywall',
