@@ -13,7 +13,7 @@ import {
 import { CHARS } from './constants.js';
 import { playCRTWipe } from './animations.js';
 import {
-  fetchHighScores, fetchAllScores, saveHighScore, isFirebaseOnline,
+  fetchHighScores, fetchAllScores, fetchScoresByDifficulty, saveHighScore, isFirebaseOnline,
   adminWipeScores, fetchMaintenance, setMaintenance,
   saveGameConfig, fetchPatchNotes, savePatchNotes, fetchFeedback, deleteFeedback,
   fetchAchievementLeaders
@@ -97,11 +97,9 @@ export async function showFullLeaderboard() {
   let activeFilter = 'all';
   const DIFFS = ['all', 'easy', 'normal', 'hard'];
   const DIFF_LABELS = { all: 'ALL', easy: 'EASY', normal: 'NORMAL', hard: 'HARD' };
+  const diffCache = { all: allScores };
 
-  function render() {
-    const scores = activeFilter === 'all'
-      ? allScores
-      : allScores.filter(s => (s.difficulty || 'normal') === activeFilter);
+  function buildView(scores) {
     const filterBtns = DIFFS.map(d =>
       `<button class="lb-filter-btn${d === activeFilter ? ' lb-filter-active' : ''}" data-diff="${d}">${DIFF_LABELS[d]}</button>`
     ).join('');
@@ -121,6 +119,16 @@ export async function showFullLeaderboard() {
       scoreboardOverlay.classList.remove('hidden');
     });
   }
+
+  async function render() {
+    if (!(activeFilter in diffCache)) {
+      el.innerHTML = '<p class="loading-text">LOADING...</p>';
+      try { diffCache[activeFilter] = await fetchScoresByDifficulty(activeFilter, 200); }
+      catch (_) { diffCache[activeFilter] = []; }
+    }
+    buildView(diffCache[activeFilter]);
+  }
+
   render();
 }
 
@@ -138,8 +146,8 @@ export async function showScoreboard(highlightIdx = -1) {
   if (tabScoresBtn) tabScoresBtn.classList.add('scoreboard-tab-active');
   if (tabAchBtn) tabAchBtn.classList.remove('scoreboard-tab-active');
 
-  let allScores;
-  try { allScores = await fetchHighScores(); }
+  let topScores;
+  try { topScores = await fetchHighScores(); }
   catch (_) {
     scoreboardContent.innerHTML = '<p class="loading-text">FAILED TO LOAD — CHECK CONNECTION</p>';
     return;
@@ -148,12 +156,16 @@ export async function showScoreboard(highlightIdx = -1) {
   let activeDiff = 'all';
   const DIFFS = ['all', 'easy', 'normal', 'hard'];
   const DIFF_LABELS = { all: 'ALL', easy: 'EASY', normal: 'NORMAL', hard: 'HARD' };
+  const diffCache = { all: topScores };
 
-  function renderScores() {
-    const scores = activeDiff === 'all'
-      ? allScores
-      : allScores.filter(s => (s.difficulty || 'normal') === activeDiff);
-    let hi = highlightIdx;
+  async function renderScores() {
+    if (!(activeDiff in diffCache)) {
+      scoreboardContent.innerHTML = '<p class="loading-text">LOADING...</p>';
+      try { diffCache[activeDiff] = await fetchScoresByDifficulty(activeDiff, 50); }
+      catch (_) { diffCache[activeDiff] = []; }
+    }
+    const scores = diffCache[activeDiff].slice(0, 5);
+    let hi = activeDiff === 'all' ? highlightIdx : -1;
     if (hi === -1 && S.lastPlayerName) {
       const found = scores.findIndex(s => s.name === S.lastPlayerName);
       if (found !== -1) hi = found;

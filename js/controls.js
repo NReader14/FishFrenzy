@@ -117,6 +117,17 @@ function initKeyboard() {
     const po = document.getElementById('pause-overlay');
     if (po) po.classList.add('hidden');
   });
+
+  document.getElementById('pause-menu-btn')?.addEventListener('click', () => {
+    S.gameRunning = false;
+    S.gamePaused = false;
+    S.timerFrozen = false;
+    clearInterval(S.timerInterval);
+    cancelAnimationFrame(S.gameLoop);
+    const po = document.getElementById('pause-overlay');
+    if (po) po.classList.add('hidden');
+    overlay.classList.remove('hidden');
+  });
 }
 
 // ─── Card Input (mouse + touch on canvas) ───────────────────────

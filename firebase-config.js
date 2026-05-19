@@ -13,6 +13,7 @@ import {
   addDoc,
   doc,
   query,
+  where,
   orderBy,
   limit,
   deleteDoc,
@@ -210,6 +211,30 @@ export async function fetchAllScores(max = 100) {
     console.warn("[Firebase] Failed to fetch all scores:", err.message);
     isOnline = false;
     return getOfflineScores();
+  }
+}
+
+export async function fetchScoresByDifficulty(diff, max = 500) {
+  try {
+    const q = query(
+      collection(db, SCORES_COLLECTION),
+      where('difficulty', '==', diff),
+      limit(max)
+    );
+    const snapshot = await getDocs(q);
+    const scores = [];
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      scores.push({
+        id: docSnap.id, name: data.name || '???', score: data.score || 0,
+        level: data.level || 1, difficulty: data.difficulty || null, uid: data.uid || null,
+      });
+    });
+    scores.sort((a, b) => b.score - a.score || b.level - a.level);
+    return scores;
+  } catch (err) {
+    console.warn('[Firebase] Failed to fetch scores by difficulty:', err.message);
+    return getOfflineScores().filter(s => (s.difficulty || 'normal') === diff);
   }
 }
 
