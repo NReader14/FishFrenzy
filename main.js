@@ -613,8 +613,9 @@ function updateFish(dt = 1) {
     return;
   }
 
+  const bouncyLocked = S.settings.mysteryEffect === 'bouncy' && bouncyLockUntil > Date.now();
   let moveX = 0, moveY = 0;
-  if (!S.inputFrozen) {
+  if (!S.inputFrozen && !bouncyLocked) {
     if (S.keys['arrowleft'] || S.keys['a'])  moveX -= 1;
     if (S.keys['arrowright'] || S.keys['d']) moveX += 1;
     if (S.keys['arrowup'] || S.keys['w'])    moveY -= 1;
@@ -645,15 +646,25 @@ function updateFish(dt = 1) {
   S.fish.vx += nx * s * 0.3;
   S.fish.vy += ny * s * 0.3;
 
-  S.fish.vx *= gameVars.fishFriction;
-  S.fish.vy *= gameVars.fishFriction;
+  S.fish.vx *= bouncyLocked ? 0.995 : gameVars.fishFriction;
+  S.fish.vy *= bouncyLocked ? 0.995 : gameVars.fishFriction;
   if (S.settings.mysteryEffect === 'gravity') S.fish.vy += 0.38 * dt;
   S.fish.x += S.fish.vx * dt;
   S.fish.y += S.fish.vy * dt;
   if (S.settings.mysteryEffect === 'bouncy') {
     const hw = S.fish.w / 2, hh = S.fish.h / 2;
-    if (S.fish.x < hw || S.fish.x > W - hw) S.fish.vx *= -1.3;
-    if (S.fish.y < hh || S.fish.y > H - hh) S.fish.vy *= -1.3;
+    let bounced = false;
+    if (S.fish.x < hw || S.fish.x > W - hw) { S.fish.vx *= -1.3; bounced = true; }
+    if (S.fish.y < hh || S.fish.y > H - hh) { S.fish.vy *= -1.3; bounced = true; }
+    if (bounced) {
+      const spd = Math.hypot(S.fish.vx, S.fish.vy);
+      if (spd < 4) {
+        const ang = Math.atan2(S.fish.vy, S.fish.vx);
+        S.fish.vx = Math.cos(ang) * 4;
+        S.fish.vy = Math.sin(ang) * 4;
+      }
+      bouncyLockUntil = Date.now() + 2000;
+    }
   }
   S.fish.x = Math.max(S.fish.w / 2, Math.min(W - S.fish.w / 2, S.fish.x));
   S.fish.y = Math.max(S.fish.h / 2, Math.min(H - S.fish.h / 2, S.fish.y));
@@ -1085,6 +1096,7 @@ function updateTreats() {
 // ═══════════════════════════════════════════════════════════════
 
 let lastTimestamp = 0;
+let bouncyLockUntil = 0;
 
 function loop(timestamp) {
   if (!S.gameRunning) return;
