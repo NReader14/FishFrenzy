@@ -28,9 +28,11 @@ function load() {
       if (typeof saved.track === 'string' && TRACKS.some(t => t.id === saved.track))
         S.settings.track = saved.track;
       if (typeof saved.sharkQuips  === 'boolean') S.settings.sharkQuips  = saved.sharkQuips;
-      if (typeof saved.movingTreats === 'boolean') S.settings.movingTreats = saved.movingTreats;
-      if (typeof saved.fastTreats   === 'boolean' && saved.movingTreats === undefined) S.settings.movingTreats = saved.fastTreats;
-      if (typeof saved.showAds      === 'boolean') S.settings.showAds      = saved.showAds;
+      if (typeof saved.movingTreats  === 'boolean') S.settings.movingTreats  = saved.movingTreats;
+      if (typeof saved.fastTreats    === 'boolean' && saved.movingTreats === undefined) S.settings.movingTreats = saved.fastTreats;
+      if (typeof saved.mysteryToggle === 'boolean') S.settings.mysteryToggle = saved.mysteryToggle;
+      if (typeof saved.mysteryEffect === 'string')  S.settings.mysteryEffect  = saved.mysteryEffect;
+      if (typeof saved.showAds       === 'boolean') S.settings.showAds       = saved.showAds;
       if (typeof saved.lastInitials === 'string')  S.settings.lastInitials = saved.lastInitials;
     }
   } catch (_) {}

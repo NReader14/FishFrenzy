@@ -36,7 +36,7 @@ import {
   drawScanlines, drawClosestTreatArrow, drawPowerupTimerBars, drawRainbowOverlay,
   drawClaudeOverlay, drawBodySwapAnim, drawBombAnim, drawHellAnim, drawCardAnim,
   drawLevelBanner, drawTutorialHints
-} from './js/drawing.js';
+} from './js/drawing.js?v=1.6';
 import { collectTreat, getBaseMultiplier } from './js/scoring.js';
 import {
   showNameEntry, showScoreboard, showFullLeaderboard,
