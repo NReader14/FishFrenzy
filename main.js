@@ -645,18 +645,15 @@ function updateFish(dt = 1) {
   S.fish.vx += nx * s * 0.3;
   S.fish.vy += ny * s * 0.3;
 
-  const _friction = S.settings.mysteryEffect === 'bouncy' ? 0.98 : gameVars.fishFriction;
-  S.fish.vx *= _friction;
-  S.fish.vy *= _friction;
+  S.fish.vx *= gameVars.fishFriction;
+  S.fish.vy *= gameVars.fishFriction;
   if (S.settings.mysteryEffect === 'gravity') S.fish.vy += 0.38 * dt;
   S.fish.x += S.fish.vx * dt;
   S.fish.y += S.fish.vy * dt;
   if (S.settings.mysteryEffect === 'bouncy') {
     const hw = S.fish.w / 2, hh = S.fish.h / 2;
-    if (S.fish.x < hw)     { S.fish.vx =  Math.abs(S.fish.vx); S.fish.x = hw; }
-    if (S.fish.x > W - hw) { S.fish.vx = -Math.abs(S.fish.vx); S.fish.x = W - hw; }
-    if (S.fish.y < hh)     { S.fish.vy =  Math.abs(S.fish.vy); S.fish.y = hh; }
-    if (S.fish.y > H - hh) { S.fish.vy = -Math.abs(S.fish.vy); S.fish.y = H - hh; }
+    if (S.fish.x < hw || S.fish.x > W - hw) S.fish.vx *= -1;
+    if (S.fish.y < hh || S.fish.y > H - hh) S.fish.vy *= -1;
   }
   S.fish.x = Math.max(S.fish.w / 2, Math.min(W - S.fish.w / 2, S.fish.x));
   S.fish.y = Math.max(S.fish.h / 2, Math.min(H - S.fish.h / 2, S.fish.y));
