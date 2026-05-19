@@ -838,7 +838,7 @@ export function drawScanlines() {
 
 // ─── CLOSEST TREAT ARROW ───
 export function drawClosestTreatArrow() {
-  if (S.treats.length === 0) return;
+  if (S.treats.length === 0 || S.settings.mysteryEffect === 'invisible_fish') return;
   // During body swap, arrow points from shark (player) to nearest treat
   const origin = S.bodySwapActive ? S.shark : S.fish;
   let nearest = null, nearestD = Infinity;
