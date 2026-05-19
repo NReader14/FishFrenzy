@@ -645,8 +645,9 @@ function updateFish(dt = 1) {
   S.fish.vx += nx * s * 0.3;
   S.fish.vy += ny * s * 0.3;
 
-  S.fish.vx *= gameVars.fishFriction;
-  S.fish.vy *= gameVars.fishFriction;
+  const _friction = S.settings.mysteryEffect === 'bouncy' ? 0.98 : gameVars.fishFriction;
+  S.fish.vx *= _friction;
+  S.fish.vy *= _friction;
   if (S.settings.mysteryEffect === 'gravity') S.fish.vy += 0.38 * dt;
   S.fish.x += S.fish.vx * dt;
   S.fish.y += S.fish.vy * dt;
