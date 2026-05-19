@@ -13,7 +13,6 @@ import {
   addDoc,
   doc,
   query,
-  where,
   orderBy,
   limit,
   deleteDoc,
@@ -214,27 +213,33 @@ export async function fetchAllScores(max = 100) {
   }
 }
 
+// Infer difficulty from score+level using each difficulty's expected minimum score.
+// Treats at level k: treatBase + k*treatPerLevel. Summed k=1..L-1 to reach level L.
+// Minimum score = totalTreats * 10 * diffMultiplier (no combo).
+// Log-distance comparison: closest baseline (multiplicatively) wins.
+function inferDifficulty(score, level) {
+  if (!score || !level || level < 2) return 'normal';
+  const expMin = (tB, tPL, dMul) =>
+    (tB * (level - 1) + tPL * (level - 1) * level / 2) * 10 * dMul;
+  const easyExp   = expMin(3, 1, 0.75);
+  const normalExp = expMin(5, 2, 1.0);
+  const hardExp   = expMin(6, 3, 1.25);
+  const dist = (exp) => Math.abs(Math.log(Math.max(score, 1) / Math.max(exp, 1)));
+  const de = dist(easyExp), dn = dist(normalExp), dh = dist(hardExp);
+  if (de <= dn && de <= dh) return 'easy';
+  if (dh <= dn && dh <= de) return 'hard';
+  return 'normal';
+}
+
 export async function fetchScoresByDifficulty(diff, max = 500) {
   try {
-    const q = query(
-      collection(db, SCORES_COLLECTION),
-      where('difficulty', '==', diff),
-      limit(max)
-    );
-    const snapshot = await getDocs(q);
-    const scores = [];
-    snapshot.forEach(docSnap => {
-      const data = docSnap.data();
-      scores.push({
-        id: docSnap.id, name: data.name || '???', score: data.score || 0,
-        level: data.level || 1, difficulty: data.difficulty || null, uid: data.uid || null,
-      });
-    });
-    scores.sort((a, b) => b.score - a.score || b.level - a.level);
-    return scores;
+    const all = await fetchAllScores(max);
+    return all
+      .map(s => ({ ...s, difficulty: s.difficulty || inferDifficulty(s.score, s.level) }))
+      .filter(s => s.difficulty === diff);
   } catch (err) {
-    console.warn('[Firebase] Failed to fetch scores by difficulty:', err.message);
-    return getOfflineScores().filter(s => (s.difficulty || 'normal') === diff);
+    console.warn('[Firebase] fetchScoresByDifficulty failed:', err.message);
+    return getOfflineScores().filter(s => (s.difficulty || inferDifficulty(s.score, s.level)) === diff);
   }
 }
 
