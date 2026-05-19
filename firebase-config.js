@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 const DEBUG = false; // set true to enable verbose Firebase logging
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {
   getFirestore,
   collection,
@@ -369,9 +369,15 @@ export async function adminWipeScores(email, password) {
 }
 
 export async function verifyAdminCredentials(email, password) {
-  const cred = await signInWithEmailAndPassword(auth, email, password);
-  await signOut(auth);
-  return cred.user;
+  const tempApp = initializeApp(firebaseConfig, 'adminVerify_' + Date.now());
+  const tempAuth = getAuth(tempApp);
+  try {
+    const cred = await signInWithEmailAndPassword(tempAuth, email, password);
+    return cred.user;
+  } finally {
+    await signOut(tempAuth);
+    await deleteApp(tempApp);
+  }
 }
 
 // Signs in as admin and stays signed in — used by tester mode to bypass maintenance
