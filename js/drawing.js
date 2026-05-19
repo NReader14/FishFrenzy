@@ -836,6 +836,16 @@ export function drawScanlines() {
   ctx.fillRect(0, 0, W, H);
 }
 
+// ─── DARK FLASHLIGHT OVERLAY ───
+export function drawDarkOverlay() {
+  if (S.settings.mysteryEffect !== 'dark' || !S.fish) return;
+  const grad = ctx.createRadialGradient(S.fish.x, S.fish.y, 55, S.fish.x, S.fish.y, 190);
+  grad.addColorStop(0, 'rgba(0,0,0,0)');
+  grad.addColorStop(1, 'rgba(0,0,5,0.97)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+}
+
 // ─── CLOSEST TREAT ARROW ───
 export function drawClosestTreatArrow() {
   if (S.treats.length === 0 || S.settings.mysteryEffect === 'invisible_fish') return;

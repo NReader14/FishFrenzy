@@ -35,7 +35,7 @@ import {
   drawHourglassOverlay, drawGhostIndicator, drawCrazyOverlay, drawFishGlow, drawMagnetLines,
   drawScanlines, drawClosestTreatArrow, drawPowerupTimerBars, drawRainbowOverlay,
   drawClaudeOverlay, drawBodySwapAnim, drawBombAnim, drawHellAnim, drawCardAnim,
-  drawLevelBanner, drawTutorialHints
+  drawLevelBanner, drawTutorialHints, drawDarkOverlay
 } from './js/drawing.js?v=1.6';
 import { collectTreat, getBaseMultiplier } from './js/scoring.js';
 import {
@@ -1157,14 +1157,7 @@ function loop(timestamp) {
   drawTutorialHints();
   drawLevelBanner();
   drawScanlines();
-
-  if (S.settings.mysteryEffect === 'dark' && S.fish) {
-    const grad = ctx.createRadialGradient(S.fish.x, S.fish.y, 55, S.fish.x, S.fish.y, 190);
-    grad.addColorStop(0, 'rgba(0,0,0,0)');
-    grad.addColorStop(1, 'rgba(0,0,5,0.97)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, H);
-  }
+  drawDarkOverlay();
 
   S.gameLoop = requestAnimationFrame(loop);
 }
