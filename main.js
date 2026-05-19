@@ -654,15 +654,17 @@ function updateFish(dt = 1) {
   if (S.settings.mysteryEffect === 'bouncy') {
     const hw = S.fish.w / 2, hh = S.fish.h / 2;
     let bounced = false;
-    if (S.fish.x < hw || S.fish.x > W - hw) { S.fish.vx *= -1.3; bounced = true; }
-    if (S.fish.y < hh || S.fish.y > H - hh) { S.fish.vy *= -1.3; bounced = true; }
+    if (S.fish.x < hw || S.fish.x > W - hw) { S.fish.vx *= -1; bounced = true; }
+    if (S.fish.y < hh || S.fish.y > H - hh) { S.fish.vy *= -1; bounced = true; }
     if (bounced) {
+      const now = Date.now();
+      bouncyStreak = (now - bouncyLastBounce < 400) ? bouncyStreak + 1 : 0;
+      bouncyLastBounce = now;
       const spd = Math.hypot(S.fish.vx, S.fish.vy);
-      if (spd < 4) {
-        const ang = Math.atan2(S.fish.vy, S.fish.vx);
-        S.fish.vx = Math.cos(ang) * 4;
-        S.fish.vy = Math.sin(ang) * 4;
-      }
+      const ang = Math.atan2(S.fish.vy, S.fish.vx);
+      const cap = 8 + bouncyStreak * 5;
+      S.fish.vx = Math.cos(ang) * Math.max(4, Math.min(spd * (1 + bouncyStreak * 0.15), cap));
+      S.fish.vy = Math.sin(ang) * Math.max(4, Math.min(spd * (1 + bouncyStreak * 0.15), cap));
       bouncyInvertUntil = Date.now() + 2000;
     }
   }
@@ -1097,6 +1099,8 @@ function updateTreats() {
 
 let lastTimestamp = 0;
 let bouncyInvertUntil = 0;
+let bouncyStreak = 0;
+let bouncyLastBounce = 0;
 
 function loop(timestamp) {
   if (!S.gameRunning) return;
