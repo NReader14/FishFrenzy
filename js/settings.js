@@ -28,7 +28,8 @@ function load() {
       if (typeof saved.track === 'string' && TRACKS.some(t => t.id === saved.track))
         S.settings.track = saved.track;
       if (typeof saved.sharkQuips  === 'boolean') S.settings.sharkQuips  = saved.sharkQuips;
-      if (typeof saved.fastTreats  === 'boolean') S.settings.fastTreats  = saved.fastTreats;
+      if (typeof saved.movingTreats === 'boolean') S.settings.movingTreats = saved.movingTreats;
+      if (typeof saved.fastTreats   === 'boolean' && saved.movingTreats === undefined) S.settings.movingTreats = saved.fastTreats;
       if (typeof saved.showAds      === 'boolean') S.settings.showAds      = saved.showAds;
       if (typeof saved.lastInitials === 'string')  S.settings.lastInitials = saved.lastInitials;
     }
@@ -63,7 +64,8 @@ function refreshUI() {
   updateToggle('toggle-music-btn',      S.settings.music);
   updateToggle('toggle-sfx-btn',        S.settings.sfx);
   updateToggle('toggle-shark-quips-btn',  S.settings.sharkQuips);
-  updateToggle('toggle-fast-treats-btn', S.settings.fastTreats);
+  updateToggle('toggle-moving-treats-btn', S.settings.movingTreats);
+  updateToggle('toggle-mystery-mode-btn',  S.settings.mysteryToggle);
   updateToggle('toggle-ads-btn',         S.settings.showAds ?? false);
   const mvs = document.getElementById('music-vol-slider');
   const svs = document.getElementById('sfx-vol-slider');
@@ -294,11 +296,24 @@ export function initSettings() {
     save();
   });
 
-  document.getElementById('toggle-fast-treats-btn')?.addEventListener('click', () => {
-    S.settings.fastTreats = !S.settings.fastTreats;
+  document.getElementById('toggle-moving-treats-btn')?.addEventListener('click', () => {
+    S.settings.movingTreats = !S.settings.movingTreats;
     save();
     refreshUI();
     window.dispatchEvent(new Event('settingsMultiplierChanged'));
+  });
+
+  document.getElementById('toggle-mystery-mode-btn')?.addEventListener('click', () => {
+    S.settings.mysteryToggle = !S.settings.mysteryToggle;
+    if (S.settings.mysteryToggle) {
+      const effects = ['tiny_fish','giant_treats','exploding_treats','invisible_fish',
+                       'gravity','blind_shark','giant_shark','inverted','dark','bouncy'];
+      S.settings.mysteryEffect = effects[Math.floor(Math.random() * effects.length)];
+    } else {
+      S.settings.mysteryEffect = null;
+    }
+    save();
+    refreshUI();
   });
 
   document.getElementById('toggle-ads-btn')?.addEventListener('click', () => {
@@ -335,7 +350,9 @@ export function initSettings() {
     S.settings.musicVolume   = 70;
     S.settings.sfxVolume     = 80;
     S.settings.sharkQuips    = true;
-    S.settings.fastTreats    = false;
+    S.settings.movingTreats  = false;
+    S.settings.mysteryToggle = false;
+    S.settings.mysteryEffect = null;
     S.settings.showAds       = false;
     save();
     refreshUI();

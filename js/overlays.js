@@ -661,6 +661,24 @@ export function openAdminPanel(currentMaint) {
 export function setupAdminEvents() {
   setupItemTestEvents();
 
+  // Mystery effect override (client-side, for testing specific effects)
+  const MYSTERY_EFFECTS = ['tiny_fish','giant_treats','exploding_treats','invisible_fish',
+                           'gravity','blind_shark','giant_shark','inverted','dark','bouncy'];
+  document.getElementById('admin-mystery-apply-btn')?.addEventListener('click', () => {
+    const sel = document.getElementById('admin-mystery-select')?.value;
+    const effect = sel || MYSTERY_EFFECTS[Math.floor(Math.random() * MYSTERY_EFFECTS.length)];
+    S.settings.mysteryToggle = true;
+    S.settings.mysteryEffect = effect;
+    const st = document.getElementById('admin-mystery-status');
+    if (st) st.textContent = 'ACTIVE: ' + effect.toUpperCase().replace(/_/g, ' ');
+  });
+  document.getElementById('admin-mystery-off-btn')?.addEventListener('click', () => {
+    S.settings.mysteryToggle = false;
+    S.settings.mysteryEffect = null;
+    const st = document.getElementById('admin-mystery-status');
+    if (st) st.textContent = 'OFF';
+  });
+
   // Maintenance toggle
   document.getElementById('maint-toggle-btn')?.addEventListener('click', async () => {
     if (!S.adminCredentials) { showPanelMsg('NOT LOGGED IN', true); return; }

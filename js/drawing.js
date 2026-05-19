@@ -71,6 +71,14 @@ export function drawPixelFish(x, y, dir, angle, phase, c1, c2, c3, fishType = 's
 
 // ─── PLAYER FISH ───
 export function drawFish() {
+  const _mfx = S.settings.mysteryEffect;
+  const _tiny = _mfx === 'tiny_fish', _invis = _mfx === 'invisible_fish';
+  if (_tiny || _invis) {
+    ctx.save();
+    if (_tiny) { ctx.translate(S.fish.x, S.fish.y); ctx.scale(0.35, 0.35); ctx.translate(-S.fish.x, -S.fish.y); }
+    if (_invis) ctx.globalAlpha = 0.07;
+  }
+
   // During body swap, fish is drawn as an angry red predator
   let c1, c2, c3, fishType = 'standard';
   if (S.bodySwapActive) {
@@ -156,6 +164,8 @@ export function drawFish() {
     ctx.strokeStyle = `rgba(255,170,50,${p})`; ctx.lineWidth = 2; ctx.stroke();
     ctx.restore();
   }
+
+  if (_tiny || _invis) ctx.restore();
 }
 
 // ─── BUDDY ───
@@ -303,7 +313,9 @@ export function drawShark() {
   ctx.save();
   ctx.translate(S.shark.x, S.shark.y);
   ctx.rotate(S.shark.angle);
-  const _sm = mob(); ctx.scale(_sm, _sm);
+  const _sm = mob();
+  const _giantScale = S.settings.mysteryEffect === 'giant_shark' ? 2.5 : 1;
+  ctx.scale(_sm * _giantScale, _sm * _giantScale);
 
   const frozen = S.iceActive || S.hourglassActive;
   if (frozen) ctx.globalAlpha = 0.6;
@@ -519,13 +531,13 @@ export function drawShark() {
 // ─── TREATS ───
 export function drawTreats() {
   const tm = mob();
+  const _treatScale = S.settings.mysteryEffect === 'giant_treats' ? 2.5 : 1;
   for (const t of S.treats) {
-    const fast = S.settings.fastTreats;
-    const bob = Math.round(Math.sin(t.bobPhase) * (fast ? 4 : 2));
-    t.bobPhase += fast ? 0.09 : 0.03;
+    const bob = Math.round(Math.sin(t.bobPhase) * 2);
+    t.bobPhase += 0.03;
     ctx.save();
     ctx.translate(t.x, t.y + bob);
-    ctx.scale(tm, tm);
+    ctx.scale(tm * _treatScale, tm * _treatScale);
     ctx.font = '20px serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';

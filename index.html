@@ -230,10 +230,17 @@
     </div>
     <div class="settings-section">
       <div class="settings-row">
-        <span class="settings-label">FAST TREATS</span>
-        <button id="toggle-fast-treats-btn" class="settings-toggle">OFF</button>
+        <span class="settings-label">MOVING TREATS</span>
+        <button id="toggle-moving-treats-btn" class="settings-toggle">OFF</button>
       </div>
-      <p class="settings-hint">Treats bob faster — harder to grab. +3% score.</p>
+      <p class="settings-hint">Treats drift slowly around the arena — harder to grab. +5% score.</p>
+    </div>
+    <div class="settings-section">
+      <div class="settings-row">
+        <span class="settings-label">??? MYSTERY TOGGLE</span>
+        <button id="toggle-mystery-mode-btn" class="settings-toggle">OFF</button>
+      </div>
+      <p class="settings-hint">What will it do next?</p>
     </div>
     <div class="settings-section">
       <div class="settings-row">
@@ -372,6 +379,29 @@
           <span id="maint-status" class="admin-status">CHECKING...</span>
           <button id="maint-toggle-btn" class="btn-primary" style="padding:6px 14px;font-size:8px;">TOGGLE</button>
         </div>
+      </div>
+
+      <!-- MYSTERY EFFECT OVERRIDE -->
+      <div class="admin-section">
+        <div class="admin-section-title">MYSTERY TOGGLE OVERRIDE</div>
+        <div class="admin-row" style="flex-wrap:wrap;gap:6px;align-items:center;">
+          <select id="admin-mystery-select" class="admin-var-input" style="width:160px;padding:4px 6px;font-size:7px;background:#0a1a2a;color:#ccddee;border:1px solid #44ddff;cursor:pointer;">
+            <option value="">— RANDOM —</option>
+            <option value="tiny_fish">TINY FISH</option>
+            <option value="giant_treats">GIANT TREATS</option>
+            <option value="exploding_treats">EXPLODING TREATS</option>
+            <option value="invisible_fish">INVISIBLE FISH</option>
+            <option value="gravity">GRAVITY</option>
+            <option value="blind_shark">BLIND SHARK</option>
+            <option value="giant_shark">GIANT SHARK</option>
+            <option value="inverted">INVERTED CONTROLS</option>
+            <option value="dark">DARK MODE</option>
+            <option value="bouncy">BOUNCY WALLS</option>
+          </select>
+          <button id="admin-mystery-apply-btn" class="btn-primary" style="padding:6px 14px;font-size:8px;">APPLY</button>
+          <button id="admin-mystery-off-btn" class="btn-secondary" style="padding:6px 14px;font-size:8px;">OFF</button>
+        </div>
+        <div id="admin-mystery-status" style="font-size:7px;color:#44ee88;margin-top:4px;"></div>
       </div>
 
       <!-- SCOREBOARD WIPE -->

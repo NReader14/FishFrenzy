@@ -355,6 +355,7 @@ function spawnTreat() {
   while ((dist(t, S.fish) < gameVars.pwSpawnRadius || overlapsExisting(t.x, t.y, 30)) && attempts < 30) {
     t.x = rand(30, W - 30); t.y = rand(30, H - 30); attempts++;
   }
+  t.vAngle = (t.x * 2.3 + t.y * 1.7) % (Math.PI * 2);
   S.treats.push(t);
 }
 
@@ -619,6 +620,7 @@ function updateFish(dt = 1) {
     if (S.keys['arrowup'] || S.keys['w'])    moveY -= 1;
     if (S.keys['arrowdown'] || S.keys['s'])  moveY += 1;
   }
+  if (S.settings.mysteryEffect === 'inverted') { moveX *= -1; moveY *= -1; }
 
   if (moveX !== 0 || moveY !== 0) {
     if (moveX === S.lastMoveDir.x && moveY === S.lastMoveDir.y) {
@@ -645,8 +647,14 @@ function updateFish(dt = 1) {
 
   S.fish.vx *= gameVars.fishFriction;
   S.fish.vy *= gameVars.fishFriction;
+  if (S.settings.mysteryEffect === 'gravity') S.fish.vy += 0.38 * dt;
   S.fish.x += S.fish.vx * dt;
   S.fish.y += S.fish.vy * dt;
+  if (S.settings.mysteryEffect === 'bouncy') {
+    const hw = S.fish.w / 2, hh = S.fish.h / 2;
+    if (S.fish.x < hw || S.fish.x > W - hw) S.fish.vx *= -1.3;
+    if (S.fish.y < hh || S.fish.y > H - hh) S.fish.vy *= -1.3;
+  }
   S.fish.x = Math.max(S.fish.w / 2, Math.min(W - S.fish.w / 2, S.fish.x));
   S.fish.y = Math.max(S.fish.h / 2, Math.min(H - S.fish.h / 2, S.fish.y));
 
@@ -770,6 +778,18 @@ function updateShark(dt = 1) {
 
   const _baseSpeed = Math.max(0, (gameVars.fishSpeed + gameVars.sharkSpeedBase) + gameVars.sharkSpeedPerLevel * Math.sqrt(S.level * 2));
   const _activeSpeed = S.iceActive ? _baseSpeed * 0.25 : _baseSpeed + (S.shark.rageBonus || 0);
+
+  if (S.settings.mysteryEffect === 'blind_shark') {
+    S.shark.angle += (Math.random() - 0.5) * 0.12 * dt;
+    S.shark.x += Math.cos(S.shark.angle) * _activeSpeed * dt;
+    S.shark.y += Math.sin(S.shark.angle) * _activeSpeed * dt;
+    S.shark.x = Math.max(20, Math.min(W - 20, S.shark.x));
+    S.shark.y = Math.max(20, Math.min(H - 20, S.shark.y));
+    if (S.shark.x <= 20 || S.shark.x >= W - 20) S.shark.angle = Math.PI - S.shark.angle;
+    if (S.shark.y <= 20 || S.shark.y >= H - 20) S.shark.angle = -S.shark.angle;
+    S.shark.tailPhase += 0.12 * dt;
+    return;
+  }
 
   // Prompt: wander phase — random movement, no targeting
   if (S.promptActive && S.promptWandering) {
@@ -1001,6 +1021,21 @@ function updateBuddy() {
 function updateTreats() {
   if (S.gamePaused) return;
 
+  if (S.settings.movingTreats) {
+    const SPEED = 0.9;
+    for (const t of S.treats) {
+      if (t.collected) continue;
+      t.vAngle += 0.02 * Math.sin(t.bobPhase * 0.2);
+      t.x += Math.cos(t.vAngle) * SPEED;
+      t.y += Math.sin(t.vAngle) * SPEED;
+      const M = 28;
+      if (t.x < M)     { t.x = M;     t.vAngle = Math.PI - t.vAngle; }
+      else if (t.x > W - M) { t.x = W - M; t.vAngle = Math.PI - t.vAngle; }
+      if (t.y < M)     { t.y = M;     t.vAngle = -t.vAngle; }
+      else if (t.y > H - M) { t.y = H - M; t.vAngle = -t.vAngle; }
+    }
+  }
+
   const collectTarget = S.bodySwapActive ? S.shark : S.fish;
 
   if (S.magnetActive) {
@@ -1012,8 +1047,23 @@ function updateTreats() {
     }
   }
 
+  const _collectR = S.settings.mysteryEffect === 'giant_treats' ? 58 : 24;
   for (const t of S.treats) {
-    if (!t.collected && dist(t, collectTarget) < 24) collectTreat(t);
+    if (!t.collected && dist(t, collectTarget) < _collectR) collectTreat(t);
+  }
+
+  if (S.settings.mysteryEffect === 'exploding_treats') {
+    for (const t of S.treats) {
+      if (t.collected && !t.exploded) {
+        t.exploded = true;
+        spawnParticles(t.x, t.y, '#ff8800', 20);
+        spawnParticles(t.x, t.y, '#ffdd44', 10);
+        const dx = S.shark.x - t.x, dy = S.shark.y - t.y;
+        const d = Math.hypot(dx, dy) || 1;
+        S.shark.x = Math.max(20, Math.min(W - 20, S.shark.x + (dx / d) * 80));
+        S.shark.y = Math.max(20, Math.min(H - 20, S.shark.y + (dy / d) * 80));
+      }
+    }
   }
 
   S.treats = S.treats.filter(t => !t.collected);
@@ -1107,6 +1157,14 @@ function loop(timestamp) {
   drawTutorialHints();
   drawLevelBanner();
   drawScanlines();
+
+  if (S.settings.mysteryEffect === 'dark' && S.fish) {
+    const grad = ctx.createRadialGradient(S.fish.x, S.fish.y, 55, S.fish.x, S.fish.y, 190);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,5,0.97)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+  }
 
   S.gameLoop = requestAnimationFrame(loop);
 }

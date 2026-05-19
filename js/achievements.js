@@ -96,7 +96,7 @@ export const ACHIEVEMENTS = [
   { id: 'treat_2000',        tier:'hard', icon: '🌊', name: 'TREAT VACUUM',           desc: 'Collect 2,000 treats total.',                                              hint: 'Collect 2,000 treats total across all your games.' },
   { id: 'power_mad',         tier:'hard', icon: '🌀', name: 'POWER MAD',              desc: 'Collect 50 powerups total.',                                               hint: 'Collect 50 powerups total across all your games.' },
   { id: 'power_mad_100',     tier:'hard', icon: '🌪️', name: 'POWERUP ADDICT',        desc: 'Collect 100 powerups total.',                                              hint: 'Collect 100 powerups total across all your games.' },
-  { id: 'full_house',        tier:'hard', icon: '🃏', name: 'FULL HOUSE',             desc: 'Play with Hard + Smart Shark + Mystery Blocks + Fast Treats.',             hint: 'Enable all four: Hard, Smart Shark, Mystery Blocks, Fast Treats.' },
+  { id: 'full_house',        tier:'hard', icon: '🃏', name: 'FULL HOUSE',             desc: 'Play with Hard + Smart Shark + Mystery Blocks + Moving Treats.',           hint: 'Enable all four: Hard, Smart Shark, Mystery Blocks, Moving Treats.' },
   { id: 'marathon',          tier:'hard', icon: '🏃', name: 'MARATHON',               desc: 'Play for 30 minutes total.',                                               hint: 'Accumulate 30 minutes of total game time.' },
   { id: 'marathon_2h',       tier:'hard', icon: '🏅', name: 'IRON SWIMMER',           desc: 'Play for 2 hours total.',                                                  hint: 'Accumulate 2 hours of total game time.' },
   { id: 'overachiever',      tier:'hard', icon: '🏅', name: 'OVERACHIEVER',           desc: 'Unlock 25 achievements.',                                                  hint: 'Unlock 25 other achievements.' },
@@ -326,9 +326,9 @@ export function onGameStart() {
   _stats.skinsUsed.add(skinIdx);
   _save();
 
-  // Full house: hard + smartShark + mysteryBlocks + fastTreats
+  // Full house: hard + smartShark + mysteryBlocks + movingTreats
   if (S.settings.difficulty === 'hard' && S.settings.smartShark &&
-      S.settings.mysteryBlocks && S.settings.fastTreats) {
+      S.settings.mysteryBlocks && S.settings.movingTreats) {
     unlock('full_house');
   }
 

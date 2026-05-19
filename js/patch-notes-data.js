@@ -10,6 +10,8 @@ export const NOTES = [
       '🏆 Leaderboard difficulty filters now show the actual top scores per difficulty — not just the top 5 overall filtered down',
       '🧮 Old scores with no difficulty tag are now classified automatically using the score and level they ended on',
       '⏸️ Pause screen now has a Main Menu button',
+      '🐟 Fast Treats renamed to Moving Treats — treats now physically drift around the arena instead of bobbing faster, bonus bumped to +5%',
+      '??? Mystery Toggle added to settings — What will it do next?',
     ]
   },
   {
@@ -62,7 +64,7 @@ export const NOTES = [
       '🔑 User login added — sign in with Google or email to save settings & scores',
       '⚙️ Settings now sync to the cloud when signed in',
       '🏅 Scores now linked to your account — your name highlights on the leaderboard',
-      '🎵 Fast Treats setting — treats bob faster for a +3% score bonus',
+      '🎵 Moving Treats setting — treats drift around the arena for a score bonus',
       '🎭 Mystery Blocks setting — power-up icons hidden until collected (+5% score)',
       '📱 Settings menu no longer overflows on mobile screens',
     ]

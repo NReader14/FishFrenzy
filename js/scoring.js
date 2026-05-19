@@ -16,8 +16,8 @@ export function getBaseMultiplier() {
   const diffMul       = diff === 'easy' ? 0.75 : diff === 'hard' ? 1.25 : 1;
   const smartMul      = S.settings.smartShark   ? 1.25 : 1;
   const mysteryMul    = S.settings.mysteryBlocks ? 1.05 : 1;
-  const fastTreatsMul = S.settings.fastTreats   ? 1.03 : 1;
-  return diffMul * smartMul * mysteryMul * fastTreatsMul;
+  const movingTreatsMul = S.settings.movingTreats ? 1.05 : 1;
+  return diffMul * smartMul * mysteryMul * movingTreatsMul;
 }
 const STREAK_COLS = { 2: '#88ddff', 3: '#44ee88', 4: '#ffdd44', 5: '#ff44ff' };
 
