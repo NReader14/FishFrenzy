@@ -23,6 +23,9 @@ const S = {
   gameLoop: null,
   timerInterval: null,
 
+  // Admin overrides
+  adminSharkHidden: false,
+
   // Input tracking
   keys: {},
   nameEntryActive: false,

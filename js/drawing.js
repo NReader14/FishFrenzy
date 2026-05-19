@@ -303,7 +303,7 @@ function drawSharkEntity(e, frozen = false) {
 
 // ─── SHARK ───
 export function drawShark() {
-  if (S.shark.hidden) return;
+  if (S.shark.hidden || S.adminSharkHidden) return;
   // Hide shark during HELL intro (circles phase)
   if (S.hellAnim) {
     const hellElapsed = (Date.now() - S.hellAnim.startTime) / 1000;

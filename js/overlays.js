@@ -679,6 +679,12 @@ export function setupAdminEvents() {
     if (st) st.textContent = 'OFF';
   });
 
+  document.getElementById('admin-shark-toggle-btn')?.addEventListener('click', () => {
+    S.adminSharkHidden = !S.adminSharkHidden;
+    const btn = document.getElementById('admin-shark-toggle-btn');
+    if (btn) btn.textContent = S.adminSharkHidden ? 'SHOW' : 'HIDE';
+  });
+
   // Maintenance toggle
   document.getElementById('maint-toggle-btn')?.addEventListener('click', async () => {
     if (!S.adminCredentials) { showPanelMsg('NOT LOGGED IN', true); return; }
