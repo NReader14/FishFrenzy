@@ -652,8 +652,10 @@ function updateFish(dt = 1) {
   S.fish.y += S.fish.vy * dt;
   if (S.settings.mysteryEffect === 'bouncy') {
     const hw = S.fish.w / 2, hh = S.fish.h / 2;
-    if (S.fish.x < hw || S.fish.x > W - hw) S.fish.vx *= -1;
-    if (S.fish.y < hh || S.fish.y > H - hh) S.fish.vy *= -1;
+    if (S.fish.x < hw)     { S.fish.vx =  Math.abs(S.fish.vx); S.fish.x = hw; }
+    if (S.fish.x > W - hw) { S.fish.vx = -Math.abs(S.fish.vx); S.fish.x = W - hw; }
+    if (S.fish.y < hh)     { S.fish.vy =  Math.abs(S.fish.vy); S.fish.y = hh; }
+    if (S.fish.y > H - hh) { S.fish.vy = -Math.abs(S.fish.vy); S.fish.y = H - hh; }
   }
   S.fish.x = Math.max(S.fish.w / 2, Math.min(W - S.fish.w / 2, S.fish.x));
   S.fish.y = Math.max(S.fish.h / 2, Math.min(H - S.fish.h / 2, S.fish.y));
