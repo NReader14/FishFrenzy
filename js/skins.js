@@ -493,6 +493,58 @@ function drawScalesPattern(c) {
   c.fillRect(13,  2, 1, 1);   // gap between U2 and U3
 }
 
+function drawPandaBody(c) {
+  // ── White base fur (re-covers body for uniform panda white)
+  c.fillStyle = '#f0f0f0';
+  c.fillRect(-14, -8, 28, 16);
+  c.fillRect(-10, -10, 20, 2);
+  c.fillRect(-10,  8,  20, 2);
+
+  // ── White belly
+  c.fillStyle = '#ffffff';
+  c.fillRect(-10, 2, 18, 6);
+
+  // ── Black rear/shoulder patch (back half of body, like shark's grey base)
+  c.fillStyle = '#111';
+  c.fillRect(-14, -10, 14, 20);
+
+  // ── Black dorsal stripe across top of back
+  c.fillStyle = '#111';
+  c.fillRect(-14, -10, 20, 2);
+
+  // ── Panda ears — two round black bumps on top of head
+  c.fillStyle = '#111';
+  c.fillRect(2,  -16, 5, 7);
+  c.fillRect(8,  -16, 5, 7);
+
+  // ── Black eye ring patches (the most iconic panda feature)
+  c.fillStyle = '#111';
+  c.fillRect(3, -9, 13, 13);
+
+  // ── White inside the eye ring
+  c.fillStyle = '#f0f0f0';
+  c.fillRect(5, -8, 9, 10);
+
+  // ── Redraw eye so it shows over the markings
+  c.fillStyle = '#fff';
+  c.fillRect(6, -6, 8, 8);
+  c.fillStyle = '#111';
+  c.fillRect(10, -4, 4, 4);
+  c.fillStyle = '#fff';
+  c.fillRect(10, -4, 2, 2);
+
+  // ── Cute round nose at snout
+  c.fillStyle = '#222';
+  c.fillRect(12, 2, 4, 3);
+  c.fillStyle = '#ffaaaa';
+  c.fillRect(13, 2, 2, 2);
+
+  // ── Black dorsal fin
+  c.fillStyle = '#111';
+  c.fillRect(-2, -14, 8, 4);
+  c.fillRect(0,  -12, 4, 2);
+}
+
 function drawIceFrost(c) {
   // Ice blue shirt base (torso half only)
   c.fillStyle = '#b8dff0';
@@ -631,6 +683,7 @@ export const ACCESSORY_TABS = [
       { key: 'checker',   label: 'CHECKER', fn: drawCheckerboard },
       { key: 'rainbow',   label: 'RAINBOW', fn: drawRainbowBody },
       { key: 'scales',    label: 'SHARK',   fn: drawScalesPattern },
+      { key: 'panda',     label: 'PANDA',   fn: drawPandaBody },
       { key: 'frost',     label: 'FROST',   fn: drawIceFrost },
       { key: 'hawaiian',  label: 'HAWAIIAN',fn: drawHawaiian },
       { key: 'plaid',     label: 'PLAID',   fn: drawPlaid },
@@ -989,6 +1042,11 @@ export const SKINS = [
     name: 'Skeleton',
     c1: '#445566', c2: '#667788', c3: '#223344',
     extras: drawSkeleton, extrasType: 'outfit',
+  },
+  {
+    name: 'Panda',
+    c1: '#f0f0f0', c2: '#ffffff', c3: '#111111',
+    extras: drawPandaBody, extrasType: 'outfit',
   },
 
   // ── Fish type skins ──
